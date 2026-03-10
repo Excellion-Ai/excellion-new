@@ -169,15 +169,29 @@ const GENERATION_STEPS: GenerationStep[] = [
 
 // ── Component ───────────────────────────────────────────────
 
-const BuilderShell = () => {
+interface BuilderShellProps {
+  initialIdea?: string;
+  initialProjectId?: string | null;
+  initialCourseId?: string;
+  templateSpec?: any;
+  courseMode?: string;
+}
+
+const BuilderShell = ({
+  initialIdea,
+  initialProjectId,
+  initialCourseId,
+  templateSpec,
+  courseMode,
+}: BuilderShellProps) => {
   // Core state
   const [courseSpec, setCourseSpec] = useState<ExtendedCourse | null>(null);
-  const [courseId, setCourseId] = useState<string | null>(null);
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const [courseId, setCourseId] = useState<string | null>(initialCourseId || null);
+  const [projectId, setProjectId] = useState<string | null>(initialProjectId || null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Generation
-  const [idea, setIdea] = useState("");
+  const [idea, setIdea] = useState(initialIdea || "");
   const [isGenerating, setIsGenerating] = useState(false);
   const [steps, setSteps] = useState<GenerationStep[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import {
   Sparkles,
   Plus,
@@ -794,12 +794,36 @@ function HubContent() {
   );
 }
 
-// ── Page wrapper with SidebarProvider ─────────────────────────
+// ── Page wrapper with SidebarProvider + Auth Guard ───────────
 
-const SecretBuilderHub = () => (
-  <SidebarProvider>
-    <HubContent />
-  </SidebarProvider>
-);
+const SecretBuilderHub = () => {
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setAuthChecked(true);
+    });
+  }, []);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return (
+    <SidebarProvider>
+      <HubContent />
+    </SidebarProvider>
+  );
+};
 
 export default SecretBuilderHub;
