@@ -17,7 +17,7 @@ const BuilderTest = () => {
   const [projectName, setProjectName] = useState("Test Project");
 
   const handleSendMessage = (msg: string) => {
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: msg };
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: msg, timestamp: new Date() };
     setMessages((prev) => [...prev, userMsg]);
     setState("loading");
     setTimeout(() => {
@@ -25,6 +25,7 @@ const BuilderTest = () => {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: `**Got it!** Here's what I'll build:\n- A ${inputs.businessType || "business"} website\n- Goal: ${inputs.goal}\n- Style: ${inputs.style}`,
+        timestamp: new Date(),
       };
       setMessages((prev) => [...prev, reply]);
       setGeneratedCode("<div class='p-8 text-center'><h1>Generated Preview</h1></div>");
