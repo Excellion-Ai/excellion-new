@@ -47,8 +47,8 @@ const BuilderTest = () => {
             setGeneratedCode("");
           }}
           history={[
-            { id: "1", name: "My First Site", date: "2026-03-10" },
-            { id: "2", name: "Portfolio v2", date: "2026-03-09" },
+            { id: "1", name: "My First Site", updatedAt: "2026-03-10" },
+            { id: "2", name: "Portfolio v2", updatedAt: "2026-03-09" },
           ]}
           onSelectHistory={(id) => console.log("Selected project:", id)}
         />
