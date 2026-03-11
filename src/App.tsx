@@ -6,7 +6,7 @@ import { Routes, Route } from "react-router-dom";
 import { Suspense } from "react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 
-// Lazy load all routes
+// Pages
 const WebBuilderHome = lazyWithRetry(() => import("./pages/WebBuilderHome"), "WebBuilderHome");
 const BuilderPricing = lazyWithRetry(() => import("./pages/BuilderPricing"), "BuilderPricing");
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"), "FAQ");
@@ -37,7 +37,7 @@ const Terms = lazyWithRetry(() => import("./pages/Terms"), "Terms");
 const About = lazyWithRetry(() => import("./pages/About"), "About");
 const BuilderTest = lazyWithRetry(() => import("./pages/BuilderTest"), "BuilderTest");
 
-// Settings pages
+// Settings
 const Settings = lazyWithRetry(() => import("./pages/Settings"), "Settings");
 const ProfileSettings = lazyWithRetry(() => import("./pages/settings/ProfileSettings"), "ProfileSettings");
 const BillingSettings = lazyWithRetry(() => import("./pages/settings/BillingSettings"), "BillingSettings");
@@ -55,7 +55,7 @@ const queryClient = new QueryClient();
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
@@ -87,8 +87,8 @@ const App = () => (
           <Route path="/billing" element={<Billing />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
-          
-          {/* LMS Course Engine */}
+
+          {/* LMS */}
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/course/:subdomain" element={<CoursePage />} />
           <Route path="/learn/:slug" element={<LearnPage />} />
@@ -98,8 +98,8 @@ const App = () => (
           <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/dashboard/analytics" element={<CreatorAnalytics />} />
           <Route path="/dashboard/analytics/:courseId" element={<CourseDetailAnalytics />} />
-          
-          {/* Settings routes */}
+
+          {/* Settings */}
           <Route path="/settings" element={<Settings />}>
             <Route index element={<ProfileSettings />} />
             <Route path="profile" element={<ProfileSettings />} />
@@ -114,7 +114,7 @@ const App = () => (
             <Route path="help" element={<HelpSettings />} />
             <Route path="support" element={<SupportSettings />} />
           </Route>
-          
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
