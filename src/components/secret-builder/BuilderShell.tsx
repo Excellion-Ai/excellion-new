@@ -280,9 +280,12 @@ const BuilderShell = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [idea, userId]);
+  }, [idea, userId, projectId]);
 
-  // ── Publish / Unpublish ───────────────────────────────────
+  // Assign ref for auto-trigger
+  handleGenerateCourseRef.current = handleGenerateCourse;
+
+
 
   const handlePublish = useCallback(async () => {
     if (!courseId) return;
