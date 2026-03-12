@@ -118,9 +118,11 @@ const BuilderShell = ({
   const [projectId, setProjectId] = useState<string | null>(initialProjectId || null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Generation
-  const [idea, setIdea] = useState(initialIdea || "");
+  // Generation — read from prop, then localStorage fallback
+  const resolvedIdea = initialIdea || localStorage.getItem("builder-initial-idea") || "";
+  const [idea, setIdea] = useState(resolvedIdea);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
   const [steps, setSteps] = useState<GenerationStep[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
