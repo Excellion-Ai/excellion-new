@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import excellionLogo from "@/assets/excellion-logo.png";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -96,9 +97,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full border-2 border-primary flex items-center justify-center">
-              <span className="text-primary font-bold text-sm">E</span>
-            </div>
+            <img src={excellionLogo} alt="Excellion" className="w-8 h-8 rounded-full object-cover" />
             <span className="text-foreground font-semibold text-lg">Excellion</span>
           </Link>
 
@@ -149,9 +148,7 @@ const Navigation = () => {
                 <div className="flex flex-col gap-6 mt-6">
                   {/* Header */}
                   <div className="flex items-center gap-2 pb-4 border-b border-border">
-                    <div className="w-8 h-8 rounded-full border-2 border-primary flex items-center justify-center">
-                      <span className="text-primary font-bold text-sm">E</span>
-                    </div>
+                    <img src={excellionLogo} alt="Excellion" className="w-8 h-8 rounded-full object-cover" />
                     <span className="text-foreground font-semibold text-lg">Excellion</span>
                   </div>
 
