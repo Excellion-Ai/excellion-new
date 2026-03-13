@@ -81,6 +81,7 @@ export async function saveCourseToDatabase(
       .single();
 
     if (!error && data) {
+      console.log("✅ Course saved successfully:", data.id);
       return { id: data.id };
     }
 
@@ -90,7 +91,15 @@ export async function saveCourseToDatabase(
       continue;
     }
 
-    console.error("Failed to save course:", error);
+    console.error("❌ Failed to save course:", JSON.stringify(error, null, 2));
+    console.error("❌ Insert payload:", JSON.stringify({
+      user_id: userId,
+      title,
+      slug: `${slug}-${subdomain.slice(-6)}`,
+      subdomain,
+      status: "draft",
+      type: offerType,
+    }, null, 2));
     return null;
   }
 
