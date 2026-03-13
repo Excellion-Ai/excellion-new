@@ -240,15 +240,17 @@ const BuilderShell = ({
       updateStep("save", "in_progress");
       let bProjectId = projectId;
       if (!bProjectId) {
-        const { data: proj } = await supabase
+        const { data: proj, error: projError } = await supabase
           .from("builder_projects")
           .insert({ name: course.title, user_id: userId })
           .select("id")
           .single();
+        if (projError) console.error("❌ builder_projects insert error:", projError);
         bProjectId = proj?.id ?? null;
       }
       if (bProjectId) setProjectId(bProjectId);
 
+      console.log("📦 Saving course with userId:", userId, "projectId:", bProjectId);
       const saved = await saveCourseToDatabase({
         userId,
         title: course.title,
