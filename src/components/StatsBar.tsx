@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 const stats = [
-  { number: "2,400+", label: "Courses Launched" },
-  { number: "$8.2M", label: "Revenue Earned" },
-  { number: "6hrs", label: "Average Launch Time" },
-  { number: "4.9★", label: "Creator Rating" },
+  { icon: "🎯", title: "Launch This Weekend", subtitle: "Go from idea to live course in hours" },
+  { icon: "📱", title: "Built for Fitness Creators", subtitle: "Designed specifically for coaches and influencers" },
+  { icon: "🔥", title: "No Tech Skills Needed", subtitle: "If you can type a sentence you can build a course" },
+  { icon: "✦", title: "Sell Directly to Your Audience", subtitle: "No middleman, no marketplace, just you and your students" },
 ];
 
 const StatsBar = () => {
