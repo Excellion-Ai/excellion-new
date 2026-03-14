@@ -21,7 +21,7 @@ const WebBuilderHome = () => {
       <StatsBar />
       <HowItWorksSection />
       <FeaturesSection />
-      <TestimonialsSection />
+      
       <QuickstartSection />
       <PricingSection />
       <GuaranteeSection />
