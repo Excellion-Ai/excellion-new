@@ -117,7 +117,8 @@ const NAV_ITEMS = [
 function HubContent() {
   const navigate = useNavigate();
 
-  const [idea, setIdea] = useState("");
+  const [idea, setIdea] = useState(() => localStorage.getItem("builder-initial-idea") || "");
+  const [autoTriggered, setAutoTriggered] = useState(false);
   const [projects, setProjects] = useState<BuilderProject[]>([]);
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [trashedCourses, setTrashedCourses] = useState<CourseItem[]>([]);
