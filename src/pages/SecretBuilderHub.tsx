@@ -173,6 +173,17 @@ function HubContent() {
     }
   }, [idea, userId, navigate]);
 
+  // Auto-trigger generation if idea came from home page
+  useEffect(() => {
+    if (autoTriggered || !idea.trim() || !userId || isLoading || isGenerating) return;
+    const fromHome = localStorage.getItem("builder-initial-idea");
+    if (fromHome) {
+      setAutoTriggered(true);
+      localStorage.removeItem("builder-initial-idea");
+      handleGenerate();
+    }
+  }, [idea, userId, isLoading, isGenerating, autoTriggered, handleGenerate]);
+
   const handleDeleteCourse = useCallback(async (id: string) => {
     const { error } = await supabase.from("courses").update({ deleted_at: new Date().toISOString() } as any).eq("id", id);
     if (error) { toast.error("Failed to delete course."); return; }
