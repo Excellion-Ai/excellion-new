@@ -9,6 +9,7 @@ import QuickstartSection from "@/components/QuickstartSection";
 import PricingSection from "@/components/PricingSection";
 import GuaranteeSection from "@/components/GuaranteeSection";
 import FAQSection from "@/components/FAQSection";
+import WaitlistSection from "@/components/WaitlistSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
@@ -26,6 +27,7 @@ const Index = () => {
       <PricingSection />
       <GuaranteeSection />
       <FAQSection />
+      <WaitlistSection />
       <CTASection />
       <Footer />
     </div>
