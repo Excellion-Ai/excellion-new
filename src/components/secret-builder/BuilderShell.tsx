@@ -50,37 +50,39 @@ const DEFAULT_SETTINGS: CourseSettings = {
   offerType: "standard",
 };
 
-// ── Mock course builder ─────────────────────────────────────
+// ── Map AI response to ExtendedCourse ───────────────────────
 
-function buildMockCourse(idea: string, options: CourseOptions): ExtendedCourse {
-  const title = idea.length > 60 ? idea.slice(0, 57) + "…" : idea;
-  return {
-    title,
-    description: idea,
-    tagline: `Master ${title} step-by-step`,
-    difficulty: options.difficulty,
-    duration_weeks: options.duration_weeks,
-    layout_style: options.template,
-    learningOutcomes: [
-      "Understand core concepts",
-      "Apply knowledge practically",
-      "Build a real project",
-    ],
-    modules: Array.from({ length: Math.ceil(options.duration_weeks / 2) }, (_, i) => ({
-      id: `mod-${i}`,
-      title: `Module ${i + 1}`,
-      description: `Week ${i * 2 + 1}–${i * 2 + 2} content`,
-      is_first: i === 0,
-      is_last: i === Math.ceil(options.duration_weeks / 2) - 1,
-      lessons: [
-        { id: `mod-${i}-les-0`, title: "Introduction", duration: "15m", type: "text" as const, content_markdown: "Lesson content goes here." },
-        { id: `mod-${i}-les-1`, title: "Deep Dive", duration: "25m", type: "video" as const, video_url: "" },
-        ...(options.includeQuizzes ? [{ id: `mod-${i}-les-2`, title: "Knowledge Check", duration: "10m", type: "quiz" as const, quiz_questions: [], passing_score: 70 }] : []),
-        ...(options.includeAssignments ? [{ id: `mod-${i}-les-3`, title: "Assignment", duration: "30m", type: "assignment" as const, assignment_brief: "Complete the practical exercise." }] : []),
-      ],
+function mapAIResponseToCourse(ai: any, options: CourseOptions): ExtendedCourse {
+  const modules = (ai.modules || []).map((mod: any, i: number) => ({
+    id: mod.id || `mod-${i}`,
+    title: mod.title || `Module ${i + 1}`,
+    description: mod.description || "",
+    is_first: i === 0,
+    is_last: i === (ai.modules?.length ?? 1) - 1,
+    lessons: (mod.lessons || []).map((les: any, j: number) => ({
+      id: les.id || `mod-${i}-les-${j}`,
+      title: les.title || `Lesson ${j + 1}`,
+      duration: les.duration || "20m",
+      type: (les.type as "text" | "video" | "quiz" | "assignment") || "text",
+      content_markdown: les.content_markdown || les.content || "",
+      assignment_brief: les.assignment_brief || les.assignment || undefined,
+      quiz_questions: les.quiz_questions || undefined,
+      passing_score: les.passing_score || undefined,
+      video_url: les.video_url || undefined,
     })),
-    pages: { landing_sections: ["hero", "outcomes", "curriculum", "instructor", "faq"] },
-    design_config: {
+  }));
+
+  return {
+    title: ai.title || "Untitled Course",
+    description: ai.description || "",
+    tagline: ai.subtitle || ai.tagline || "",
+    difficulty: ai.difficulty || options.difficulty,
+    duration_weeks: ai.duration_weeks || options.duration_weeks,
+    layout_style: options.template,
+    learningOutcomes: ai.learningOutcomes || [],
+    modules,
+    pages: ai.pages || { landing_sections: ["hero", "outcomes", "curriculum", "instructor", "faq"] },
+    design_config: ai.design_config || {
       colors: { primary: "#d4a853", secondary: "#1a1a1a", accent: "#f59e0b", background: "#0a0a0a", cardBackground: "#111111", text: "#ffffff", textMuted: "#9ca3af" },
       fonts: { heading: "Inter", body: "Inter" },
       spacing: "normal",
