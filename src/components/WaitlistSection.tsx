@@ -25,6 +25,14 @@ const WaitlistSection = () => {
       return;
     }
 
+    // Fire-and-forget welcome email
+    supabase.functions.invoke("waitlist-welcome", {
+      body: { email },
+    }).then(({ error: fnError }) => {
+      if (fnError) console.error("📧 Welcome email failed:", fnError);
+      else console.log("📧 Welcome email sent to", email);
+    });
+
     setSubmitted(true);
     toast({ title: "You're on the list! 🎉", description: "We'll notify you when early access opens." });
   };
