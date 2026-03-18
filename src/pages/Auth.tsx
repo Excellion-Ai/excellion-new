@@ -43,28 +43,8 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        // If user already exists, try signing in directly
-        if (error && error.message === "User already registered") {
-          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-          if (signInError) throw signInError;
-          toast({ title: "Welcome back!", description: "You already had an account, signed you in." });
-          return;
-        }
-        if (error) throw error;
-        // Auto sign in after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
-        toast({ title: "Welcome!", description: "Your account has been created." });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
