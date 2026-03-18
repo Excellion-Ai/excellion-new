@@ -68,12 +68,8 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center px-4 pt-16">
         <div className="w-full max-w-md glass-card rounded-2xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              {isSignUp ? "Create Account" : "Welcome Back"}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {isSignUp ? "Sign up to get started" : "Sign in to your account to continue"}
-            </p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground text-sm">Sign in to your account to continue</p>
           </div>
 
           <button
