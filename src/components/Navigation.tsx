@@ -179,16 +179,12 @@ const Navigation = () => {
                           <Link to="/billing" className="text-muted-foreground hover:text-foreground transition-colors text-sm py-2">
                             Billing
                           </Link>
-                          <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors text-sm flex items-center gap-2 py-2 text-left">
+                      <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors text-sm flex items-center gap-2 py-2 text-left">
                             <LogOut className="h-4 w-4" />
                             Sign Out
                           </button>
                         </>
-                      ) : (
-                        <Link to="/auth" className="text-muted-foreground hover:text-foreground transition-colors text-sm py-2">
-                          Sign In
-                        </Link>
-                      )
+                      ) : null
                     )}
                     <Button onClick={handleStartBuilding} className="w-full mt-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" variant="outline">
                       Start Building
