@@ -40,15 +40,12 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/auth" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-body">
-              Sign In
-            </Link>
-            <Link
-              to="/auth"
+            <button
+              onClick={() => scrollTo("waitlist")}
               className="px-4 py-2 rounded-[10px] btn-primary text-sm font-body"
             >
               Start Building
-            </Link>
+            </button>
           </div>
 
           <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
