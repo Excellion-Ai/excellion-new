@@ -55,7 +55,7 @@ const Navigation = () => {
     if (user) {
       navigate("/secret-builder-hub");
     } else {
-      navigate("/auth?redirect=/secret-builder-hub");
+      scrollTo("waitlist");
     }
   };
 
