@@ -25,7 +25,7 @@ const SecretBuilder = () => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/#waitlist" replace />;
   }
 
   // Extract navigation state passed from SecretBuilderHub

@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,28 +42,8 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        // If user already exists, try signing in directly
-        if (error && error.message === "User already registered") {
-          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-          if (signInError) throw signInError;
-          toast({ title: "Welcome back!", description: "You already had an account, signed you in." });
-          return;
-        }
-        if (error) throw error;
-        // Auto sign in after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
-        toast({ title: "Welcome!", description: "Your account has been created." });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
@@ -88,12 +67,8 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center px-4 pt-16">
         <div className="w-full max-w-md glass-card rounded-2xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              {isSignUp ? "Create Account" : "Welcome Back"}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {isSignUp ? "Sign up to get started" : "Sign in to your account to continue"}
-            </p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground text-sm">Sign in to your account to continue</p>
           </div>
 
           <button
@@ -152,8 +127,7 @@ const Auth = () => {
               </div>
             </div>
 
-            {!isSignUp && (
-              <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                   <input
                     type="checkbox"
@@ -167,26 +141,16 @@ const Auth = () => {
                   Forgot password?
                 </button>
               </div>
-            )}
 
             <button
               type="submit"
               disabled={loading}
               className="w-full px-4 py-3 rounded-lg gradient-gold text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
+              {loading ? "Loading..." : "Sign In"}
             </button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline font-medium"
-            >
-              {isSignUp ? "Sign in" : "Sign up"}
-            </button>
-          </p>
         </div>
       </div>
       <Footer />
