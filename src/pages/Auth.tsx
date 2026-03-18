@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
