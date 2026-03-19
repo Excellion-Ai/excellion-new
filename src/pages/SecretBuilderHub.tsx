@@ -703,7 +703,6 @@ function HubContent() {
   const [trashedCourses, setTrashedCourses] = useState<CourseItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatingTemplate, setGeneratingTemplate] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [showAllCourses, setShowAllCourses] = useState(false);
 
