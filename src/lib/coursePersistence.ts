@@ -58,8 +58,12 @@ export async function saveCourseToDatabase(
     sectionOrder,
     pageSections,
     builderProjectId,
-    offerType = "standard",
+    offerType = "course",
   } = params;
+
+  // Map offerType to valid check constraint values
+  const VALID_TYPES = ["course", "challenge", "coach", "lead_magnet", "webinar"];
+  const resolvedType = VALID_TYPES.includes(offerType) ? offerType : "course";
 
   if (!userId) {
     console.error("💾 [saveCourse] ABORT — no userId provided");
@@ -94,7 +98,7 @@ export async function saveCourseToDatabase(
       subdomain,
       curriculum: modules as any,
       status: "draft",
-      type: offerType,
+      type: resolvedType,
       design_config: designConfig as any,
       layout_template: layoutTemplate,
       section_order: sectionOrder as any,
