@@ -43,7 +43,6 @@ const HeroSection = () => {
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-sm text-primary font-body font-semibold tracking-wide">Waitlist Now Open — Launching April 7th</span>
           </div>
-          </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-foreground leading-tight mb-6">
             Launch your fitness course in{" "}
@@ -86,17 +85,17 @@ const HeroSection = () => {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <button
-              onClick={handleExample}
+              onClick={handleHowItWorks}
               className="flex-1 px-6 py-3 rounded-[10px] bg-secondary text-foreground font-medium text-sm flex items-center justify-center gap-2 hover:bg-secondary/80 transition-colors font-body"
             >
               <Sparkles className="w-4 h-4" />
-              See an example
+              See how it works
             </button>
             <button
               onClick={handleGenerate}
               className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body"
             >
-              Generate my course
+              Join the Waitlist
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
