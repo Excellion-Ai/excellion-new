@@ -65,12 +65,6 @@ const Footer = () => {
                   Terms of Service
                 </Link>
               </li>
-              <li>
-                <Link to="/sitemap.xml" className="text-muted-foreground hover:text-foreground transition-colors text-sm inline-flex items-center gap-1 font-body">
-                  Sitemap
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
