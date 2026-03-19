@@ -193,9 +193,12 @@ const BuilderPreviewPanel = ({
               className="mx-auto border border-border rounded-lg overflow-hidden bg-background transition-all"
               style={{ maxWidth: DEVICE_WIDTHS[deviceMode] }}
             >
-              <div
-                className="p-4 text-sm"
-                dangerouslySetInnerHTML={{ __html: generatedCode }}
+              <iframe
+                srcDoc={generatedCode}
+                sandbox="allow-scripts"
+                className="w-full border-none"
+                style={{ minHeight: 400 }}
+                title="Preview"
               />
             </div>
           )}
