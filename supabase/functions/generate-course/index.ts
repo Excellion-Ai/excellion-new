@@ -123,7 +123,7 @@ Important:
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1500,
+        max_tokens: MAX_TOKENS,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
       }),
