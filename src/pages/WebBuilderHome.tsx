@@ -18,6 +18,7 @@ const WebBuilderHome = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <HeroSection />
+      <WaitlistSection />
       <SocialProofTicker />
       <StatsBar />
       <HowItWorksSection />
@@ -27,7 +28,6 @@ const WebBuilderHome = () => {
       <PricingSection />
       <GuaranteeSection />
       <FAQSection />
-      <WaitlistSection />
       <CTASection />
       <Footer />
     </div>
