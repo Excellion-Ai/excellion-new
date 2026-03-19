@@ -1187,70 +1187,6 @@ function HubContent() {
             ))}
           </div>
 
-          {/* ── Template Cards ────────────────────────────── */}
-          <section className="space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Layout className="h-5 w-5 text-primary" />
-                Start from a Template
-              </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                onClick={() => setShowTemplates(!showTemplates)}
-              >
-                {showTemplates ? "Hide" : "Show"}
-              </Button>
-            </div>
-
-            {showTemplates && (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {TEMPLATE_CARDS.map((template) => (
-                  <Card
-                    key={template.id}
-                    className={cn(
-                      "cursor-pointer transition-all border",
-                      template.accentClass,
-                      generatingTemplate === template.id && "opacity-60"
-                    )}
-                    onClick={() => {
-                      if (!generatingTemplate)
-                        handleGenerateFromTemplate(template);
-                    }}
-                  >
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                          {generatingTemplate === template.id ? (
-                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                          ) : (
-                            <template.icon className="h-5 w-5 text-foreground" />
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium">
-                            {template.title}
-                          </h3>
-                          <p className="text-[11px] text-muted-foreground capitalize">
-                            {template.style} style
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {template.description}
-                      </p>
-                      <div className="flex items-center gap-1 text-xs text-primary font-medium">
-                        <span>Use template</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </section>
-
           {/* ── Your Courses ──────────────────────────────── */}
           {isLoading ? (
             <div className="flex justify-center py-12">
@@ -1259,7 +1195,8 @@ function HubContent() {
           ) : courses.length > 0 ? (
             <section className="space-y-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
                   Your Courses
                 </h2>
                 <div className="flex items-center gap-2">
@@ -1304,13 +1241,12 @@ function HubContent() {
                     No courses yet
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Describe your idea above or pick a template to get started.
+                    Describe your idea above to get started.
                   </p>
                 </div>
               </div>
             )
           )}
-
           {/* ── Trashed Courses ───────────────────────────── */}
           {trashedCourses.length > 0 && (
             <section className="space-y-4 pt-4 border-t border-border">
