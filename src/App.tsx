@@ -121,6 +121,7 @@ const App = () => (
         </Routes>
       </Suspense>
     </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
