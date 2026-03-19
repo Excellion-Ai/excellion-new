@@ -232,7 +232,8 @@ const BuilderShell = ({
       updateStep("analyze", "complete");
       updateStep("structure", "in_progress");
 
-      console.log("🚀 [generate] Outline received:", outlineResponse?.title, outlineResponse?.modules?.length, "modules");
+      const outline = outlineResponse as Record<string, any>;
+      console.log("🚀 [generate] Outline received:", outline?.title, outline?.modules?.length, "modules");
 
       // Map outline to course (lessons will have titles but no content yet)
       const course = mapAIResponseToCourse(outlineResponse, options);
