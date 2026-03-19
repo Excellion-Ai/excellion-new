@@ -16,10 +16,10 @@ const TYPING_PHRASES = [
   "Launch a nutrition coaching course for athletes",
 ];
 
-const TYPING_SPEED = 60;
-const DELETING_SPEED = 35;
-const PAUSE_AFTER_TYPE = 2000;
-const PAUSE_AFTER_DELETE = 500;
+const TYPING_SPEED = 35;
+const DELETING_SPEED = 20;
+const PAUSE_AFTER_TYPE = 1200;
+const PAUSE_AFTER_DELETE = 300;
 
 function useTypingAnimation(phrases: string[], active: boolean) {
   const [display, setDisplay] = useState("");
