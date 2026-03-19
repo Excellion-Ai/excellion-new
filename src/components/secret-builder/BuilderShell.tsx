@@ -211,66 +211,52 @@ const BuilderShell = ({
     const genSteps = GENERATION_STEPS.map((s) => ({ ...s }));
     setSteps(genSteps);
 
-    const updateStep = (id: string, status: GenerationStep["status"]) => {
-      setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
+    const updateStep = (id: string, status: GenerationStep["status"], label?: string) => {
+      setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, status, ...(label ? { label } : {}) } : s)));
     };
 
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", content: idea }]);
 
     try {
+      // ── STEP 1: Generate outline (fast, ~5-10s) ──────────
       updateStep("analyze", "in_progress");
-      updateStep("structure", "in_progress");
-      updateStep("content", "in_progress");
+      console.log("🚀 [generate] Step 1: Generating course outline");
 
-      console.log("🚀 [generate] Step 1: Calling AI.generateCourse with idea:", idea.slice(0, 80));
-      const aiResponse = await AI.generateCourse(idea, {
+      const outlineResponse = await AI.generateCourseOutline(idea, {
         difficulty: options.difficulty,
         duration_weeks: options.duration_weeks,
         includeQuizzes: options.includeQuizzes,
         includeAssignments: options.includeAssignments,
         template: options.template,
       });
-      console.log("🚀 [generate] Step 2: AI response received:", {
-        hasTitle: !!aiResponse?.title,
-        hasModules: !!aiResponse?.modules,
-        modulesCount: aiResponse?.modules?.length ?? 0,
-        keys: Object.keys(aiResponse || {}),
-      });
 
       updateStep("analyze", "complete");
+      updateStep("structure", "in_progress");
+
+      console.log("🚀 [generate] Outline received:", outlineResponse?.title, outlineResponse?.modules?.length, "modules");
+
+      // Map outline to course (lessons will have titles but no content yet)
+      const course = mapAIResponseToCourse(outlineResponse, options);
       updateStep("structure", "complete");
 
-      console.log("🚀 [generate] Step 3: Mapping AI response to ExtendedCourse");
-      const course = mapAIResponseToCourse(aiResponse, options);
-      console.log("🚀 [generate] Step 3 done:", {
-        title: course.title,
-        modulesCount: course.modules.length,
-        lessonsCount: course.modules.reduce((sum: number, m: any) => sum + (m.lessons?.length ?? 0), 0),
-      });
-      updateStep("content", "complete");
+      // ── STEP 2: Save outline immediately ─────────────────
+      updateStep("save-outline", "in_progress");
 
-      updateStep("design", "in_progress");
-      updateStep("design", "complete");
-
-      updateStep("save", "in_progress");
       let bProjectId = projectId;
       if (!bProjectId) {
-        console.log("🚀 [generate] Step 4a: Creating builder_project");
         const { data: proj, error: projError } = await supabase
           .from("builder_projects")
           .insert({ name: course.title, user_id: userId })
           .select("id")
           .single();
         if (projError) {
-          console.error("❌ [generate] builder_projects insert error:", JSON.stringify(projError));
+          console.error("❌ builder_projects insert error:", JSON.stringify(projError));
           toast.error(`Failed to create project: ${projError.message}`);
         }
         bProjectId = proj?.id ?? null;
-        console.log("🚀 [generate] Step 4a done — projectId:", bProjectId);
       }
       if (bProjectId) setProjectId(bProjectId);
 
-      console.log("🚀 [generate] Step 5: Saving course to database");
       const saved = await saveCourseToDatabase({
         userId,
         title: course.title,
@@ -287,18 +273,79 @@ const BuilderShell = ({
       });
 
       if (saved) {
-        console.log("✅ [generate] Step 5 done — course saved with id:", saved.id);
         course.id = saved.id;
         setCourseId(saved.id);
-        updateStep("save", "complete");
-        toast.success(`Course "${course.title}" saved successfully!`);
+        updateStep("save-outline", "complete");
+        console.log("✅ Outline saved with id:", saved.id);
       } else {
-        console.error("❌ [generate] Step 5 FAILED — saveCourseToDatabase returned null");
-        updateStep("save", "error");
-        toast.error("Course was generated but failed to save to database. Check console for details.");
+        updateStep("save-outline", "error");
+        toast.error("Failed to save course outline. Check console.");
       }
 
       setCourseSpec(course);
+
+      // ── STEP 3: Generate lesson content per module ───────
+      updateStep("content", "in_progress");
+      const totalModules = course.modules.length;
+
+      for (let i = 0; i < totalModules; i++) {
+        const mod = course.modules[i];
+        updateStep("content", "in_progress", `Generating Module ${i + 1} of ${totalModules}...`);
+
+        try {
+          const lessonTitles = mod.lessons.map((l: any) => l.title);
+          console.log(`🚀 [generate] Module ${i + 1}/${totalModules}: "${mod.title}"`);
+
+          const contentResponse = await AI.generateLessonContent({
+            courseTitle: course.title,
+            moduleTitle: mod.title,
+            lessonTitles,
+            difficulty: options.difficulty,
+            includeAssignments: options.includeAssignments,
+          });
+
+          // Merge generated content back into lessons
+          if (contentResponse?.lessons) {
+            for (let j = 0; j < mod.lessons.length; j++) {
+              const generated = contentResponse.lessons[j];
+              if (generated) {
+                mod.lessons[j].content_markdown = generated.content || "";
+                mod.lessons[j].assignment_brief = generated.assignment || undefined;
+              }
+            }
+          }
+
+          // Update in-memory course and save progress
+          setCourseSpec((prev: any) => {
+            if (!prev) return prev;
+            const updated = { ...prev, modules: [...prev.modules] };
+            updated.modules[i] = { ...mod };
+            return updated;
+          });
+
+          // Persist updated module content to DB
+          if (saved?.id) {
+            await updateCourseInDatabase(saved.id, {
+              curriculum: course.modules as any,
+            });
+          }
+
+          console.log(`✅ Module ${i + 1}/${totalModules} content saved`);
+        } catch (modErr: any) {
+          console.error(`❌ Module ${i + 1} content failed:`, modErr?.message);
+          toast.error(`Module "${mod.title}" content failed. You can refine it later.`);
+          // Continue with remaining modules
+        }
+      }
+
+      updateStep("content", "complete", "Generating lesson content");
+
+      updateStep("design", "in_progress");
+      updateStep("design", "complete");
+      updateStep("save", "in_progress");
+      updateStep("save", "complete");
+
+      toast.success(`Course "${course.title}" generated with ${totalModules} modules!`);
 
       setMessages((prev) => [...prev, {
         id: crypto.randomUUID(),
@@ -307,11 +354,6 @@ const BuilderShell = ({
       }]);
     } catch (err: any) {
       console.error("❌ [generate] CAUGHT ERROR:", err);
-      console.error("❌ [generate] Error details:", {
-        message: err?.message,
-        name: err?.name,
-        stack: err?.stack?.slice(0, 300),
-      });
       const failedStep = genSteps.find((s) => s.status === "in_progress");
       if (failedStep) updateStep(failedStep.id, "error");
       const errorMsg = err?.message || err?.error || "Unknown error";
