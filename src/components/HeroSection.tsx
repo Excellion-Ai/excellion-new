@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Sparkles, Mic, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -9,8 +9,72 @@ const suggestions = [
   "Home workout fundamentals course",
 ];
 
+const TYPING_PHRASES = [
+  "Help busy moms lose 10 lbs in 8 weeks",
+  "Build a 6-week strength program for beginners",
+  "Create a 30-day mobility challenge",
+  "Launch a nutrition coaching course for athletes",
+];
+
+const TYPING_SPEED = 60;
+const DELETING_SPEED = 35;
+const PAUSE_AFTER_TYPE = 2000;
+const PAUSE_AFTER_DELETE = 500;
+
+function useTypingAnimation(phrases: string[], active: boolean) {
+  const [display, setDisplay] = useState("");
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!active) return;
+    const phrase = phrases[phraseIdx];
+
+    if (!isDeleting && charIdx < phrase.length) {
+      const t = setTimeout(() => {
+        setDisplay(phrase.slice(0, charIdx + 1));
+        setCharIdx(charIdx + 1);
+      }, TYPING_SPEED);
+      return () => clearTimeout(t);
+    }
+
+    if (!isDeleting && charIdx === phrase.length) {
+      const t = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPE);
+      return () => clearTimeout(t);
+    }
+
+    if (isDeleting && charIdx > 0) {
+      const t = setTimeout(() => {
+        setDisplay(phrase.slice(0, charIdx - 1));
+        setCharIdx(charIdx - 1);
+      }, DELETING_SPEED);
+      return () => clearTimeout(t);
+    }
+
+    if (isDeleting && charIdx === 0) {
+      const t = setTimeout(() => {
+        setIsDeleting(false);
+        setPhraseIdx((phraseIdx + 1) % phrases.length);
+      }, PAUSE_AFTER_DELETE);
+      return () => clearTimeout(t);
+    }
+  }, [active, charIdx, isDeleting, phraseIdx, phrases]);
+
+  return display;
+}
+
 const HeroSection = () => {
   const [prompt, setPrompt] = useState("");
+  const [userHasTyped, setUserHasTyped] = useState(false);
+
+  const animatedText = useTypingAnimation(TYPING_PHRASES, !userHasTyped && !prompt);
+
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPrompt(e.target.value);
+    if (!userHasTyped && e.target.value) setUserHasTyped(true);
+    if (userHasTyped && !e.target.value) setUserHasTyped(false);
+  };
 
   const handleGenerate = () => {
     document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
