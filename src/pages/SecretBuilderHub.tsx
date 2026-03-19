@@ -787,47 +787,7 @@ function HubContent() {
     }
   }, [idea, userId, navigate]);
 
-  const handleGenerateFromTemplate = useCallback(
-    async (template: TemplateCard) => {
-      if (!userId) return;
-      setGeneratingTemplate(template.id);
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          toast.error("Session expired.");
-          navigate("/auth");
-          return;
-        }
-
-        const { data: proj, error } = await supabase
-          .from("builder_projects")
-          .insert({
-            name: template.title,
-            user_id: session.user.id,
-          })
-          .select("id")
-          .single();
-        if (error || !proj) throw error;
-
-        localStorage.setItem("builder-initial-idea", template.prompt);
-        localStorage.setItem("last-project-id", proj.id);
-        navigate(`/studio/${proj.id}`, {
-          state: {
-            initialIdea: template.prompt,
-            courseMode: template.style,
-          },
-        });
-      } catch (err) {
-        console.error("handleGenerateFromTemplate error:", err);
-        toast.error("Failed to create project from template.");
-      } finally {
-        setGeneratingTemplate(null);
-      }
-    },
-    [userId, navigate]
-  );
+  // Template generation removed — users start from prompts or saved courses
 
   // Auto-trigger generation if idea came from home page
   useEffect(() => {
