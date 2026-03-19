@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import excellionLogo from "@/assets/excellion-logo.png";
-import { ExternalLink } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -64,12 +63,6 @@ const Footer = () => {
               <li>
                 <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-body">
                   Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link to="/sitemap.xml" className="text-muted-foreground hover:text-foreground transition-colors text-sm inline-flex items-center gap-1 font-body">
-                  Sitemap
-                  <ExternalLink className="h-3 w-3" />
                 </Link>
               </li>
             </ul>
