@@ -163,6 +163,7 @@ export async function updateCourseInDatabase(
 
   if (error) {
     console.error("Failed to update course:", error);
+    toast.error(`Failed to update course: ${error.message}`);
     return false;
   }
   return true;
