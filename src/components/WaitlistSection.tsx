@@ -43,7 +43,7 @@ const WaitlistSection = () => {
   };
 
   return (
-    <section className="py-[60px] bg-background relative overflow-hidden">
+    <section id="waitlist" className="py-[60px] bg-background relative overflow-hidden">
       {/* Gold radial glow */}
       <div className="absolute inset-0 pointer-events-none" style={{
         background: "radial-gradient(ellipse 60% 40% at 50% 50%, hsl(43 52% 54% / 0.08), transparent)"
