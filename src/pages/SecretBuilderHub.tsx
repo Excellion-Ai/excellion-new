@@ -706,7 +706,6 @@ function HubContent() {
   const [generatingTemplate, setGeneratingTemplate] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [showAllCourses, setShowAllCourses] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(true);
 
   // Dialogs
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
