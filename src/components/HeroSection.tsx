@@ -137,11 +137,17 @@ const HeroSection = () => {
           <div className="relative rounded-xl border border-primary/20 bg-black/40 backdrop-blur-sm p-3">
             <textarea
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Help [AUDIENCE] achieve [RESULT] in [TIMEFRAME]"
+              onChange={handlePromptChange}
+              placeholder={!userHasTyped && !prompt ? "" : "Help [AUDIENCE] achieve [RESULT] in [TIMEFRAME]"}
               className="w-full bg-transparent text-foreground placeholder:text-muted-foreground resize-none border-none outline-none text-base min-h-[60px] font-body"
               rows={2}
             />
+            {!prompt && !userHasTyped && (
+              <span className="absolute top-3 left-3 text-base text-muted-foreground pointer-events-none font-body">
+                {animatedText}
+                <span className="inline-block w-[2px] h-[1.1em] bg-primary/70 ml-[1px] align-text-bottom animate-blink" />
+              </span>
+            )}
             <button className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors">
               <Mic className="w-4 h-4" />
             </button>
