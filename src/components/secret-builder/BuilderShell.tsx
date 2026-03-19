@@ -236,7 +236,7 @@ const BuilderShell = ({
       console.log("🚀 [generate] Outline received:", outline?.title, outline?.modules?.length, "modules");
 
       // Map outline to course (lessons will have titles but no content yet)
-      const course = mapAIResponseToCourse(outlineResponse, options);
+      const course = mapAIResponseToCourse(outline, options);
       updateStep("structure", "complete");
 
       // ── STEP 2: Save outline immediately ─────────────────
