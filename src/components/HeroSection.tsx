@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Sparkles, Mic, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -12,17 +11,13 @@ const suggestions = [
 
 const HeroSection = () => {
   const [prompt, setPrompt] = useState("");
-  const navigate = useNavigate();
 
   const handleGenerate = () => {
-    if (prompt.trim()) {
-      localStorage.setItem("builder-initial-idea", prompt.trim());
-      navigate("/auth");
-    }
+    document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleExample = () => {
-    setPrompt("Help busy dads lose 20lbs in 12 weeks with home workouts");
+  const handleHowItWorks = () => {
+    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -44,9 +39,9 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card-light mb-8">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-primary font-body">AI Course Builder for Fitness Creators</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-8">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm text-primary font-body font-semibold tracking-wide">Waitlist Now Open — Launching April 7th</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-foreground leading-tight mb-6">
@@ -90,17 +85,17 @@ const HeroSection = () => {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <button
-              onClick={handleExample}
+              onClick={handleHowItWorks}
               className="flex-1 px-6 py-3 rounded-[10px] bg-secondary text-foreground font-medium text-sm flex items-center justify-center gap-2 hover:bg-secondary/80 transition-colors font-body"
             >
               <Sparkles className="w-4 h-4" />
-              See an example
+              See how it works
             </button>
             <button
               onClick={handleGenerate}
               className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body"
             >
-              Generate my course
+              Join the Waitlist
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
