@@ -8,6 +8,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import WaitlistModal from "@/components/WaitlistModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
