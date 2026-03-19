@@ -580,12 +580,14 @@ function HubContent() {
 const SecretBuilderHub = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAllowed, setIsAllowed] = useState(false);
 
   const ALLOWED_EMAIL = "excellionai@gmail.com";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      setIsAllowed(session?.user?.email === ALLOWED_EMAIL);
       setAuthChecked(true);
     });
   }, []);
@@ -598,10 +600,9 @@ const SecretBuilderHub = () => {
     );
   }
 
-  if (!isAuthenticated) return <Navigate to="/#waitlist" replace />;
+  if (!isAuthenticated || !isAllowed) return <Navigate to="/#waitlist" replace />;
 
-  // Only the allowed email can access the builder hub
-  return <AllowedEmailGate><HubContent /></AllowedEmailGate>;
+  return <HubContent />;
 };
 
 export default SecretBuilderHub;
