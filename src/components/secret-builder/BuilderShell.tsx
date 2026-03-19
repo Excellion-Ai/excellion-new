@@ -65,11 +65,11 @@ function mapAIResponseToCourse(ai: any, options: CourseOptions): ExtendedCourse 
       title: les.title || `Lesson ${j + 1}`,
       duration: les.duration || "20m",
       type: (les.type as "text" | "video" | "quiz" | "assignment") || "text",
-      content_markdown: les.content_markdown || les.content || "",
-      assignment_brief: les.assignment_brief || les.assignment || undefined,
-      quiz_questions: les.quiz_questions || undefined,
-      passing_score: les.passing_score || undefined,
-      video_url: les.video_url || undefined,
+      content_markdown: "",
+      assignment_brief: undefined,
+      quiz_questions: undefined,
+      passing_score: undefined,
+      video_url: undefined,
     })),
   }));
 
