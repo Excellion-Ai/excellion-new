@@ -8,6 +8,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import WaitlistModal from "@/components/WaitlistModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,12 +53,13 @@ const Navigation = () => {
   };
 
   const ALLOWED_EMAIL = "excellionai@gmail.com";
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const handleStartBuilding = () => {
     if (user && user.email === ALLOWED_EMAIL) {
       navigate("/secret-builder-hub");
     } else {
-      scrollTo("waitlist");
+      setWaitlistOpen(true);
     }
   };
 
@@ -94,6 +96,7 @@ const Navigation = () => {
   );
 
   return (
+    <>
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -203,7 +206,10 @@ const Navigation = () => {
         </div>
       </div>
     </nav>
+      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+    </>
   );
 };
+
 
 export default Navigation;
