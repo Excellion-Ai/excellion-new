@@ -581,6 +581,8 @@ const SecretBuilderHub = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const ALLOWED_EMAIL = "excellionai@gmail.com";
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
@@ -598,7 +600,8 @@ const SecretBuilderHub = () => {
 
   if (!isAuthenticated) return <Navigate to="/#waitlist" replace />;
 
-  return <HubContent />;
+  // Only the allowed email can access the builder hub
+  return <AllowedEmailGate><HubContent /></AllowedEmailGate>;
 };
 
 export default SecretBuilderHub;

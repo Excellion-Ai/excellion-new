@@ -51,8 +51,10 @@ const Navigation = () => {
     }
   };
 
+  const ALLOWED_EMAIL = "excellionai@gmail.com";
+
   const handleStartBuilding = () => {
-    if (user) {
+    if (user && user.email === ALLOWED_EMAIL) {
       navigate("/secret-builder-hub");
     } else {
       scrollTo("waitlist");

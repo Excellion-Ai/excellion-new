@@ -3,15 +3,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import BuilderShell from "@/components/secret-builder/BuilderShell";
 
+const ALLOWED_EMAIL = "excellionai@gmail.com";
+
 const SecretBuilder = () => {
   const location = useLocation();
   const { projectId: paramProjectId } = useParams<{ projectId: string }>();
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      setIsAllowed(session?.user?.email === ALLOWED_EMAIL);
       setAuthChecked(true);
     });
   }, []);
@@ -24,7 +28,7 @@ const SecretBuilder = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !isAllowed) {
     return <Navigate to="/#waitlist" replace />;
   }
 
