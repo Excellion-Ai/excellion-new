@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+
+// TODO: Re-enable when subscription system is built
+// import { supabase } from "@/integrations/supabase/client";
 
 interface SubscriptionState {
   subscribed: boolean;
@@ -9,42 +11,18 @@ interface SubscriptionState {
 }
 
 export function useSubscription() {
-  const [state, setState] = useState<SubscriptionState>({
+  // TODO: Re-enable when subscription system is built
+  const [state] = useState<SubscriptionState>({
     subscribed: false,
     productId: null,
     subscriptionEnd: null,
-    loading: true,
+    loading: false,
   });
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
-  const refresh = useCallback(async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke("check-subscription");
-      if (error) throw error;
-      setState({
-        subscribed: !!data?.subscribed,
-        productId: data?.productId ?? null,
-        subscriptionEnd: data?.subscriptionEnd ?? null,
-        loading: false,
-      });
-    } catch {
-      setState((prev) => ({ ...prev, loading: false }));
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-    intervalRef.current = setInterval(refresh, 60_000);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      refresh();
-    });
-
-    return () => {
-      clearInterval(intervalRef.current);
-      subscription.unsubscribe();
-    };
-  }, [refresh]);
+  const refresh = async () => {
+    // TODO: Re-enable when subscription system is built
+    // const { data, error } = await supabase.functions.invoke("check-subscription");
+  };
 
   return { ...state, refresh };
 }
