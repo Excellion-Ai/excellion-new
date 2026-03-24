@@ -94,6 +94,36 @@ function mapAIResponseToCourse(ai: any, options: CourseOptions): ExtendedCourse 
     })),
   }));
 
+  // Use AI-generated design config, falling back to defaults only for missing fields
+  const aiDesign = ai.design_config || {};
+  const designConfig = {
+    colors: {
+      ...DEFAULT_DESIGN_CONFIG.colors,
+      ...(aiDesign.colors || {}),
+    },
+    fonts: {
+      ...DEFAULT_DESIGN_CONFIG.fonts,
+      ...(aiDesign.fonts || {}),
+    },
+    spacing: aiDesign.spacing || DEFAULT_DESIGN_CONFIG.spacing,
+    borderRadius: aiDesign.borderRadius || DEFAULT_DESIGN_CONFIG.borderRadius,
+    heroStyle: aiDesign.heroStyle || DEFAULT_DESIGN_CONFIG.heroStyle,
+  };
+
+  // Use AI-generated section order or fall back to a rich default
+  const sectionOrder = ai.section_order || [
+    "hero", "outcomes", "who_is_for", "curriculum",
+    "course_includes", "testimonials", "pricing", "guarantee", "faq",
+  ];
+
+  // Build pages object with AI-generated content
+  const pages = {
+    landing_sections: sectionOrder,
+    target_audience: ai.target_audience || undefined,
+    faq: ai.faq || undefined,
+    ...(ai.pages || {}),
+  };
+
   return {
     title: ai.title || "Untitled Course",
     description: ai.description || "",
@@ -103,10 +133,9 @@ function mapAIResponseToCourse(ai: any, options: CourseOptions): ExtendedCourse 
     layout_style: options.template,
     learningOutcomes: ai.learningOutcomes || [],
     modules,
-    pages: ai.pages || {
-      landing_sections: ["hero", "outcomes", "curriculum", "instructor", "faq"],
-    },
-    design_config: ai.design_config || DEFAULT_DESIGN_CONFIG,
+    pages,
+    section_order: sectionOrder,
+    design_config: designConfig,
   };
 }
 

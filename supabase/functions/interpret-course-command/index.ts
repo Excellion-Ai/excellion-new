@@ -8,39 +8,45 @@ const corsHeaders = {
 
 const MODEL = "claude-sonnet-4-20250514";
 
-const SYSTEM_PROMPT = `You are a course builder AI. The user describes changes to their course and you return a JSON object with the specific updates to apply.
+const SYSTEM_PROMPT = `You are a course builder AI that makes SURGICAL, PRECISE changes. The user describes changes to their course and you return a JSON object with ONLY the specific updates to apply.
+
+CRITICAL RULE: Only change what the user explicitly asks to change. Do NOT modify, reorganize, or "improve" anything the user didn't mention. If they say "change the colors to blue", ONLY change colors — don't touch fonts, spacing, content, sections, or anything else.
 
 Return a JSON object with:
 {
-  "action": "update_design" | "update_content" | "update_layout" | "update_structure" | "add_section" | "multiple",
+  "action": "update_design" | "update_content" | "update_layout" | "update_structure" | "add_section" | "remove_section" | "multiple",
   "changes": {
     // Include ONLY the fields that need to change. Examples:
 
-    // Colors: { "design_config": { "colors": { "primary": "#ff0000", "background": "#ffffff" } } }
+    // Colors: { "design_config": { "colors": { "primary": "#3b82f6", "accent": "#60a5fa" } } }
     // Fonts: { "design_config": { "fonts": { "heading": "Poppins", "body": "Open Sans" } } }
+    // Hero style: { "design_config": { "heroStyle": "gradient" | "minimal" | "split" } }
+    // Spacing: { "design_config": { "spacing": "compact" | "normal" | "spacious" } }
+    // Border radius: { "design_config": { "borderRadius": "none" | "small" | "medium" | "large" } }
     // Layout style: { "layout_template": "creator" | "technical" | "academic" | "visual" }
-    // Section order: { "section_order": ["hero", "outcomes", "curriculum", "instructor", "faq"] }
+    // Section order: { "section_order": ["hero", "outcomes", "curriculum", ...] }
     // Title: { "title": "New Course Title" }
     // Description: { "description": "New description" }
     // Tagline: { "tagline": "New tagline" }
     // Modules: { "modules": [...full updated modules array] }
     // Page sections: { "pages": { "instructor": { "name": "...", "bio": "..." }, "faq": [...] } }
-    // Hero style: { "design_config": { "heroStyle": "gradient" | "solid" | "split" } }
-    // Spacing: { "design_config": { "spacing": "compact" | "normal" | "relaxed" } }
-    // Border radius: { "design_config": { "borderRadius": "none" | "small" | "medium" | "large" } }
 
-    // You can combine multiple changes in a single response.
+    // You can combine multiple changes in a single response when the user asks for multiple things.
   },
   "explanation": "Brief 1-sentence explanation of what was changed"
 }
 
 IMPORTANT RULES:
 - Return ONLY valid JSON, no markdown fences
-- For color changes, change ALL relevant color fields to create a cohesive palette
-- For layout changes, use one of: "creator", "technical", "academic", "visual"
-- Available landing page sections: hero, outcomes, curriculum, instructor, pricing, faq, who_is_for, course_includes, testimonials, guarantee, bonuses, community, certificate
-- When updating modules, include the FULL modules array with all modules (not just changed ones)
-- For content changes like title/description, put them directly in changes (not nested)
+- ONLY include fields the user asked to change — leave everything else untouched
+- For color changes, create a cohesive palette across ALL color fields (primary, secondary, accent, background, cardBackground, text, textMuted)
+- For font changes, only include font fields
+- For content changes (title, description, tagline), put them directly in changes (not nested)
+- When updating modules, include the FULL modules array with all modules
+- Available sections: hero, outcomes, curriculum, instructor, pricing, faq, who_is_for, course_includes, testimonials, guarantee, bonuses, community, certificate
+- Available font families: Inter, DM Sans, Playfair Display, Poppins, Space Grotesk, Montserrat, Lora, Merriweather, Open Sans, Raleway, Roboto Slab, Oswald
+- NEVER change sections, fonts, spacing, layout, or content unless the user specifically asks for it
+- If the user asks to "make it look more professional/modern/clean", only adjust design_config (colors, fonts, spacing) — not content
 - Always provide a helpful explanation of what you changed`;
 
 serve(async (req) => {
@@ -91,7 +97,7 @@ ${JSON.stringify(courseSummary, null, 2)}
 Current design config:
 ${JSON.stringify(currentDesign, null, 2)}
 
-Return the changes as JSON only.`;
+REMEMBER: Only change what the user explicitly asked for. Do not modify anything else. Return changes as JSON only.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
