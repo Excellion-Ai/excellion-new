@@ -8,9 +8,9 @@ const corsHeaders = {
 
 const MODEL = "claude-sonnet-4-20250514";
 const REQUEST_TIMEOUT_MS = 50000;
-const MAX_TOKENS = 1200;
+const MAX_TOKENS = 3000;
 
-const SYSTEM_PROMPT = `You are an expert course creator. Generate a course OUTLINE as compact valid JSON.
+const SYSTEM_PROMPT = `You are an expert course creator and web designer. Generate a course OUTLINE with a UNIQUE visual design as compact valid JSON.
 
 RULES:
 - Return exactly 5 modules unless the user explicitly asks for a different size
@@ -19,7 +19,30 @@ RULES:
 - The subtitle must be a concrete benefit statement and must not repeat the title
 - Module and lesson titles must be specific, not generic placeholders
 - Include exactly 6 measurable learning outcomes
+- Generate a UNIQUE design_config for every course — never reuse the same palette
+- Generate 3-4 relevant FAQ questions and answers specific to this course topic
+- Generate a target_audience description (1-2 sentences about who this is for)
+- Choose a section_order that suits the course topic (vary it between courses)
 - Return ONLY the requested JSON keys
+
+DESIGN RULES — every course MUST look different:
+- Pick a color palette that matches the course topic/mood (e.g. fitness=energetic, coding=cool/techy, business=professional, wellness=calm)
+- Choose from these font pairings (pick ONE pairing, vary between courses):
+  * "Playfair Display" + "DM Sans" (elegant/editorial)
+  * "Space Grotesk" + "Inter" (modern/tech)
+  * "Poppins" + "Inter" (clean/friendly)
+  * "Montserrat" + "DM Sans" (bold/professional)
+  * "Lora" + "Inter" (warm/academic)
+  * "DM Sans" + "Inter" (minimal/sleek)
+  * "Merriweather" + "DM Sans" (classic/authoritative)
+- Pick heroStyle from: "gradient", "minimal", "split"
+- Pick spacing from: "compact", "normal", "spacious"
+- Pick borderRadius from: "none", "small", "medium", "large"
+- Default to dark backgrounds (#0a-#15 range) with light text for premium feel, BUT if the user explicitly requests light/white backgrounds, honor their request
+- primary color must be a VIBRANT accent/brand color (NOT the same as background or text). It's used for buttons, icons, and highlights — it MUST contrast against both background and text
+- accent should complement primary but be distinct
+- cardBackground should be slightly lighter than background (for dark themes) or slightly darker (for light themes)
+- NEVER set primary to the same color as background or text — that makes UI elements invisible
 
 OUTPUT FORMAT:
 {
@@ -35,8 +58,31 @@ OUTPUT FORMAT:
         { "title": "string", "description": "string (1 sentence)" }
       ]
     }
-  ]
-}`;
+  ],
+  "design_config": {
+    "colors": {
+      "primary": "#hex",
+      "secondary": "#hex",
+      "accent": "#hex",
+      "background": "#hex",
+      "cardBackground": "#hex",
+      "text": "#hex",
+      "textMuted": "#hex"
+    },
+    "fonts": { "heading": "string", "body": "string" },
+    "spacing": "compact|normal|spacious",
+    "borderRadius": "none|small|medium|large",
+    "heroStyle": "gradient|minimal|split"
+  },
+  "target_audience": "string (1-2 sentences)",
+  "faq": [
+    { "question": "string", "answer": "string" }
+  ],
+  "section_order": ["hero", "outcomes", "who_is_for", "curriculum", "course_includes", "testimonials", "pricing", "guarantee", "faq"]
+}
+
+SECTION OPTIONS (pick 7-10 in a logical order, always start with "hero"):
+hero, outcomes, who_is_for, curriculum, course_includes, instructor, testimonials, pricing, guarantee, faq, bonuses, community, certificate`;
 
 function parseCourseJson(text: string) {
   try {
@@ -62,7 +108,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("generate-course invoked (outline only)");
+    console.log("generate-course invoked (outline + design)");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -98,7 +144,10 @@ serve(async (req) => {
     const { prompt, options } = await req.json();
     if (!prompt || typeof prompt !== "string") throw new Error("prompt is required");
 
-    const userMessage = `Create a course OUTLINE (titles only, no lesson content) about: ${prompt}
+    // Generate a random seed to encourage variety
+    const designSeed = Math.random().toString(36).slice(2, 6);
+
+    const userMessage = `Create a course OUTLINE with UNIQUE visual design about: ${prompt}
 
 Requirements:
 - Difficulty level: ${options?.difficulty || "beginner"}
@@ -110,7 +159,12 @@ Important:
 - Only return titles for lessons — NO content or assignments
 - Subtitle must describe the transformation, not repeat the title
 - Learning outcomes must be unique to this topic
-- Return ONLY valid JSON with the keys: title, subtitle, description, learningOutcomes, modules`;
+- Design must be UNIQUE — use design seed "${designSeed}" to inspire a distinct palette
+- Pick colors that match the course topic mood (DO NOT default to gold/amber)
+- Include 3-4 topic-specific FAQ entries
+- Include a target_audience description
+- Vary the section_order — don't always use the same arrangement
+- Return ONLY valid JSON`;
 
     console.log("generate-course requesting Anthropic outline with model:", MODEL);
 
@@ -124,6 +178,7 @@ Important:
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
+        temperature: 0.8,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
       }),
@@ -146,7 +201,8 @@ Important:
       throw new Error("AI response missing required course fields");
     }
 
-    console.log("generate-course outline success:", course.title, course.modules.length, "modules");
+    console.log("generate-course outline success:", course.title, course.modules.length, "modules",
+      course.design_config ? "with design" : "no design");
 
     return new Response(JSON.stringify(course), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
