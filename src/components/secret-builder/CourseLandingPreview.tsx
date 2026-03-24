@@ -77,14 +77,144 @@ const HeroSection = ({
       : `${Math.round(totalDuration)}m`;
 
   const pricing = course.pages?.pricing;
+  const heroLayout = course.design_config?.heroLayout ?? "left";
+  const heroImage = course.design_config?.heroImage;
+  const bgImage = heroImage || course.thumbnail;
+  const isCentered = heroLayout === "centered";
+  const isSplit = heroLayout === "split";
+  const isImageBg = heroLayout === "image_background";
 
+  const statsRow = (
+    <motion.div variants={fadeUp} className={`flex flex-wrap gap-4 mb-10 ${isCentered ? "justify-center" : ""}`}>
+      {[
+        { icon: BookOpen, label: `${course.modules.length} Modules` },
+        { icon: FileText, label: `${totalLessons} Lessons` },
+        { icon: Clock, label: durationStr },
+        { icon: Award, label: "Certificate" },
+      ].map(({ icon: Icon, label }) => (
+        <div
+          key={label}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card/60 border border-border backdrop-blur-sm"
+        >
+          <Icon className="h-4 w-4 text-primary" />
+          <span className="text-sm font-body text-foreground font-medium">{label}</span>
+        </div>
+      ))}
+    </motion.div>
+  );
+
+  const ctaRow = (
+    <motion.div variants={fadeUp} className={`flex items-center gap-6 ${isCentered ? "justify-center" : ""}`}>
+      <Button
+        size="lg"
+        onClick={onEnrollClick}
+        className="btn-primary text-lg px-10 py-6 font-heading font-bold shadow-glow"
+      >
+        {pricing ? `Enroll — $${pricing.price}` : "Enroll Now"}
+        <ChevronRight className="ml-2 h-5 w-5" />
+      </Button>
+      {pricing?.original_price && (
+        <span className="text-muted-foreground line-through text-lg font-body">
+          ${pricing.original_price}
+        </span>
+      )}
+    </motion.div>
+  );
+
+  const textContent = (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+      className={isCentered ? "text-center" : ""}
+    >
+      {course.tagline && (
+        <motion.p
+          variants={fadeUp}
+          className="text-primary font-body text-sm uppercase tracking-[0.2em] font-semibold mb-4"
+        >
+          {course.tagline}
+        </motion.p>
+      )}
+
+      <motion.h1
+        variants={fadeUp}
+        className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-foreground mb-6 leading-[1.1]"
+      >
+        {course.title}
+      </motion.h1>
+
+      <motion.p
+        variants={fadeUp}
+        className={`text-lg sm:text-xl text-muted-foreground font-body mb-8 leading-relaxed ${isCentered ? "max-w-2xl mx-auto" : "max-w-2xl"}`}
+      >
+        {course.description}
+      </motion.p>
+
+      {statsRow}
+      {ctaRow}
+    </motion.div>
+  );
+
+  // ── Split layout: text left, image right ──
+  if (isSplit) {
+    return (
+      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--gold)/0.1)_0%,transparent_70%)] pointer-events-none" />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-24 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>{textContent}</div>
+          {bgImage ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3]"
+            >
+              <img
+                src={bgImage}
+                alt={course.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
+            </motion.div>
+          ) : (
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-card/40 border border-border flex items-center justify-center">
+              <BookOpen className="h-16 w-16 text-primary/20" />
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Image background layout: prominent bg image with overlay ──
+  if (isImageBg && bgImage) {
+    return (
+      <section className="relative min-h-[80vh] flex items-center overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
+
+        <div className="relative z-10 max-w-5xl mx-auto px-6 py-24 w-full">
+          {textContent}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Left / Centered / Default layout ──
   return (
     <section className="relative min-h-[70vh] flex items-center overflow-hidden">
       {/* Background layers */}
-      {course.thumbnail && (
+      {bgImage && !isCentered && (
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${course.thumbnail})` }}
+          style={{ backgroundImage: `url(${bgImage})` }}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
@@ -92,70 +222,24 @@ const HeroSection = ({
       {/* Radial gold glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--gold)/0.1)_0%,transparent_70%)] pointer-events-none" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-24 w-full">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-        >
-          {course.tagline && (
-            <motion.p
-              variants={fadeUp}
-              className="text-primary font-body text-sm uppercase tracking-[0.2em] font-semibold mb-4"
-            >
-              {course.tagline}
-            </motion.p>
-          )}
+      <div className={`relative z-10 max-w-5xl mx-auto px-6 py-24 w-full ${isCentered ? "flex flex-col items-center" : ""}`}>
+        {textContent}
 
-          <motion.h1
-            variants={fadeUp}
-            className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-foreground mb-6 leading-[1.1]"
+        {/* Centered layout can show image below text */}
+        {isCentered && bgImage && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mt-12 w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl"
           >
-            {course.title}
-          </motion.h1>
-
-          <motion.p
-            variants={fadeUp}
-            className="text-lg sm:text-xl text-muted-foreground font-body max-w-2xl mb-8 leading-relaxed"
-          >
-            {course.description}
-          </motion.p>
-
-          <motion.div variants={fadeUp} className="flex flex-wrap gap-4 mb-10">
-            {[
-              { icon: BookOpen, label: `${course.modules.length} Modules` },
-              { icon: FileText, label: `${totalLessons} Lessons` },
-              { icon: Clock, label: durationStr },
-              { icon: Award, label: "Certificate" },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card/60 border border-border backdrop-blur-sm"
-              >
-                <Icon className="h-4 w-4 text-primary" />
-                <span className="text-sm font-body text-foreground font-medium">{label}</span>
-              </div>
-            ))}
+            <img
+              src={bgImage}
+              alt={course.title}
+              className="w-full h-auto object-cover max-h-[400px]"
+            />
           </motion.div>
-
-          <motion.div variants={fadeUp} className="flex items-center gap-6">
-            <Button
-              size="lg"
-              onClick={onEnrollClick}
-              className="btn-primary text-lg px-10 py-6 font-heading font-bold shadow-glow"
-            >
-              {pricing
-                ? `Enroll — $${pricing.price}`
-                : "Enroll Now"}
-              <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
-            {pricing?.original_price && (
-              <span className="text-muted-foreground line-through text-lg font-body">
-                ${pricing.original_price}
-              </span>
-            )}
-          </motion.div>
-        </motion.div>
+        )}
       </div>
     </section>
   );

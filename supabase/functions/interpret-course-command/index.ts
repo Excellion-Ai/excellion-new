@@ -20,6 +20,14 @@ Return a JSON object with:
 
     // Colors: { "design_config": { "colors": { "primary": "#3b82f6", "accent": "#60a5fa" } } }
     // Fonts: { "design_config": { "fonts": { "heading": "Poppins", "body": "Open Sans" } } }
+    // Hero layout: { "design_config": { "heroLayout": "left" | "centered" | "split" | "image_background" } }
+    //   - "left": text left-aligned (default)
+    //   - "centered": text and CTA centered, image shown below text if present
+    //   - "split": text on left, image on right in a 50/50 grid
+    //   - "image_background": full-bleed background image with text overlay
+    // Hero image: { "design_config": { "heroImage": "https://images.unsplash.com/..." } }
+    //   - Use a relevant Unsplash URL when the user asks to add an image to the hero
+    //   - Pick an image that matches the course topic (fitness, yoga, cooking, etc.)
     // Hero style: { "design_config": { "heroStyle": "gradient" | "minimal" | "split" } }
     // Spacing: { "design_config": { "spacing": "compact" | "normal" | "spacious" } }
     // Border radius: { "design_config": { "borderRadius": "none" | "small" | "medium" | "large" } }
@@ -82,6 +90,8 @@ serve(async (req) => {
       description: currentCourse?.description,
       tagline: currentCourse?.tagline,
       layout_style: currentCourse?.layout_style || currentCourse?.layout_template,
+      heroLayout: currentDesign?.heroLayout || "left",
+      heroImage: currentDesign?.heroImage || null,
       section_order: currentCourse?.section_order,
       modules: (currentCourse?.modules || []).map((m: any) => ({
         id: m.id, title: m.title, description: m.description,

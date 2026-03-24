@@ -84,6 +84,8 @@ export interface ModuleWithContent {
   layout_variant?: 'video_heavy' | 'text_heavy' | 'mixed' | 'project_based';
 }
 
+export type HeroLayout = 'left' | 'centered' | 'split' | 'image_background';
+
 export interface DesignConfig {
   colors?: {
     primary?: string;
@@ -98,6 +100,8 @@ export interface DesignConfig {
   spacing?: 'compact' | 'normal' | 'spacious';
   borderRadius?: 'none' | 'small' | 'medium' | 'large';
   heroStyle?: string;
+  heroLayout?: HeroLayout;
+  heroImage?: string;
   backgrounds?: { hero?: string; curriculum?: string; cta?: string };
 }
 
