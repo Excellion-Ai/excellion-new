@@ -99,8 +99,81 @@ function loadGoogleFont(fontName: string) {
   const link = document.createElement("link");
   link.id = id;
   link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;600;700&display=swap`;
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700;800;900&display=swap`;
   document.head.appendChild(link);
+}
+
+/** Convert hex color to "H S% L%" for Tailwind CSS variables. */
+function hexToHSL(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return "0 0% 50%";
+  let r = parseInt(result[1], 16) / 255;
+  let g = parseInt(result[2], 16) / 255;
+  let b = parseInt(result[3], 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+function adjustHSLLightness(hsl: string, delta: number): string {
+  const m = hsl.match(/([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/);
+  if (!m) return hsl;
+  const l = Math.max(0, Math.min(100, parseFloat(m[3]) + delta));
+  return `${Math.round(parseFloat(m[1]))} ${Math.round(parseFloat(m[2]))}% ${Math.round(l)}%`;
+}
+
+/** Build Tailwind theme CSS variable overrides from design_config colors. */
+function buildThemeOverrides(colors: NonNullable<ExtendedCourse["design_config"]>["colors"]): Record<string, string> {
+  if (!colors) return {};
+  const vars: Record<string, string> = {};
+
+  if (colors.primary) {
+    const hsl = hexToHSL(colors.primary);
+    vars["--primary"] = hsl;
+    vars["--accent"] = hsl;
+    vars["--ring"] = hsl;
+    vars["--gold"] = hsl;
+    vars["--gold-light"] = adjustHSLLightness(hsl, 12);
+    vars["--gold-dark"] = adjustHSLLightness(hsl, -12);
+    vars["--shadow-glow"] = `0 0 60px hsl(${hsl} / 0.12)`;
+    vars["--shadow-glow-sm"] = `0 0 20px hsl(${hsl} / 0.08)`;
+    vars["--shadow-glow-lg"] = `0 0 100px hsl(${hsl} / 0.1)`;
+  }
+  if (colors.background) {
+    vars["--background"] = hexToHSL(colors.background);
+  }
+  if (colors.cardBackground) {
+    const cardHSL = hexToHSL(colors.cardBackground);
+    vars["--card"] = cardHSL;
+    vars["--card-elevated"] = adjustHSLLightness(cardHSL, 3);
+    vars["--border"] = adjustHSLLightness(cardHSL, 8);
+    vars["--input"] = adjustHSLLightness(cardHSL, 5);
+    if (colors.text) vars["--card-foreground"] = hexToHSL(colors.text);
+  }
+  if (colors.text) {
+    vars["--foreground"] = hexToHSL(colors.text);
+    if (colors.background) {
+      vars["--primary-foreground"] = hexToHSL(colors.background);
+      vars["--accent-foreground"] = hexToHSL(colors.background);
+    }
+  }
+  if (colors.textMuted) vars["--muted-foreground"] = hexToHSL(colors.textMuted);
+  if (colors.secondary) {
+    const secHSL = hexToHSL(colors.secondary);
+    vars["--secondary"] = secHSL;
+    vars["--muted"] = secHSL;
+  }
+  return vars;
 }
 
 // ── Component ────────────────────────────────────────────────
@@ -127,9 +200,29 @@ const CoursePreviewTabs = ({
 
   const layoutStyle = course.layout_style ?? "creator";
   const style = getLayoutStyleConfig(layoutStyle);
-  const accent = ACCENT_MAP[layoutStyle];
   const designColors = course.design_config?.colors;
   const designFonts = course.design_config?.fonts;
+
+  // When design_config provides custom colors, use theme-variable-based Tailwind classes
+  // (which get overridden by the CSS variable injection below).
+  // Otherwise fall back to the hardcoded layout-style accent palette.
+  const hasCustomColors = !!designColors?.primary;
+  const accent: AccentPalette = hasCustomColors
+    ? {
+        bg: "bg-primary",
+        text: "text-primary",
+        border: "border-primary",
+        bgLight: "bg-primary/10",
+        borderLight: "border-primary/30",
+      }
+    : ACCENT_MAP[layoutStyle];
+
+  // Override layout style classes when custom colors are active
+  if (hasCustomColors) {
+    style.headingClass = "text-foreground font-bold";
+    style.cardClass = "bg-card border-border";
+    style.primaryHex = designColors!.primary!;
+  }
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
   const currentModule = course.modules[selectedModuleIdx];
   const currentLesson = currentModule?.lessons[selectedLessonIdx];
@@ -196,18 +289,17 @@ const CoursePreviewTabs = ({
     setIsUploadingLogo(false);
   };
 
-  // CSS custom properties from DesignConfig
+  // Build Tailwind theme overrides from design_config so ALL utility classes
+  // (bg-background, text-foreground, text-primary, etc.) reflect the custom palette
+  const themeOverrides = buildThemeOverrides(designColors);
   const cssVars: React.CSSProperties & Record<string, string> = {
-    ...(designColors?.primary && { "--course-primary": designColors.primary }),
-    ...(designColors?.secondary && { "--course-secondary": designColors.secondary }),
-    ...(designColors?.accent && { "--course-accent": designColors.accent }),
-    ...(designColors?.background && { "--course-bg": designColors.background }),
-    ...(designColors?.cardBackground && { "--course-card-bg": designColors.cardBackground }),
-    ...(designColors?.text && { "--course-text": designColors.text }),
-    ...(designColors?.textMuted && { "--course-text-muted": designColors.textMuted }),
-    ...(designFonts?.heading && { "--course-font-heading": designFonts.heading }),
-    ...(designFonts?.body && { "--course-font-body": designFonts.body }),
+    ...themeOverrides,
+    ...(designFonts?.heading && { "--font-heading": `'${designFonts.heading}', serif` }),
+    ...(designFonts?.body && { "--font-body": `'${designFonts.body}', sans-serif` }),
   } as any;
+
+  // Resolve the effective primary color for inline styles (fallback to layout style)
+  const effectivePrimary = designColors?.primary || style.primaryHex;
 
   // ── Render sections ──
 
@@ -219,7 +311,7 @@ const CoursePreviewTabs = ({
         style={{
           background: heroBg
             ? undefined
-            : `linear-gradient(135deg, ${style.primaryHex}22 0%, transparent 60%)`,
+            : `linear-gradient(135deg, ${effectivePrimary}22 0%, transparent 60%)`,
         }}
       >
         {heroBg && (
@@ -456,7 +548,7 @@ const CoursePreviewTabs = ({
 
   const renderTimelineModules = () => (
     <div className="relative pl-6 space-y-6">
-      <div className="absolute left-2.5 top-0 bottom-0 w-px" style={{ backgroundColor: `${style.primaryHex}40` }} />
+      <div className="absolute left-2.5 top-0 bottom-0 w-px" style={{ backgroundColor: `${effectivePrimary}40` }} />
       {course.modules.map((mod, mIdx) => (
         <div key={mod.id} className="relative">
           <div className={cn("absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white", accent.bg)}>
@@ -529,7 +621,7 @@ const CoursePreviewTabs = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {course.modules.map((mod) => (
         <Card key={mod.id} className={cn(style.cardClass, style.cardRadius, "overflow-hidden")}>
-          <div className="h-2" style={{ background: `linear-gradient(90deg, ${style.primaryHex}, ${style.primaryHex}88)` }} />
+          <div className="h-2" style={{ background: `linear-gradient(90deg, ${effectivePrimary}, ${effectivePrimary}88)` }} />
           <CardContent className="pt-4">
             <h3 className="font-semibold text-foreground text-sm mb-2">{mod.title}</h3>
             <ul className="space-y-1">
@@ -712,7 +804,7 @@ const CoursePreviewTabs = ({
                       {mod.title}
                     </button>
                     {mIdx === selectedModuleIdx && (
-                      <div className="ml-3 space-y-0.5 mt-1 border-l-2 pl-3" style={{ borderColor: `${style.primaryHex}40` }}>
+                      <div className="ml-3 space-y-0.5 mt-1 border-l-2 pl-3" style={{ borderColor: `${effectivePrimary}40` }}>
                         {mod.lessons.map((l, lIdx) => (
                           <button
                             key={l.id}
