@@ -304,39 +304,136 @@ const CoursePreviewTabs = ({
   // ── Render sections ──
 
   const renderHeroSection = () => {
-    const heroBg = course.design_config?.backgrounds?.hero;
+    const heroBg = course.design_config?.heroImage || course.design_config?.backgrounds?.hero || course.thumbnail;
+    const heroStyleVal = course.design_config?.heroStyle ?? "gradient";
+    const heroLayout = course.design_config?.heroLayout ?? "left";
+    const isSplit = heroLayout === "split";
+    const isCentered = heroLayout === "centered";
+    const isImageBg = heroLayout === "image_background";
+
+    // Style-driven background rendering
+    const renderBgLayers = () => {
+      switch (heroStyleVal) {
+        case "minimal":
+          return <div className="absolute inset-0 bg-background" />;
+        case "image":
+          if (heroBg) {
+            return (
+              <>
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBg})` }} />
+                <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/40" />
+              </>
+            );
+          }
+          return <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${effectivePrimary}15 0%, transparent 60%)` }} />;
+        case "gradient":
+        default:
+          if (heroBg && !isCentered) {
+            return (
+              <>
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBg})` }} />
+                <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-background/70" />
+              </>
+            );
+          }
+          return <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${effectivePrimary}22 0%, transparent 60%)` }} />;
+      }
+    };
+
+    // Image-background layout override
+    if (isImageBg && heroBg) {
+      return (
+        <section className="relative py-20 overflow-hidden">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBg})` }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/75 to-background/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
+          <div className={cn("relative z-10", style.containerClass)}>
+            {isVisualEditMode ? (
+              <>
+                <EditableText value={course.title} onSave={(v) => updateCourseField("title", v)} as="h1" className="text-4xl font-bold mb-3" />
+                <EditableText value={course.tagline ?? ""} onSave={(v) => updateCourseField("tagline", v)} as="p" className="text-lg text-muted-foreground mb-4" placeholder="Add a tagline…" />
+                <EditableText value={course.description} onSave={(v) => updateCourseField("description", v)} as="p" className="text-muted-foreground mb-8" multiline placeholder="Add description…" />
+              </>
+            ) : (
+              <>
+                <h1 className="text-4xl font-bold text-foreground mb-3" style={{ fontFamily: designFonts?.heading }}>{course.title}</h1>
+                {course.tagline && <p className="text-lg text-muted-foreground mb-4">{course.tagline}</p>}
+                {course.description && <p className="text-muted-foreground mb-8 max-w-2xl">{course.description}</p>}
+              </>
+            )}
+            <Button className={cn(accent.bg, "text-white hover:opacity-90")}>
+              Enroll Now <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </section>
+      );
+    }
+
+    // Split layout: text + image side by side
+    if (isSplit) {
+      return (
+        <section className="relative py-16 overflow-hidden">
+          {renderBgLayers()}
+          <div className={cn("relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center", style.containerClass)}>
+            <div>
+              {isVisualEditMode ? (
+                <>
+                  <EditableText value={course.title} onSave={(v) => updateCourseField("title", v)} as="h1" className="text-4xl font-bold mb-3" />
+                  <EditableText value={course.tagline ?? ""} onSave={(v) => updateCourseField("tagline", v)} as="p" className="text-lg text-muted-foreground mb-4" placeholder="Add a tagline…" />
+                  <EditableText value={course.description} onSave={(v) => updateCourseField("description", v)} as="p" className="text-muted-foreground mb-8" multiline placeholder="Add description…" />
+                </>
+              ) : (
+                <>
+                  <h1 className="text-4xl font-bold text-foreground mb-3" style={{ fontFamily: designFonts?.heading }}>{course.title}</h1>
+                  {course.tagline && <p className="text-lg text-muted-foreground mb-4">{course.tagline}</p>}
+                  {course.description && <p className="text-muted-foreground mb-8 max-w-2xl">{course.description}</p>}
+                </>
+              )}
+              <Button className={cn(accent.bg, "text-white hover:opacity-90")}>
+                Enroll Now <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+            {heroBg ? (
+              <div className="rounded-xl overflow-hidden shadow-lg aspect-[4/3]">
+                <img src={heroBg} alt={course.title} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="rounded-xl overflow-hidden aspect-[4/3] bg-muted/30 border border-border flex items-center justify-center">
+                <BookOpen className="h-12 w-12 text-muted-foreground/20" />
+              </div>
+            )}
+          </div>
+        </section>
+      );
+    }
+
+    // Left / Centered / Default
     return (
-      <section
-        className="relative py-16 overflow-hidden"
-        style={{
-          background: heroBg
-            ? undefined
-            : `linear-gradient(135deg, ${effectivePrimary}22 0%, transparent 60%)`,
-        }}
-      >
-        {heroBg && (
-          <>
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroBg})` }} />
-            <div className="absolute inset-0 bg-black/55" />
-          </>
-        )}
-        <div className={cn("relative", style.containerClass)}>
+      <section className={cn("relative py-16 overflow-hidden", heroStyleVal === "minimal" && "border-b border-border")}>
+        {renderBgLayers()}
+        <div className={cn("relative z-10", style.containerClass, isCentered && "text-center")}>
           {isVisualEditMode ? (
             <>
               <EditableText value={course.title} onSave={(v) => updateCourseField("title", v)} as="h1" className="text-4xl font-bold mb-3" />
               <EditableText value={course.tagline ?? ""} onSave={(v) => updateCourseField("tagline", v)} as="p" className="text-lg text-muted-foreground mb-4" placeholder="Add a tagline…" />
-              <EditableText value={course.description} onSave={(v) => updateCourseField("description", v)} as="p" className="text-muted-foreground mb-8" multiline placeholder="Add description…" />
+              <EditableText value={course.description} onSave={(v) => updateCourseField("description", v)} as="p" className={cn("text-muted-foreground mb-8", isCentered ? "max-w-2xl mx-auto" : "max-w-2xl")} multiline placeholder="Add description…" />
             </>
           ) : (
             <>
               <h1 className="text-4xl font-bold text-foreground mb-3" style={{ fontFamily: designFonts?.heading }}>{course.title}</h1>
               {course.tagline && <p className="text-lg text-muted-foreground mb-4">{course.tagline}</p>}
-              {course.description && <p className="text-muted-foreground mb-8 max-w-2xl">{course.description}</p>}
+              {course.description && <p className={cn("text-muted-foreground mb-8", isCentered ? "max-w-2xl mx-auto" : "max-w-2xl")}>{course.description}</p>}
             </>
           )}
-          <Button className={cn(accent.bg, "text-white hover:opacity-90")}>
+          <Button className={cn(accent.bg, "text-white hover:opacity-90", isCentered && "mx-auto")}>
             Enroll Now <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
+          {/* Centered layout: show image below */}
+          {isCentered && heroBg && (
+            <div className="mt-8 max-w-2xl mx-auto rounded-xl overflow-hidden shadow-lg">
+              <img src={heroBg} alt={course.title} className="w-full h-auto object-cover max-h-[300px]" />
+            </div>
+          )}
         </div>
       </section>
     );

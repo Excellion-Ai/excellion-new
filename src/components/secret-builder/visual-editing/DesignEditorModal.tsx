@@ -17,8 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Palette, Type, Layout, Layers, GripVertical } from "lucide-react";
-import { DesignConfig, CourseLayoutStyle, LandingSectionType } from "@/types/course-pages";
+import { Palette, Type, Layout, Layers, GripVertical, Upload, ImageIcon, X } from "lucide-react";
+import { DesignConfig, CourseLayoutStyle, LandingSectionType, HeroLayout } from "@/types/course-pages";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface DesignEditorModalProps {
@@ -27,6 +29,7 @@ interface DesignEditorModalProps {
   designConfig: DesignConfig;
   layoutTemplate: CourseLayoutStyle;
   sectionOrder: LandingSectionType[];
+  courseId?: string;
   onSave: (config: {
     designConfig: DesignConfig;
     layoutTemplate: CourseLayoutStyle;
@@ -54,6 +57,13 @@ const SPACING_OPTIONS = ["compact", "normal", "spacious"] as const;
 const RADIUS_OPTIONS = ["none", "small", "medium", "large"] as const;
 const HERO_STYLES = ["gradient", "centered", "split", "minimal", "video", "image"];
 
+const HERO_LAYOUTS: Array<{ value: HeroLayout; label: string; description: string }> = [
+  { value: "left", label: "Left-aligned", description: "Text on the left, classic layout" },
+  { value: "centered", label: "Centered", description: "Text centered, image below" },
+  { value: "split", label: "Split", description: "Text left, image right (50/50)" },
+  { value: "image_background", label: "Image Background", description: "Full-bleed image with text overlay" },
+];
+
 const LAYOUT_TEMPLATES: Array<{ value: CourseLayoutStyle; label: string; description: string }> = [
   { value: "creator", label: "Creator", description: "Personal brand, warm tones" },
   { value: "technical", label: "Technical", description: "Developer-focused, compact" },
@@ -73,11 +83,13 @@ const DesignEditorModal = ({
   designConfig,
   layoutTemplate,
   sectionOrder,
+  courseId,
   onSave,
 }: DesignEditorModalProps) => {
   const [config, setConfig] = useState<DesignConfig>({ ...designConfig });
   const [template, setTemplate] = useState<CourseLayoutStyle>(layoutTemplate);
   const [sections, setSections] = useState<LandingSectionType[]>([...sectionOrder]);
+  const [isUploadingHero, setIsUploadingHero] = useState(false);
 
   const updateColor = (key: string, value: string) => {
     setConfig((prev) => ({
@@ -114,6 +126,33 @@ const DesignEditorModal = ({
     } else {
       setSections([...sections, section]);
     }
+  };
+
+  const handleHeroImageUpload = async (file: File) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Not authenticated"); return; }
+
+    const ext = file.name.split(".").pop() ?? "png";
+    const path = `${user.id}/${courseId ?? "draft"}/hero.${ext}`;
+
+    setIsUploadingHero(true);
+    const { error } = await supabase.storage
+      .from("course-thumbnails")
+      .upload(path, file, { upsert: true });
+
+    if (error) {
+      toast.error("Failed to upload hero image");
+      setIsUploadingHero(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("course-thumbnails")
+      .getPublicUrl(path);
+
+    setConfig((prev) => ({ ...prev, heroImage: urlData.publicUrl }));
+    setIsUploadingHero(false);
+    toast.success("Hero image uploaded");
   };
 
   const handleSave = () => {
@@ -167,25 +206,6 @@ const DesignEditorModal = ({
               ))}
             </div>
 
-            <div className="space-y-2 pt-2">
-              <Label className="text-xs">Hero Style</Label>
-              <Select
-                value={config.heroStyle || "gradient"}
-                onValueChange={(v) => setConfig((p) => ({ ...p, heroStyle: v }))}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {HERO_STYLES.map((s) => (
-                    <SelectItem key={s} value={s} className="text-xs">
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="space-y-1">
                 <Label className="text-xs">Spacing</Label>
@@ -229,22 +249,95 @@ const DesignEditorModal = ({
               </div>
             </div>
 
-            {/* Background images */}
-            <div className="space-y-2 pt-2">
-              <Label className="text-xs font-medium">Background Images</Label>
-              {["hero", "curriculum", "cta"].map((key) => (
-                <div key={key} className="space-y-1">
-                  <Label className="text-xs text-muted-foreground capitalize">
-                    {key}
-                  </Label>
-                  <Input
-                    value={(config.backgrounds as any)?.[key] || ""}
-                    onChange={(e) => updateBackground(key, e.target.value)}
-                    placeholder="Image URL..."
-                    className="h-8 text-xs"
-                  />
+            {/* Hero section config */}
+            <div className="space-y-3 pt-3 border-t border-border">
+              <Label className="text-xs font-medium">Hero Section</Label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Style</Label>
+                  <Select
+                    value={config.heroStyle || "gradient"}
+                    onValueChange={(v) => setConfig((p) => ({ ...p, heroStyle: v }))}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HERO_STYLES.map((s) => (
+                        <SelectItem key={s} value={s} className="text-xs">
+                          {s.charAt(0).toUpperCase() + s.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Layout</Label>
+                  <Select
+                    value={config.heroLayout || "left"}
+                    onValueChange={(v) => setConfig((p) => ({ ...p, heroLayout: v as HeroLayout }))}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HERO_LAYOUTS.map((h) => (
+                        <SelectItem key={h.value} value={h.value} className="text-xs">
+                          {h.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Hero image upload */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Hero Image</Label>
+                {config.heroImage ? (
+                  <div className="relative rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={config.heroImage}
+                      alt="Hero background"
+                      className="w-full h-32 object-cover"
+                    />
+                    <button
+                      onClick={() => setConfig((p) => ({ ...p, heroImage: undefined }))}
+                      className="absolute top-1.5 right-1.5 p-1 rounded-full bg-background/80 hover:bg-destructive/80 text-foreground hover:text-destructive-foreground transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-card/50">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleHeroImageUpload(file);
+                      }}
+                    />
+                    {isUploadingHero ? (
+                      <span className="text-xs text-muted-foreground">Uploading...</span>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-muted-foreground mb-1.5" />
+                        <span className="text-xs text-muted-foreground">Click to upload</span>
+                        <span className="text-[10px] text-muted-foreground/60 mt-0.5">or paste a URL below</span>
+                      </>
+                    )}
+                  </label>
+                )}
+                <Input
+                  value={config.heroImage || ""}
+                  onChange={(e) => setConfig((p) => ({ ...p, heroImage: e.target.value || undefined }))}
+                  placeholder="Or paste image URL..."
+                  className="h-7 text-xs"
+                />
+              </div>
             </div>
           </TabsContent>
 

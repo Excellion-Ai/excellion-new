@@ -28,7 +28,13 @@ Return a JSON object with:
     // Hero image: { "design_config": { "heroImage": "https://images.unsplash.com/..." } }
     //   - Use a relevant Unsplash URL when the user asks to add an image to the hero
     //   - Pick an image that matches the course topic (fitness, yoga, cooking, etc.)
-    // Hero style: { "design_config": { "heroStyle": "gradient" | "minimal" | "split" } }
+    // Hero style (visual feel): { "design_config": { "heroStyle": "gradient" | "minimal" | "split" | "centered" | "image" } }
+    //   - "gradient": rich gradient overlays with radial glow (default, dramatic)
+    //   - "minimal": clean solid background, subtle bottom border (simple, professional)
+    //   - "split": split-tone background left-to-right
+    //   - "centered": radial glow from center
+    //   - "image": background image prominently visible with lighter overlay
+    //   When setting heroStyle to "image" or heroLayout to "image_background" or "split", also set a heroImage URL
     // Spacing: { "design_config": { "spacing": "compact" | "normal" | "spacious" } }
     // Border radius: { "design_config": { "borderRadius": "none" | "small" | "medium" | "large" } }
     // Layout style: { "layout_template": "creator" | "technical" | "academic" | "visual" }
