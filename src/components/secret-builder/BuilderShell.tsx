@@ -825,6 +825,12 @@ const BuilderShell = ({
               onRefinePrompt={handleRefine}
               hasCourse={!!courseSpec}
               onAddMessage={(msg) => setMessages((prev) => [...prev, msg])}
+              onDesignUpdate={(config) => {
+                if (courseSpec) {
+                  setCourseSpec({ ...courseSpec, design_config: config });
+                }
+              }}
+              currentDesignConfig={courseSpec?.design_config}
             />
           </ResizablePanel>
 
