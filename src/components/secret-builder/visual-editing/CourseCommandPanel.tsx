@@ -296,18 +296,12 @@ const CourseCommandPanel = ({
 
       {/* Input area — flush bottom */}
       <div className="border-t border-border p-3">
-        <Textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            mode === "build"
-              ? "Describe a design change…"
-              : "Ask a question…"
-          }
-          rows={4}
-          className="resize-none text-sm mb-2"
-          disabled={isLoading}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          multiple
+          onChange={handleFileSelect}
         />
         <div className="flex items-end justify-between gap-2">
           <Textarea
