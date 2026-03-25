@@ -11,6 +11,9 @@ import {
   Rocket,
   ArrowLeft,
   Sparkles,
+  ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EditableText from "./EditableText";
 
@@ -38,6 +42,7 @@ interface BuilderHeaderProps {
   isPublished: boolean;
   isPublishing: boolean;
   isUnpublishing: boolean;
+  courseUrl: string;
   onPublish: () => void;
   onUnpublish: () => void;
   onRefine: () => void;
@@ -55,6 +60,7 @@ const BuilderHeader = ({
   isPublished,
   isPublishing,
   isUnpublishing,
+  courseUrl,
   onPublish,
   onUnpublish,
   onRefine,
@@ -62,6 +68,7 @@ const BuilderHeader = ({
   onOpenPublishSettings,
 }: BuilderHeaderProps) => {
   const navigate = useNavigate();
+  const [linkCopied, setLinkCopied] = useState(false);
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4">
@@ -129,6 +136,32 @@ const BuilderHeader = ({
 
       {/* Right */}
       <div className="flex items-center gap-2">
+        {hasCourse && courseUrl && (
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground text-xs gap-1.5"
+              onClick={() => window.open(courseUrl, "_blank")}
+            >
+              <ExternalLink className="h-3 w-3" />
+              Preview
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                navigator.clipboard.writeText(courseUrl);
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+              }}
+            >
+              {linkCopied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+            </Button>
+          </div>
+        )}
+
         {hasCourse && (
           <Button
             size="sm"
