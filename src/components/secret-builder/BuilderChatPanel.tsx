@@ -197,6 +197,7 @@ const BuilderChatPanel = ({
           steps={steps}
           messages={messages}
           attachments={attachments}
+          onAddAttachment={onAddAttachment}
           onRemoveAttachment={onRemoveAttachment}
           showOptions={showOptions}
           setShowOptions={setShowOptions}
