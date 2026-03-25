@@ -101,6 +101,21 @@ export async function saveCourseToDatabase(
     .replace(/^-|-$/g, "")
     .slice(0, 60);
 
+  // If a builder project already has an active course, return it instead of duplicating
+  if (builderProjectId) {
+    const { data: existing } = await supabase
+      .from("courses")
+      .select("id")
+      .eq("builder_project_id", builderProjectId)
+      .is("deleted_at", null)
+      .limit(1);
+
+    if (existing?.[0]) {
+      console.log("💾 [saveCourse] Course already exists for project, reusing:", existing[0].id);
+      return { id: existing[0].id };
+    }
+  }
+
   for (let attempt = 0; attempt < 3; attempt++) {
     const subdomain = generateSubdomain(title);
 
@@ -134,9 +149,20 @@ export async function saveCourseToDatabase(
       return { id: data.id };
     }
 
-    // Retry only on unique constraint violation (code 23505)
+    // Retry on slug/subdomain collision (code 23505)
     if (error?.code === "23505") {
-      console.warn(`💾 [saveCourse] Subdomain collision (attempt ${attempt + 1}/3), retrying...`);
+      // If the collision is on builder_project_id (duplicate active course), fetch the existing one
+      if (error.message?.includes("idx_courses_one_active_per_project") || error.message?.includes("builder_project_id")) {
+        console.warn("💾 [saveCourse] Active course already exists for this project, fetching it");
+        const { data: dup } = await supabase
+          .from("courses")
+          .select("id")
+          .eq("builder_project_id", builderProjectId!)
+          .is("deleted_at", null)
+          .limit(1);
+        if (dup?.[0]) return { id: dup[0].id };
+      }
+      console.warn(`💾 [saveCourse] Unique collision (attempt ${attempt + 1}/3), retrying...`);
       continue;
     }
 
@@ -148,7 +174,7 @@ export async function saveCourseToDatabase(
     return null;
   }
 
-  console.error("💾 [saveCourse] FAILED after 3 attempts (subdomain collisions)");
+  console.error("💾 [saveCourse] FAILED after 3 attempts (unique collisions)");
   return null;
 }
 
@@ -156,17 +182,30 @@ export async function updateCourseInDatabase(
   courseId: string,
   updates: Record<string, unknown>
 ): Promise<boolean> {
+  const payload = { ...updates, updated_at: new Date().toISOString() } as any;
+
+  // First attempt (silent on failure — auto-save fires frequently)
   const { error } = await supabase
     .from("courses")
-    .update({ ...updates, updated_at: new Date().toISOString() } as any)
+    .update(payload)
     .eq("id", courseId);
 
-  if (error) {
-    console.error("Failed to update course:", error);
-    toast.error(`Failed to update course: ${error.message}`);
-    return false;
-  }
-  return true;
+  if (!error) return true;
+
+  console.warn("⚠️ [updateCourse] First attempt failed, retrying:", error.code, error.message);
+
+  // Retry once after a short delay
+  await new Promise((r) => setTimeout(r, 1000));
+  const { error: retryError } = await supabase
+    .from("courses")
+    .update(payload)
+    .eq("id", courseId);
+
+  if (!retryError) return true;
+
+  console.error("❌ [updateCourse] FAILED after retry:", retryError.code, retryError.message);
+  toast.error(`Failed to save changes: ${retryError.message}`);
+  return false;
 }
 
 export async function ensureCourseExists(params: {
