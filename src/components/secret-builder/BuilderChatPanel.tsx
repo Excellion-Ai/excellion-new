@@ -515,7 +515,6 @@ const BuildTab = ({
   );
 };
 
-// ── Design Tab ────────────────────────────────────────────────
 
 const COLOR_FIELDS_DESIGN: { key: string; label: string }[] = [
   { key: "primary", label: "Primary" },
