@@ -801,6 +801,12 @@ const BuilderShell = ({
         onRefine={() => {}}
         onOpenSettings={() => setShowCourseSettings(true)}
         onOpenPublishSettings={() => setShowPublishSettings(true)}
+        onDesignUpdate={(config) => {
+          if (courseSpec) {
+            setCourseSpec({ ...courseSpec, design_config: config });
+          }
+        }}
+        currentDesignConfig={courseSpec?.design_config}
       />
 
       <div className="flex-1 overflow-hidden">
@@ -825,12 +831,6 @@ const BuilderShell = ({
               onRefinePrompt={handleRefine}
               hasCourse={!!courseSpec}
               onAddMessage={(msg) => setMessages((prev) => [...prev, msg])}
-              onDesignUpdate={(config) => {
-                if (courseSpec) {
-                  setCourseSpec({ ...courseSpec, design_config: config });
-                }
-              }}
-              currentDesignConfig={courseSpec?.design_config}
             />
           </ResizablePanel>
 
