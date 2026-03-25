@@ -131,6 +131,8 @@ interface CourseItem {
   published_at: string | null;
   total_students: number | null;
   layout_template: string | null;
+  design_config: any;
+  tagline: string | null;
 }
 
 interface AttachmentItem {
@@ -536,8 +538,8 @@ function CourseCard({
       className="group cursor-pointer overflow-hidden transition-all hover:shadow-[var(--shadow-glow-sm)] border-border/60 bg-card"
       onClick={() => onEdit(course)}
     >
-      {/* Thumbnail */}
-      <div className="h-36 bg-muted/30 relative overflow-hidden">
+      {/* Thumbnail / Mini Preview */}
+      <div className="h-36 relative overflow-hidden">
         {course.thumbnail_url ? (
           <img
             src={course.thumbnail_url}
@@ -545,11 +547,61 @@ function CourseCard({
             className="h-full w-full object-cover"
             loading="lazy"
           />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-muted/50 to-muted/20">
-            <BookOpen className="h-10 w-10 text-muted-foreground/20" />
-          </div>
-        )}
+        ) : (() => {
+          const dc = course.design_config as any;
+          const primary = dc?.colors?.primary || "#d4a853";
+          const bg = dc?.colors?.background || "#0a0a0a";
+          const accent = dc?.colors?.accent || "#f59e0b";
+          const textColor = dc?.colors?.text || "#ffffff";
+          const firstModule = Array.isArray(course.curriculum) ? course.curriculum[0] : null;
+          const moduleTitle = firstModule?.title || firstModule?.name || "";
+          const lessonTitles = (firstModule?.lessons || []).slice(0, 3).map((l: any) => l?.title || l?.name || "");
+
+          return (
+            <div
+              className="h-full w-full p-3 flex flex-col justify-between"
+              style={{ background: `linear-gradient(135deg, ${bg} 0%, ${bg}ee 60%, ${primary}22 100%)` }}
+            >
+              {/* Mini hero */}
+              <div>
+                <div
+                  className="text-[10px] font-bold uppercase tracking-wider mb-1 truncate"
+                  style={{ color: primary }}
+                >
+                  {course.tagline || course.type || "Course"}
+                </div>
+                <div
+                  className="text-xs font-semibold leading-tight line-clamp-2"
+                  style={{ color: textColor }}
+                >
+                  {course.title}
+                </div>
+              </div>
+              {/* Mini curriculum preview */}
+              {moduleTitle && (
+                <div className="space-y-0.5 mt-auto">
+                  <div className="text-[9px] font-medium truncate" style={{ color: accent }}>
+                    {moduleTitle}
+                  </div>
+                  {lessonTitles.map((lt: string, i: number) => (
+                    <div
+                      key={i}
+                      className="text-[8px] truncate pl-2 opacity-60"
+                      style={{ color: textColor }}
+                    >
+                      • {lt}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Accent bar */}
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5"
+                style={{ background: `linear-gradient(90deg, ${primary}, ${accent})` }}
+              />
+            </div>
+          );
+        })()}
 
         {/* Status badge */}
         <Badge
@@ -726,7 +778,7 @@ function HubContent() {
         supabase
           .from("courses")
           .select(
-            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template"
+            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template, design_config, tagline"
           )
           .eq("user_id", userId)
           .is("deleted_at", null)
@@ -735,7 +787,7 @@ function HubContent() {
         supabase
           .from("courses")
           .select(
-            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template"
+            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template, design_config, tagline"
           )
           .eq("user_id", userId)
           .not("deleted_at", "is", null)
@@ -944,7 +996,7 @@ function HubContent() {
         const { data: refreshed } = await supabase
           .from("courses")
           .select(
-            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template"
+            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template, design_config, tagline"
           )
           .eq("user_id", userId)
           .is("deleted_at", null)
