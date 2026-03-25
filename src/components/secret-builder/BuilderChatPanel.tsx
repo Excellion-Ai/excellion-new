@@ -242,7 +242,7 @@ interface BuildTabProps {
 
 const BuildTab = ({
   idea, onIdeaChange, onSubmit, isGenerating, isRefining, steps, messages,
-  attachments, onRemoveAttachment, showOptions, setShowOptions,
+  attachments, onAddAttachment, onRemoveAttachment, showOptions, setShowOptions,
   courseOptions, updateOption, messagesEndRef, hasCourse,
 }: BuildTabProps) => {
   const isBusy = isGenerating || !!isRefining;
