@@ -10,7 +10,6 @@ import {
   MessageSquare,
   Send,
   Paperclip,
-  Image,
   Sparkles,
   Loader2,
   X,
