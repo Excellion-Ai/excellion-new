@@ -201,6 +201,7 @@ const CoursePage = () => {
         .select("*")
         .eq("subdomain", subdomain)
         .eq("status", "published")
+        .is("deleted_at", null)
         .maybeSingle();
 
       // Fallback: try as UUID
@@ -210,6 +211,7 @@ const CoursePage = () => {
           .select("*")
           .eq("id", subdomain)
           .eq("status", "published")
+          .is("deleted_at", null)
           .maybeSingle();
         data = res.data;
         error = res.error;
