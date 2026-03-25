@@ -62,6 +62,8 @@ interface BuilderChatPanelProps {
   isRefining?: boolean;
   hasCourse?: boolean;
   onAddMessage?: (msg: Message) => void;
+  onDesignUpdate?: (config: DesignConfig) => void;
+  currentDesignConfig?: DesignConfig;
 }
 
 // ── Template detection ────────────────────────────────────────
