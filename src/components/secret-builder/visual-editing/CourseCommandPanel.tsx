@@ -328,19 +328,27 @@ const CourseCommandPanel = ({
               <Image className="w-6 h-6" />
             </button>
           </div>
-          <Button
-            size="sm"
-            onClick={handleSend}
-            disabled={!prompt.trim() || isLoading}
-            className="gap-1.5"
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-            Send
-          </Button>
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Attach file"
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
+            <Button
+              size="icon"
+              onClick={handleSend}
+              disabled={!prompt.trim() || isLoading}
+              className="h-8 w-8"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
