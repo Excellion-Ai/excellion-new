@@ -208,12 +208,6 @@ const BuilderChatPanel = ({
         />
       )}
 
-      {activeTab === "design" && hasCourse && (
-        <DesignTab
-          config={currentDesignConfig ?? {}}
-          onUpdate={onDesignUpdate ?? (() => {})}
-        />
-      )}
 
       {activeTab === "help" && (
         <HelpTab
