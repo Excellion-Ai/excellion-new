@@ -181,6 +181,7 @@ export async function ensureCourseExists(params: {
     .from("courses")
     .select("id")
     .eq("builder_project_id", projectId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (!error && existing) {
