@@ -728,7 +728,7 @@ function HubContent() {
         supabase
           .from("courses")
           .select(
-            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template"
+            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template, design_config, tagline"
           )
           .eq("user_id", userId)
           .is("deleted_at", null)
@@ -737,7 +737,7 @@ function HubContent() {
         supabase
           .from("courses")
           .select(
-            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template"
+            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template, design_config, tagline"
           )
           .eq("user_id", userId)
           .not("deleted_at", "is", null)
@@ -946,7 +946,7 @@ function HubContent() {
         const { data: refreshed } = await supabase
           .from("courses")
           .select(
-            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template"
+            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template, design_config, tagline"
           )
           .eq("user_id", userId)
           .is("deleted_at", null)
