@@ -317,13 +317,15 @@ const CourseCommandPanel = ({
             disabled={isLoading}
           />
           <div className="flex flex-col items-center gap-1.5">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="h-8 w-8"
               title="Attach file"
             >
-              <Paperclip className="w-5 h-5" />
-            </button>
+              <Paperclip className="w-4 h-4" />
+            </Button>
             <Button
               size="icon"
               onClick={handleSend}
