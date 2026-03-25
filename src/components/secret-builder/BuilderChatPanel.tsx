@@ -131,8 +131,10 @@ const BuilderChatPanel = ({
   isRefining,
   hasCourse,
   onAddMessage,
+  onDesignUpdate,
+  currentDesignConfig,
 }: BuilderChatPanelProps) => {
-  const [activeTab, setActiveTab] = useState<"build" | "help">("build");
+  const [activeTab, setActiveTab] = useState<"build" | "design" | "help">("build");
   const [showOptions, setShowOptions] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [helpInput, setHelpInput] = useState("");
