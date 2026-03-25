@@ -32,14 +32,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { CourseLayoutStyle, DesignConfig } from "@/types/course-pages";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CourseLayoutStyle } from "@/types/course-pages";
 import {
   CourseOptions,
   GenerationStep,
@@ -69,8 +62,6 @@ interface BuilderChatPanelProps {
   isRefining?: boolean;
   hasCourse?: boolean;
   onAddMessage?: (msg: Message) => void;
-  onDesignUpdate?: (config: DesignConfig) => void;
-  currentDesignConfig?: DesignConfig;
 }
 
 // ── Template detection ────────────────────────────────────────
@@ -131,10 +122,8 @@ const BuilderChatPanel = ({
   isRefining,
   hasCourse,
   onAddMessage,
-  onDesignUpdate,
-  currentDesignConfig,
 }: BuilderChatPanelProps) => {
-  const [activeTab, setActiveTab] = useState<"build" | "design" | "help">("build");
+  const [activeTab, setActiveTab] = useState<"build" | "help">("build");
   const [showOptions, setShowOptions] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [helpInput, setHelpInput] = useState("");
@@ -189,12 +178,6 @@ const BuilderChatPanel = ({
               <Sparkles className="h-3.5 w-3.5" />
               Build
             </TabsTrigger>
-            {hasCourse && (
-              <TabsTrigger value="design" className="flex-1 gap-1.5 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                <Palette className="h-3.5 w-3.5" />
-                Design
-              </TabsTrigger>
-            )}
             <TabsTrigger value="help" className="flex-1 gap-1.5 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
               <HelpCircle className="h-3.5 w-3.5" />
               Help
