@@ -78,11 +78,67 @@ const HeroSection = ({
 
   const pricing = course.pages?.pricing;
   const heroLayout = course.design_config?.heroLayout ?? "left";
-  const heroImage = course.design_config?.heroImage;
+  const heroStyle = course.design_config?.heroStyle ?? "gradient";
+  const heroImage = course.design_config?.heroImage || course.design_config?.backgrounds?.hero;
   const bgImage = heroImage || course.thumbnail;
   const isCentered = heroLayout === "centered";
   const isSplit = heroLayout === "split";
   const isImageBg = heroLayout === "image_background";
+
+  // heroStyle-driven background overlays
+  const styleOverlays = (() => {
+    switch (heroStyle) {
+      case "minimal":
+        return (
+          <>
+            <div className="absolute inset-0 bg-background" />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-border" />
+          </>
+        );
+      case "split":
+        return (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background to-card" />
+          </>
+        );
+      case "centered":
+      case "video":
+        return (
+          <>
+            <div className="absolute inset-0 bg-background" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.06)_0%,transparent_70%)]" />
+          </>
+        );
+      case "image":
+        if (bgImage) {
+          return (
+            <>
+              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${bgImage})` }} />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
+            </>
+          );
+        }
+        return (
+          <>
+            <div className="absolute inset-0 bg-background" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--primary)/0.08)_0%,transparent_70%)] pointer-events-none" />
+          </>
+        );
+      case "gradient":
+      default:
+        return (
+          <>
+            {bgImage && (
+              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${bgImage})` }} />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--primary)/0.1)_0%,transparent_70%)] pointer-events-none" />
+          </>
+        );
+    }
+  })();
 
   const statsRow = (
     <motion.div variants={fadeUp} className={`flex flex-wrap gap-4 mb-10 ${isCentered ? "justify-center" : ""}`}>
@@ -139,7 +195,11 @@ const HeroSection = ({
 
       <motion.h1
         variants={fadeUp}
-        className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-foreground mb-6 leading-[1.1]"
+        className={`font-heading font-black text-foreground mb-6 leading-[1.1] ${
+          heroStyle === "minimal"
+            ? "text-3xl sm:text-4xl md:text-5xl"
+            : "text-4xl sm:text-5xl md:text-6xl"
+        }`}
       >
         {course.title}
       </motion.h1>
@@ -160,8 +220,7 @@ const HeroSection = ({
   if (isSplit) {
     return (
       <section className="relative min-h-[70vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--gold)/0.1)_0%,transparent_70%)] pointer-events-none" />
+        {styleOverlays}
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-24 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>{textContent}</div>
@@ -209,18 +268,10 @@ const HeroSection = ({
 
   // ── Left / Centered / Default layout ──
   return (
-    <section className="relative min-h-[70vh] flex items-center overflow-hidden">
-      {/* Background layers */}
-      {bgImage && !isCentered && (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${bgImage})` }}
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-      {/* Radial gold glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse,hsl(var(--gold)/0.1)_0%,transparent_70%)] pointer-events-none" />
+    <section className={`relative flex items-center overflow-hidden ${
+      heroStyle === "minimal" ? "min-h-[60vh]" : "min-h-[70vh]"
+    }`}>
+      {styleOverlays}
 
       <div className={`relative z-10 max-w-5xl mx-auto px-6 py-24 w-full ${isCentered ? "flex flex-col items-center" : ""}`}>
         {textContent}

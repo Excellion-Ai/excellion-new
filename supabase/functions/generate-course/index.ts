@@ -35,7 +35,13 @@ DESIGN RULES — every course MUST look different:
   * "Lora" + "Inter" (warm/academic)
   * "DM Sans" + "Inter" (minimal/sleek)
   * "Merriweather" + "DM Sans" (classic/authoritative)
-- Pick heroStyle from: "gradient", "minimal", "split"
+- Pick heroStyle from: "gradient", "minimal", "split", "centered", "image"
+- Pick heroLayout from: "left", "centered", "split", "image_background"
+  * "left": text left-aligned, classic layout (default)
+  * "centered": text and CTA centered
+  * "split": text left, image right in a 50/50 grid
+  * "image_background": full-bleed background image with text overlay
+- Vary heroLayout between courses — don't always use "left"
 - Pick spacing from: "compact", "normal", "spacious"
 - Pick borderRadius from: "none", "small", "medium", "large"
 - Default to dark backgrounds (#0a-#15 range) with light text for premium feel, BUT if the user explicitly requests light/white backgrounds, honor their request
@@ -72,7 +78,8 @@ OUTPUT FORMAT:
     "fonts": { "heading": "string", "body": "string" },
     "spacing": "compact|normal|spacious",
     "borderRadius": "none|small|medium|large",
-    "heroStyle": "gradient|minimal|split"
+    "heroStyle": "gradient|minimal|split|centered|image",
+    "heroLayout": "left|centered|split|image_background"
   },
   "target_audience": "string (1-2 sentences)",
   "faq": [
