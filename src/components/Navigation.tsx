@@ -7,6 +7,7 @@ import { Menu, Shield, LogOut, User } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
 import WaitlistModal from "@/components/WaitlistModal";
 import {
@@ -21,6 +22,7 @@ const Navigation = () => {
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { subscribed, startCheckout } = useSubscription();
 
   const handleSignOut = async () => {
     try {
@@ -35,9 +37,16 @@ const Navigation = () => {
   const ALLOWED_EMAIL = "excellionai@gmail.com";
   const [waitlistOpen, setWaitlistOpen] = useState(false);
 
-  const handleStartBuilding = () => {
-    if (user && user.email === ALLOWED_EMAIL) {
+  const handleStartBuilding = async () => {
+    if (user && (user.email === ALLOWED_EMAIL || subscribed)) {
       navigate("/secret-builder-hub");
+    } else if (user) {
+      // Logged in but not subscribed — go to checkout
+      try {
+        await startCheckout("monthly");
+      } catch {
+        setWaitlistOpen(true);
+      }
     } else {
       setWaitlistOpen(true);
     }
