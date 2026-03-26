@@ -1,43 +1,79 @@
 
 
-## Add Manual Design Controls to the Builder Refine Panel
+## Wire Up Waitlist-Aware Stripe Checkout — Implementation Plan
 
-### What We're Building
-When a course exists in the builder, add a third tab called "Design" (alongside Build and Help) that gives creators direct manual controls for customizing their course's visual appearance — no AI prompt needed.
+### Overview
+Create the full checkout flow: edge function that checks waitlist status and creates the right Stripe session, update frontend CTAs, build real checkout success page, and wire up billing page with live subscription data.
 
-### Why Lovable (Not Claude Code)
-This is purely frontend UI work. The `ThemeEditor` component and `DesignConfig` type already exist. No database schema or edge function changes needed.
+### Step 1: Create `create-checkout` Edge Function
+**File:** `supabase/functions/create-checkout/index.ts`
 
-### Implementation
+- Authenticate user via JWT (`getUser`)
+- Accept `plan` param (`monthly` or `annual`)
+- Use service-role client to query `waitlist` table for user's email
+- Select price + coupon:
+  - Waitlist monthly: `price_1TF4uLPCTHzXvqDgXzsHLUoV` ($49/mo) + coupon `VsiCmzhh` ($30 off) = $19 first month
+  - Public monthly: `price_1T1YnuPCTHzXvqDgZwElpsRS` ($79/mo) + coupon `YqRziFUU` ($50 off) = $29 first month
+  - Annual: `price_1T1YjxPCTHzXvqDg3Plq3gtT` ($790/yr) — no coupon
+- Create Stripe checkout session with `client_reference_id` = user ID, `mode: "subscription"`
+- Return `{ url }`
 
-**File: `src/components/secret-builder/BuilderChatPanel.tsx`**
+### Step 2: Create `check-subscription` Edge Function
+**File:** `supabase/functions/check-subscription/index.ts`
 
-1. Add a "Design" tab to the tab bar (using a Palette icon), visible only when `hasCourse` is true
-2. Create a `DesignTab` component inside the file that renders manual controls:
-   - **Colors section**: Color pickers for primary, secondary, accent, background, card background, text, and muted text (reusing the pattern from `ThemeEditor`)
-   - **Typography section**: Font selects for heading and body fonts (same 8 font options already defined)
-   - **Layout section**: Spacing (compact/normal/relaxed), border radius (none/small/medium/large), hero style (gradient/image/minimal/split)
-   - **Template section**: 4 template cards (creator/technical/academic/visual) for quick style switching
-3. Wire the Design tab to directly update the course's `design_config` via a new `onDesignUpdate` callback prop
+- Authenticate user, look up Stripe customer by email
+- Check for active subscriptions
+- Return `{ subscribed, product_id, subscription_end }`
+- Following the pattern from the Stripe implementation guide
 
-**File: `src/components/secret-builder/BuilderShell.tsx`**
+### Step 3: Update `useSubscription` Hook
+**File:** `src/hooks/useSubscription.ts`
 
-4. Pass a new `onDesignUpdate` handler to `BuilderChatPanel` that:
-   - Merges the updated design config into the current `courseSpec`
-   - Triggers the existing autosave debounce
-   - Sets `saveStatus` to `"unsaved"`
+- Replace local `subscriptions` table query with call to `check-subscription` edge function
+- Auto-refresh on auth changes and every 60 seconds
+- Keep `openPortal` method (update to use `customer-portal` pattern if needed)
 
-### Props Change
-```typescript
-// Add to BuilderChatPanelProps
-onDesignUpdate?: (config: DesignConfig) => void;
-currentDesignConfig?: DesignConfig;
-```
+### Step 4: Update `PricingSection.tsx`
+- Replace `<Link to="/auth">` with a button that:
+  - If not logged in → redirect to `/auth?redirect=/pricing`
+  - If logged in → call `create-checkout` and redirect to Stripe
+- Pass `plan: "annual"` when yearly toggle is active
+- Show loading spinner during checkout creation
 
-### Technical Notes
-- Reuses the `DesignConfig` interface from `ThemeEditor.tsx` (colors, fonts, spacing, borderRadius, heroStyle)
-- Color pickers use native `<input type="color">` (same as ThemeEditor)
-- Font options: Inter, DM Sans, Playfair Display, Poppins, Space Grotesk, Montserrat, Lora, Merriweather
-- Changes apply instantly to the preview via the existing `DynamicCoursePreview` CSS variable injection
-- No new dependencies required
+### Step 5: Update `Navigation.tsx`
+- "Start Building" for non-founder, logged-in users → call `create-checkout` (monthly)
+- Keep existing waitlist modal for non-logged-in users
+
+### Step 6: Update `CheckoutSuccess.tsx`
+- Replace placeholder with real success page
+- Call `useSubscription().refresh()` to sync state
+- Show confirmation, auto-redirect to `/secret-builder-hub` after 3s
+
+### Step 7: Update `Billing.tsx`
+- Wire up `useSubscription()` hook for real data
+- Show actual plan status, price, renewal date
+- Wire "Manage Subscription" to `openPortal()`
+- "Upgrade" button triggers `create-checkout`
+
+### Step 8: Add to `supabase/config.toml`
+- Add `[functions.create-checkout]` and `[functions.check-subscription]` with `verify_jwt = false`
+
+### Files Summary
+| Action | File |
+|--------|------|
+| Create | `supabase/functions/create-checkout/index.ts` |
+| Create | `supabase/functions/check-subscription/index.ts` |
+| Modify | `src/hooks/useSubscription.ts` |
+| Modify | `src/components/PricingSection.tsx` |
+| Modify | `src/components/Navigation.tsx` |
+| Modify | `src/pages/CheckoutSuccess.tsx` |
+| Modify | `src/pages/Billing.tsx` |
+| Modify | `supabase/config.toml` |
+
+### Testing
+- Add your email to the `waitlist` table in Supabase dashboard
+- Test waitlist flow: should see $19 first month
+- Remove from waitlist, test public flow: should see $29 first month
+- Use Stripe test card `4242 4242 4242 4242`
+- Verify billing page shows real subscription data after checkout
 
