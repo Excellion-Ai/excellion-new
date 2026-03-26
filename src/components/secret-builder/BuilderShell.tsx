@@ -401,8 +401,14 @@ const BuilderShell = ({
     };
   }, [isDirty, courseSpec, siteSpec, courseId, projectId, userId, projectName]);
 
-  // Mark dirty when specs change
+  // Mark dirty when specs change (skip initial mount)
+  const hasInitializedRef = useRef(false);
   useEffect(() => {
+    if (!hasInitializedRef.current) {
+      // Skip the first render cycle (initial load from DB)
+      if (courseSpec || siteSpec) hasInitializedRef.current = true;
+      return;
+    }
     if (courseSpec || siteSpec) setIsDirty(true);
   }, [courseSpec, siteSpec]);
 
@@ -807,7 +813,10 @@ const BuilderShell = ({
         onOpenPublishSettings={() => setShowPublishSettings(true)}
         onDesignUpdate={(config) => {
           if (courseSpec) {
-            setCourseSpec({ ...courseSpec, design_config: config });
+            const updated = { ...courseSpec, design_config: config };
+            setCourseSpec(updated);
+            setIsDirty(true);
+            setSaveStatus("unsaved");
           }
         }}
         currentDesignConfig={courseSpec?.design_config}
