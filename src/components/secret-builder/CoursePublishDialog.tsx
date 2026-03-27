@@ -33,21 +33,28 @@ const CoursePublishDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md text-center border-border" style={{ backgroundColor: 'hsl(var(--background))', zIndex: 100 }}>
+      <DialogContent
+        className="max-w-md text-center border-border sm:rounded-lg"
+        style={{
+          backgroundColor: '#09090b',
+          color: '#fafafa',
+          zIndex: 100,
+        }}
+      >
         <DialogDescription className="sr-only">
           Your course has been published successfully.
         </DialogDescription>
         <div className="flex flex-col items-center gap-4 py-4">
           <PartyPopper className="h-12 w-12 text-primary" />
           <DialogHeader>
-            <DialogTitle className="text-2xl text-foreground">
+            <DialogTitle className="text-2xl" style={{ color: '#fafafa' }}>
               Your course is live!
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">{courseTitle}</p>
+          <p className="text-sm" style={{ color: '#a1a1aa' }}>{courseTitle}</p>
 
-          <div className="w-full flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
-            <span className="flex-1 text-sm text-foreground truncate text-left">
+          <div className="w-full flex items-center gap-2 rounded-md px-3 py-2" style={{ border: '1px solid #27272a', backgroundColor: 'rgba(39,39,42,0.3)' }}>
+            <span className="flex-1 text-sm truncate text-left" style={{ color: '#fafafa' }}>
               {courseUrl}
             </span>
             <Button size="icon" variant="ghost" className="shrink-0" onClick={handleCopy}>
