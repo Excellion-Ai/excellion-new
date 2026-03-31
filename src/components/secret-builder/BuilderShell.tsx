@@ -237,8 +237,10 @@ const BuilderShell = ({
       console.log("📂 Loading saved course:", data.id, data.title);
       setCourseId(data.id);
       setIsPublished(data.status === "published");
-      if (data.slug || data.subdomain) {
-        setCoursePublishedUrl(`${window.location.origin}/c/${data.slug || data.subdomain}`);
+      if (data.custom_domain && data.domain_verified) {
+        setCoursePublishedUrl(`https://${data.custom_domain}`);
+      } else if (data.slug || data.subdomain) {
+        setCoursePublishedUrl(`https://excellioncourses.com/c/${data.slug || data.subdomain}`);
       }
 
       // Rebuild ExtendedCourse from DB row
@@ -567,10 +569,10 @@ const BuilderShell = ({
 
     setIsPublishing(true);
     try {
-      // Fetch existing slug — reuse if already clean
+      // Fetch existing slug, subdomain, and custom domain
       const { data: existing } = await supabase
         .from("courses")
-        .select("slug, subdomain")
+        .select("slug, subdomain, custom_domain, domain_verified")
         .eq("id", courseId)
         .single();
 
@@ -605,7 +607,11 @@ const BuilderShell = ({
       // Keep subdomain in sync with slug for backwards compatibility
       const subdomain = existing?.subdomain || slug;
 
-      const publishedUrl = `${window.location.origin}/c/${slug}`;
+      // URL priority: verified custom domain > excellioncourses.com/c/:slug > origin fallback
+      const hasCustomDomain = existing?.custom_domain && existing?.domain_verified;
+      const publishedUrl = hasCustomDomain
+        ? `https://${existing.custom_domain}`
+        : `https://excellioncourses.com/c/${slug}`;
 
       const { error } = await supabase
         .from("courses")

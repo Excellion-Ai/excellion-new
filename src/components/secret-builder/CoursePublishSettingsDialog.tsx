@@ -77,7 +77,7 @@ const CoursePublishSettingsDialog = ({
   const [isRemovingDomain, setIsRemovingDomain] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const courseUrl = `https://${courseSubdomain}.excellion.com`;
+  const courseUrl = `https://excellioncourses.com/c/${courseSubdomain}`;
 
   useEffect(() => {
     if (open && courseId) loadSettings();
@@ -171,9 +171,15 @@ const CoursePublishSettingsDialog = ({
     if (!newDomainInput.trim() || !courseId) return;
     setIsAddingDomain(true);
 
+    const token = `excellion-${courseId.slice(0, 8)}`;
     const { error } = await supabase
       .from("courses")
-      .update({ custom_domain: newDomainInput.trim(), updated_at: new Date().toISOString() } as any)
+      .update({
+        custom_domain: newDomainInput.trim(),
+        domain_verified: false,
+        domain_verification_token: token,
+        updated_at: new Date().toISOString(),
+      } as any)
       .eq("id", courseId);
 
     if (error) {
@@ -375,21 +381,21 @@ const CoursePublishSettingsDialog = ({
                   {!domainRecord.verified && (
                     <Card className="border-border/50">
                       <CardContent className="pt-4">
-                        <p className="text-xs text-muted-foreground mb-2">Add these DNS records at your registrar:</p>
-                        <div className="text-xs space-y-1 font-mono">
+                        <p className="text-xs text-muted-foreground mb-2">Add these DNS records at your domain registrar:</p>
+                        <div className="text-xs space-y-1.5 font-mono">
                           <div className="grid grid-cols-3 gap-2 text-muted-foreground font-sans font-medium border-b border-border pb-1">
                             <span>Type</span><span>Name</span><span>Value</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-foreground">
-                            <span>A</span><span>@</span><span>185.158.133.1</span>
+                            <span>CNAME</span><span>@</span><span>excellioncourses.com</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-foreground">
-                            <span>A</span><span>www</span><span>185.158.133.1</span>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2 text-foreground">
-                            <span>TXT</span><span>_verify</span><span>excellion={courseId?.slice(0, 8)}</span>
+                            <span>TXT</span><span>_verify</span><span>excellion-{courseId?.slice(0, 8)}</span>
                           </div>
                         </div>
+                        <p className="text-[10px] text-muted-foreground/60 mt-2">
+                          DNS changes can take up to 48 hours to propagate. Click "Verify" once your records are set.
+                        </p>
                       </CardContent>
                     </Card>
                   )}
