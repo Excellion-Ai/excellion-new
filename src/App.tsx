@@ -88,7 +88,8 @@ const App = () => (
 
             {/* LMS */}
             <Route path="/courses" element={<CoursesPage />} />
-            <Route path="/course/:subdomain" element={<CoursePage />} />
+            <Route path="/c/:slug" element={<CoursePage />} />
+            <Route path="/course/:slug" element={<CoursePage />} />
             <Route path="/learn/:slug" element={<LearnPage />} />
             <Route path="/my-courses" element={<MyCourses />} />
             <Route path="/certificate/:id" element={<CertificatePage />} />

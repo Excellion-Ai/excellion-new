@@ -237,8 +237,8 @@ const BuilderShell = ({
       console.log("📂 Loading saved course:", data.id, data.title);
       setCourseId(data.id);
       setIsPublished(data.status === "published");
-      if (data.subdomain) {
-        setCoursePublishedUrl(`${window.location.origin}/course/${data.subdomain}`);
+      if (data.slug || data.subdomain) {
+        setCoursePublishedUrl(`${window.location.origin}/c/${data.slug || data.subdomain}`);
       }
 
       // Rebuild ExtendedCourse from DB row
@@ -500,7 +500,7 @@ const BuilderShell = ({
           course.id = saved.id;
           setCourseId(saved.id);
           if (saved.subdomain) {
-            setCoursePublishedUrl(`${window.location.origin}/course/${saved.subdomain}`);
+            setCoursePublishedUrl(`${window.location.origin}/c/${saved.subdomain}`);
           }
           updateStep("save-outline", "complete");
         } else {
@@ -567,25 +567,45 @@ const BuilderShell = ({
 
     setIsPublishing(true);
     try {
-      // Fetch existing subdomain — reuse it if already set (from course creation)
-      let subdomain: string | null = null;
+      // Fetch existing slug — reuse if already clean
       const { data: existing } = await supabase
         .from("courses")
-        .select("subdomain")
+        .select("slug, subdomain")
         .eq("id", courseId)
         .single();
-      subdomain = existing?.subdomain || null;
 
-      // Generate new subdomain only if none exists
-      if (!subdomain) {
-        subdomain = `${courseSpec.title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "")
-          .slice(0, 40)}-${Date.now().toString(36)}`;
+      // Generate a clean slug from the title
+      const cleanSlug = (t: string) => t
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 60);
+
+      let slug = existing?.slug;
+      // Regenerate if slug has random suffix (old format) or doesn't match title
+      const titleSlug = cleanSlug(courseSpec.title);
+      if (!slug || slug !== titleSlug) {
+        slug = titleSlug;
+        // Check for duplicates
+        const { data: dupes } = await supabase
+          .from("courses")
+          .select("slug")
+          .like("slug", `${slug}%`)
+          .neq("id", courseId)
+          .is("deleted_at", null)
+          .limit(20);
+        const existing_slugs = new Set((dupes || []).map((d: any) => d.slug));
+        if (existing_slugs.has(slug)) {
+          let counter = 1;
+          while (existing_slugs.has(`${slug}-${counter}`)) counter++;
+          slug = `${slug}-${counter}`;
+        }
       }
 
-      const publishedUrl = `https://excellioncourses.lovable.app/course/${subdomain}`;
+      // Keep subdomain in sync with slug for backwards compatibility
+      const subdomain = existing?.subdomain || slug;
+
+      const publishedUrl = `${window.location.origin}/c/${slug}`;
 
       const { error } = await supabase
         .from("courses")
@@ -593,6 +613,7 @@ const BuilderShell = ({
           status: "published",
           published_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          slug,
           subdomain,
           title: courseSpec.title,
           description: courseSpec.description,

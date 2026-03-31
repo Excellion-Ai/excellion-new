@@ -131,7 +131,9 @@ function useOverrideDarkTheme(dc: any) {
 // ── Component ───────────────────────────────────────────────
 
 const CoursePage = () => {
-  const { subdomain } = useParams<{ subdomain: string }>();
+  // Accept :slug from /c/:slug or :slug from /course/:slug
+  const params = useParams<{ slug: string; subdomain: string }>();
+  const identifier = params.slug || params.subdomain || "";
   const navigate = useNavigate();
   const [course, setCourse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -141,29 +143,37 @@ const CoursePage = () => {
 
   // ── Fetch ────────────────────────────────────────────────
 
-  const PUBLIC_COURSE_COLUMNS = "id,title,description,tagline,slug,subdomain,curriculum,design_config,layout_template,section_order,section_config,page_sections,meta,status,is_free,price_cents,currency,thumbnail_url,hero_copy,instructor_name,instructor_bio,seo_title,seo_description,social_image_url,type,total_students,branding,created_at,updated_at,published_at,deleted_at,has_video_content,is_featured,custom_domain,domain_verified,original_prompt,builder_project_id";
-
   useEffect(() => {
-    if (!subdomain) { setNotFound(true); setIsLoading(false); return; }
+    if (!identifier) { setNotFound(true); setIsLoading(false); return; }
 
     const fetchCourse = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       const findOne = async (q: any) => { const { data: rows } = await q; return rows?.[0] ?? null; };
+      const sel = "*";
 
       let row: any = null;
       let ownerPreview = false;
 
-      row = await findOne(supabase.from("courses").select(PUBLIC_COURSE_COLUMNS).eq("subdomain", subdomain).eq("status", "published").is("deleted_at", null).limit(1));
+      // 1. Published by slug (primary — clean URL)
+      row = await findOne(supabase.from("courses").select(sel).eq("slug", identifier).eq("status", "published").is("deleted_at", null).limit(1));
 
+      // 2. Published by subdomain (backwards compat)
+      if (!row) {
+        row = await findOne(supabase.from("courses").select(sel).eq("subdomain", identifier).eq("status", "published").is("deleted_at", null).limit(1));
+      }
+
+      // 3. Owner draft by slug or subdomain
       if (!row && user) {
-        row = await findOne(supabase.from("courses").select(PUBLIC_COURSE_COLUMNS).eq("subdomain", subdomain).eq("user_id", user.id).is("deleted_at", null).limit(1));
+        row = await findOne(supabase.from("courses").select(sel).eq("slug", identifier).eq("user_id", user.id).is("deleted_at", null).limit(1));
+        if (!row) row = await findOne(supabase.from("courses").select(sel).eq("subdomain", identifier).eq("user_id", user.id).is("deleted_at", null).limit(1));
         if (row) ownerPreview = true;
       }
 
-      if (!row && subdomain.match(/^[0-9a-f-]{36}$/i)) {
-        row = await findOne(supabase.from("courses").select(PUBLIC_COURSE_COLUMNS).eq("id", subdomain).eq("status", "published").is("deleted_at", null).limit(1));
+      // 4. UUID fallback
+      if (!row && identifier.match(/^[0-9a-f-]{36}$/i)) {
+        row = await findOne(supabase.from("courses").select(sel).eq("id", identifier).eq("status", "published").is("deleted_at", null).limit(1));
         if (!row && user) {
-          row = await findOne(supabase.from("courses").select(PUBLIC_COURSE_COLUMNS).eq("id", subdomain).eq("user_id", user.id).is("deleted_at", null).limit(1));
+          row = await findOne(supabase.from("courses").select(sel).eq("id", identifier).eq("user_id", user.id).is("deleted_at", null).limit(1));
           if (row) ownerPreview = true;
         }
       }
@@ -181,7 +191,7 @@ const CoursePage = () => {
     };
 
     fetchCourse();
-  }, [subdomain]);
+  }, [identifier]);
 
   // ── Enroll ───────────────────────────────────────────────
 
@@ -189,14 +199,14 @@ const CoursePage = () => {
     if (enrolling || !course) return;
     setEnrolling(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { navigate("/auth", { state: { redirect: `/course/${subdomain}` } }); setEnrolling(false); return; }
+    if (!user) { navigate("/auth", { state: { redirect: `/c/${identifier}` } }); setEnrolling(false); return; }
     const { data: existing } = await supabase.from("enrollments").select("id").eq("course_id", course.id).eq("user_id", user.id).maybeSingle();
-    if (existing) { toast.info("You're already enrolled!"); navigate(`/learn/${subdomain}`); setEnrolling(false); return; }
+    if (existing) { toast.info("You're already enrolled!"); navigate(`/learn/${course.slug || identifier}`); setEnrolling(false); return; }
     if (!course.is_free && course.price_cents && course.price_cents > 0) { navigate(`/checkout?course=${course.id}`); setEnrolling(false); return; }
     const { error } = await supabase.from("enrollments").insert({ course_id: course.id, user_id: user.id });
     if (error) { toast.error("Failed to enroll."); setEnrolling(false); return; }
     toast.success("Enrolled successfully!");
-    navigate(`/learn/${subdomain}`);
+    navigate(`/learn/${course.slug || identifier}`);
     setEnrolling(false);
   };
 
