@@ -85,6 +85,49 @@ function formatPrice(cents: number | null, currency: string | null, isFree: bool
   }
 }
 
+// ── Override .dark theme for published course ───────────────
+
+function hexToHSL(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return "0 0% 50%";
+  let r = parseInt(result[1], 16) / 255, g = parseInt(result[2], 16) / 255, b = parseInt(result[3], 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if (max !== min) { const d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+function adj(hsl: string, delta: number): string {
+  const m = hsl.match(/([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/);
+  if (!m) return hsl;
+  return `${Math.round(parseFloat(m[1]))} ${Math.round(parseFloat(m[2]))}% ${Math.round(Math.max(0, Math.min(100, parseFloat(m[3]) + delta)))}%`;
+}
+
+/** Inject <style> into head that overrides .dark {} from index.css with course colors */
+function useOverrideDarkTheme(dc: any) {
+  useEffect(() => {
+    if (!dc?.colors) return;
+    const c = dc.colors; const f = dc.fonts; const v: string[] = [];
+    if (c.primary) { const p = hexToHSL(c.primary); v.push(`--primary:${p}`, `--accent:${p}`, `--ring:${p}`, `--gold:${p}`, `--gold-light:${adj(p,12)}`, `--gold-dark:${adj(p,-12)}`); }
+    if (c.background) { const bg = hexToHSL(c.background); v.push(`--background:${bg}`); if (c.text) v.push(`--primary-foreground:${bg}`, `--accent-foreground:${bg}`); }
+    if (c.cardBackground) { const cd = hexToHSL(c.cardBackground); v.push(`--card:${cd}`, `--popover:${cd}`, `--border:${adj(cd,8)}`, `--input:${adj(cd,5)}`); if (c.text) v.push(`--card-foreground:${hexToHSL(c.text)}`, `--popover-foreground:${hexToHSL(c.text)}`); }
+    if (c.text) v.push(`--foreground:${hexToHSL(c.text)}`);
+    if (c.textMuted) v.push(`--muted-foreground:${hexToHSL(c.textMuted)}`);
+    if (c.secondary) { const s = hexToHSL(c.secondary); v.push(`--secondary:${s}`, `--muted:${s}`); }
+    if (f?.heading) v.push(`--font-heading:'${f.heading}',serif`);
+    if (f?.body) v.push(`--font-body:'${f.body}',sans-serif`);
+    const el = document.createElement("style");
+    el.id = "course-theme";
+    el.textContent = `.dark{${v.join(";")}}`;
+    document.head.appendChild(el);
+    return () => { document.getElementById("course-theme")?.remove(); };
+  }, [dc]);
+}
+
 // ── Component ───────────────────────────────────────────────
 
 const CoursePage = () => {
@@ -156,6 +199,9 @@ const CoursePage = () => {
     navigate(`/learn/${subdomain}`);
     setEnrolling(false);
   };
+
+  // ── Override .dark theme ─────────────────────────────────
+  useOverrideDarkTheme(course?.design_config);
 
   // ── Derived ──────────────────────────────────────────────
 
