@@ -199,7 +199,7 @@ const CoursePage = () => {
     if (enrolling || !course) return;
     setEnrolling(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { navigate("/auth", { state: { redirect: `/c/${identifier}` } }); setEnrolling(false); return; }
+    if (!user) { navigate("/auth", { state: { redirect: `/course/${identifier}` } }); setEnrolling(false); return; }
     const { data: existing } = await supabase.from("enrollments").select("id").eq("course_id", course.id).eq("user_id", user.id).maybeSingle();
     if (existing) { toast.info("You're already enrolled!"); navigate(`/learn/${course.slug || identifier}`); setEnrolling(false); return; }
     if (!course.is_free && course.price_cents && course.price_cents > 0) { navigate(`/checkout?course=${course.id}`); setEnrolling(false); return; }

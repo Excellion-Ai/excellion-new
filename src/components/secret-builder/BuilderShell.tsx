@@ -240,7 +240,7 @@ const BuilderShell = ({
       if (data.custom_domain && data.domain_verified) {
         setCoursePublishedUrl(`https://${data.custom_domain}`);
       } else if (data.slug || data.subdomain) {
-        setCoursePublishedUrl(`https://excellioncourses.com/c/${data.slug || data.subdomain}`);
+        setCoursePublishedUrl(`https://excellioncourses.com/course/${data.slug || data.subdomain}`);
       }
 
       // Rebuild ExtendedCourse from DB row
@@ -502,7 +502,7 @@ const BuilderShell = ({
           course.id = saved.id;
           setCourseId(saved.id);
           if (saved.subdomain) {
-            setCoursePublishedUrl(`${window.location.origin}/c/${saved.subdomain}`);
+            setCoursePublishedUrl(`${window.location.origin}/course/${saved.subdomain}`);
           }
           updateStep("save-outline", "complete");
         } else {
@@ -607,11 +607,11 @@ const BuilderShell = ({
       // Keep subdomain in sync with slug for backwards compatibility
       const subdomain = existing?.subdomain || slug;
 
-      // URL priority: verified custom domain > excellioncourses.com/c/:slug > origin fallback
+      // URL priority: verified custom domain > excellioncourses.com/course/:slug > origin fallback
       const hasCustomDomain = existing?.custom_domain && existing?.domain_verified;
       const publishedUrl = hasCustomDomain
         ? `https://${existing.custom_domain}`
-        : `https://excellioncourses.com/c/${slug}`;
+        : `https://excellioncourses.com/course/${slug}`;
 
       const { error } = await supabase
         .from("courses")

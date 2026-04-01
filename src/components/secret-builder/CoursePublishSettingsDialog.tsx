@@ -77,7 +77,7 @@ const CoursePublishSettingsDialog = ({
   const [isRemovingDomain, setIsRemovingDomain] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const courseUrl = `https://excellioncourses.com/c/${courseSubdomain}`;
+  const courseUrl = `https://excellioncourses.com/course/${courseSubdomain}`;
 
   useEffect(() => {
     if (open && courseId) loadSettings();
