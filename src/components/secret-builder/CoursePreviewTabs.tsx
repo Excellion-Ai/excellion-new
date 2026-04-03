@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import EditableText from "./EditableText";
+import CourseLandingPreview from "./CourseLandingPreview";
 import {
   ExtendedCourse, LessonContent, LandingSectionType,
   getLayoutStyleConfig, formatSectionNumber, CourseLayoutStyle,
@@ -866,9 +867,13 @@ const CoursePreviewTabs = ({
                   </div>
                 </div>
               ) : (
-                landingSections.map((section) => (
-                  <div key={section}>{SECTION_RENDERERS[section]?.()}</div>
-                ))
+                /* Use the SAME CourseLandingPreview component as the published page
+                   so the builder landing tab is a 1:1 match of what students see */
+                <CourseLandingPreview
+                  course={{ ...course, section_order: landingSections }}
+                  onUpdate={onUpdate}
+                  onEnrollClick={() => {}}
+                />
               )}
             </div>
           )}
