@@ -16,6 +16,8 @@ interface BuilderPreviewAreaProps {
   onRefine: () => void;
   onOpenSettings: () => void;
   onOpenPublishSettings: () => void;
+  logoUrl?: string;
+  onUpdateLogo?: (url: string | undefined) => void;
 }
 
 const BuilderPreviewArea = ({
