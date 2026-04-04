@@ -31,6 +31,8 @@ const BuilderPreviewArea = ({
   onRefine,
   onOpenSettings,
   onOpenPublishSettings,
+  logoUrl,
+  onUpdateLogo,
 }: BuilderPreviewAreaProps) => {
   const previewClass =
     previewMode === "tablet"
