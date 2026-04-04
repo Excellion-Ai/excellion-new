@@ -800,23 +800,10 @@ const CoursePreviewTabs = ({
           </Select>
         </div>
 
-        {/* Right — Role-based actions */}
+        {/* Right — Role-based actions (public view only) */}
         <div className="flex items-center gap-2 shrink-0">
-          {isCreatorView ? (
-            <>
-              {isPublished ? (
-                <Button size="sm" variant="outline" className="text-xs h-8" onClick={onUnpublish}>Unpublish</Button>
-              ) : (
-                <Button size="sm" className={cn("text-xs h-8", accent.bg, "text-white hover:opacity-90")} onClick={onPublish} disabled={isPublishing}>
-                  {isPublishing && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
-                  Publish
-                </Button>
-              )}
-            </>
-          ) : (
-            onSignIn && (
-              <Button size="sm" variant="ghost" className="text-xs h-8" onClick={onSignIn}>Sign In</Button>
-            )
+          {!isCreatorView && onSignIn && (
+            <Button size="sm" variant="ghost" className="text-xs h-8" onClick={onSignIn}>Sign In</Button>
           )}
         </div>
       </nav>
