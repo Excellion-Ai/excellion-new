@@ -78,6 +78,8 @@ const BuilderPreviewArea = ({
           isPublished={isPublished}
           isVisualEditMode={true}
           isCreatorView={true}
+          logoUrl={logoUrl}
+          onUpdateLogo={onUpdateLogo}
         />
       </div>
     </div>
