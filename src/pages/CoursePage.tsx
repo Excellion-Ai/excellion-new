@@ -298,7 +298,7 @@ const CoursePage = () => {
 
         {/* Center — Navigation links */}
         <div className="hidden md:flex items-center justify-center gap-1 flex-1">
-          {["Landing", "Curriculum"].map((label) => (
+          {["Landing", "Curriculum", "Lesson", "Dashboard", "Pricing"].map((label) => (
             <a
               key={label}
               href={`#${label.toLowerCase()}`}
