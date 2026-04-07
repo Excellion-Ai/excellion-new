@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Play, CheckCircle } from "lucide-react";
 
 const QuickstartSection = () => {
-  const [open, setOpen] = useState(false);
 
   return (
     <section className="py-[60px] bg-background relative radial-glow">
