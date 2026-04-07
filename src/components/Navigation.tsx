@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import excellionLogo from "@/assets/excellion-logo.png";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
-import WaitlistModal from "@/components/WaitlistModal";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,20 +35,17 @@ const Navigation = () => {
   };
 
   const ALLOWED_EMAIL = "excellionai@gmail.com";
-  const [waitlistOpen, setWaitlistOpen] = useState(false);
-
   const handleStartBuilding = async () => {
     if (user && (user.email === ALLOWED_EMAIL || subscribed)) {
       navigate("/secret-builder-hub");
     } else if (user) {
-      // Logged in but not subscribed — go to checkout
       try {
         await startCheckout("monthly");
       } catch {
-        setWaitlistOpen(true);
+        navigate("/auth");
       }
     } else {
-      setWaitlistOpen(true);
+      navigate("/auth");
     }
   };
 
@@ -85,7 +82,6 @@ const Navigation = () => {
   );
 
   return (
-    <>
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="w-full px-6 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between h-16">
@@ -195,8 +191,6 @@ const Navigation = () => {
         </div>
       </div>
     </nav>
-      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
-    </>
   );
 };
 

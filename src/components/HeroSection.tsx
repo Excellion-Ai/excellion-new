@@ -88,7 +88,7 @@ const HeroSection = () => {
   };
 
   const handleGenerate = () => {
-    document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleHowItWorks = () => {
@@ -114,15 +114,17 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-4">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm text-primary font-body font-semibold tracking-wide">Waitlist Now Open — Launching April 7th</span>
+            <span className="text-sm text-primary font-body font-semibold tracking-wide">Now Live — Start Building Free</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-foreground leading-tight mb-6">
             Launch your fitness course in{" "}
             <em className="not-italic text-gradient-gold">1 weekend.</em>
           </h1>
+
+          <p className="text-sm text-primary/80 font-body font-medium mb-6">Join 200+ fitness coaches already building on Excellion</p>
 
           <p
             className="max-w-2xl mx-auto mb-10 font-body font-light rounded-lg inline-block"
@@ -192,9 +194,22 @@ const HeroSection = () => {
               onClick={handleGenerate}
               className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body"
             >
-              Join the Waitlist
+              Start Building Free
               <ArrowRight className="w-4 h-4" />
             </button>
+          </div>
+
+          <p className="text-xs text-muted-foreground font-body">No credit card required.</p>
+
+          <div className="flex flex-wrap gap-2 justify-center pt-2">
+            {["Generated in 60 seconds", "Published on your domain", "Keep 100% of revenue"].map((stat) => (
+              <span
+                key={stat}
+                className="px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-xs text-primary/90 font-body font-medium"
+              >
+                {stat}
+              </span>
+            ))}
           </div>
 
           <div className="flex flex-wrap gap-2 justify-center pt-2">
