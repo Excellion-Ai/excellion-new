@@ -1468,6 +1468,53 @@ function HubContent() {
           <VoiceBotPlaceholder onClose={() => setShowBuildAssist(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* ── Post-Publish Celebration Modal ──────────────────── */}
+      <Dialog open={!!publishedCourse} onOpenChange={(o) => { if (!o) { setPublishedCourse(null); setLinkCopied(false); } }}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader className="items-center">
+            <div className="text-5xl mb-2">🎉</div>
+            <DialogTitle className="text-xl">Your course is live!</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {publishedCourse?.title} is now published and ready for students.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground break-all">
+              <Globe className="h-4 w-4 shrink-0 text-primary" />
+              <span className="flex-1 text-left">{publishedCourse ? `${window.location.origin}/course/${publishedCourse.slug}` : ""}</span>
+            </div>
+            <Button
+              className="w-full gap-2"
+              onClick={() => {
+                if (publishedCourse) {
+                  navigator.clipboard.writeText(`${window.location.origin}/course/${publishedCourse.slug}`);
+                  setLinkCopied(true);
+                  toast.success("Link copied!");
+                  setTimeout(() => setLinkCopied(false), 2000);
+                }
+              }}
+            >
+              {linkCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {linkCopied ? "Copied!" : "Copy Link"}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => {
+                if (publishedCourse) {
+                  const url = `${window.location.origin}/course/${publishedCourse.slug}`;
+                  const igUrl = `https://www.instagram.com/?url=${encodeURIComponent(url)}`;
+                  window.open(igUrl, "_blank");
+                }
+              }}
+            >
+              <Instagram className="h-4 w-4" />
+              Share to Instagram
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
