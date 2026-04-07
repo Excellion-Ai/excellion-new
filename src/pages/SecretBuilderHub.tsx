@@ -1138,7 +1138,7 @@ function HubContent() {
     ].filter(Boolean).join(". ");
     if (!combined) return;
     setIdea(combined);
-    setTimeout(() => handleGenerate(), 0);
+    handleGenerate(combined);
   };
 
   const visibleCourses = showAllCourses ? courses : courses.slice(0, 6);
