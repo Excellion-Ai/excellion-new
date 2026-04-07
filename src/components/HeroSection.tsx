@@ -69,6 +69,16 @@ function useTypingAnimation(phrases: string[], active: boolean) {
 const HeroSection = () => {
   const [prompt, setPrompt] = useState("");
   const [userHasTyped, setUserHasTyped] = useState(false);
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+
+  const handleAddAttachment = (item: AttachmentItem) => {
+    setAttachments((prev) => [...prev, item]);
+  };
+
+  const handleRemoveAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  };
+  const [userHasTyped, setUserHasTyped] = useState(false);
 
   const animatedText = useTypingAnimation(TYPING_PHRASES, !userHasTyped && !prompt);
 
