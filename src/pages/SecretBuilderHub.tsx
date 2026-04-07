@@ -524,6 +524,7 @@ function CourseCard({
   onPublish,
   onUnpublish,
   onDelete,
+  onShare,
 }: CourseCardProps) {
   const getModuleCount = (curriculum: any) =>
     Array.isArray(curriculum) ? curriculum.length : 0;
