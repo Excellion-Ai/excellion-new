@@ -791,6 +791,7 @@ function HubContent() {
   const [idea, setIdea] = useState(
     () => localStorage.getItem("builder-initial-idea") || ""
   );
+  const [guidedMode, setGuidedMode] = useState(false);
   const [guidedQ1, setGuidedQ1] = useState("");
   const [guidedQ2, setGuidedQ2] = useState("");
   const [guidedQ3, setGuidedQ3] = useState("");
