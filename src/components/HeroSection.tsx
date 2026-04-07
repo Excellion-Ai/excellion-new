@@ -91,6 +91,27 @@ const HeroSection = () => {
     if (userHasTyped && !e.target.value) setUserHasTyped(false);
   };
 
+  const buildGuidedPrompt = (q1: string, q2: string, q3: string) => {
+    const parts = [
+      q1.trim() && `Course about: ${q1.trim()}`,
+      q2.trim() && `Target audience: ${q2.trim()}`,
+      q3.trim() && `Transformation: ${q3.trim()}`,
+    ].filter(Boolean).join(". ");
+    setPrompt(parts);
+    if (parts && !userHasTyped) setUserHasTyped(true);
+    if (!parts) setUserHasTyped(false);
+  };
+
+  const updateGuided = (field: 1 | 2 | 3, value: string) => {
+    const n1 = field === 1 ? value : gQ1;
+    const n2 = field === 2 ? value : gQ2;
+    const n3 = field === 3 ? value : gQ3;
+    if (field === 1) setGQ1(value);
+    if (field === 2) setGQ2(value);
+    if (field === 3) setGQ3(value);
+    buildGuidedPrompt(n1, n2, n3);
+  };
+
   const handleGenerate = () => {
     document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
   };
