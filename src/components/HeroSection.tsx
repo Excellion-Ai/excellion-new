@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { Sparkles, Mic, Paperclip, ArrowRight } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Sparkles, Mic, ArrowRight, X, FileText, Link as LinkIcon, Palette } from "lucide-react";
+import AttachmentMenu from "@/components/secret-builder/attachments/AttachmentMenu";
+import type { AttachmentItem } from "@/components/secret-builder/attachments/types";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
 
