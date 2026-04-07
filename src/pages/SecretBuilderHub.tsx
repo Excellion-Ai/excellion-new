@@ -422,7 +422,6 @@ function SidebarInner({
               <Trash2 className="h-4 w-4" />
               <span>Trash</span>
             </div>
-            </div>
             <ChevronDown
               className={cn(
                 "h-4 w-4 transition-transform",
