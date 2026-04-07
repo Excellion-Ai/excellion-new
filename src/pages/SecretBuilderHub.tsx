@@ -868,8 +868,9 @@ function HubContent() {
 
   // ── Handlers ───────────────────────────────────────────────
 
-  const handleGenerate = useCallback(async () => {
-    if (!idea.trim() || !userId) return;
+  const handleGenerate = useCallback(async (overrideIdea?: string) => {
+    const prompt = overrideIdea || idea;
+    if (!prompt.trim() || !userId) return;
     setIsGenerating(true);
     try {
       const {
