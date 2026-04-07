@@ -49,6 +49,11 @@ import {
   Star,
   ArrowRight,
   Plus,
+  Share2,
+  Link,
+  Instagram,
+  Check,
+  PartyPopper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
