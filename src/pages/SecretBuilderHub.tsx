@@ -1321,6 +1321,11 @@ function HubContent() {
                     onPublish={handlePublishCourse}
                     onUnpublish={(c) => handleUnpublishCourse(c.id)}
                     onDelete={(c) => handleDeleteCourse(c.id)}
+                    onShare={(c) => {
+                      const url = `${window.location.origin}/course/${c.slug}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Link copied!");
+                    }}
                   />
                 ))}
               </div>
