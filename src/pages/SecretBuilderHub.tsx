@@ -474,9 +474,14 @@ function SidebarInner({
         <div className="p-3">
           <button
             onClick={() => onNavigate("/billing")}
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8))",
+              color: "hsl(var(--primary-foreground))",
+              boxShadow: "0 0 16px hsl(var(--primary) / 0.3), 0 0 4px hsl(var(--primary) / 0.2)",
+            }}
           >
-            <Sparkles className="h-4 w-4 text-primary" />
+            <Sparkles className="h-4 w-4" />
             <span>Upgrade to Pro</span>
           </button>
         </div>
