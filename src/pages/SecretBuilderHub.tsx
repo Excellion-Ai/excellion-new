@@ -849,6 +849,20 @@ function HubContent() {
     load();
   }, [userId]);
 
+  // Check for ?published= param to show celebration modal
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const publishedSlug = params.get("published");
+    if (publishedSlug && courses.length > 0) {
+      const course = courses.find((c) => c.slug === publishedSlug);
+      if (course) {
+        setPublishedCourse(course);
+        // Clean the URL
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, [courses]);
+
   // ── Handlers ───────────────────────────────────────────────
 
   const handleGenerate = useCallback(async () => {
