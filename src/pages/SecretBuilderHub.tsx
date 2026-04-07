@@ -1127,6 +1127,19 @@ function HubContent() {
     }
   };
 
+  const guidedHasContent = guidedQ1.trim() || guidedQ2.trim() || guidedQ3.trim();
+
+  const handleGuidedGenerate = () => {
+    const combined = [
+      guidedQ1.trim() && `Course about: ${guidedQ1.trim()}`,
+      guidedQ2.trim() && `Target audience: ${guidedQ2.trim()}`,
+      guidedQ3.trim() && `Result: ${guidedQ3.trim()}`,
+    ].filter(Boolean).join(". ");
+    if (!combined) return;
+    setIdea(combined);
+    setTimeout(() => handleGenerate(), 0);
+  };
+
   const visibleCourses = showAllCourses ? courses : courses.slice(0, 6);
 
   const sidebarProps: SidebarContentProps = {
