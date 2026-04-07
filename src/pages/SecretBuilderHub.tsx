@@ -513,6 +513,7 @@ interface CourseCardProps {
   onPublish: (course: CourseItem) => void;
   onUnpublish: (course: CourseItem) => void;
   onDelete: (course: CourseItem) => void;
+  onShare: (course: CourseItem) => void;
 }
 
 function CourseCard({
