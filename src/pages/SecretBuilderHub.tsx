@@ -1162,7 +1162,18 @@ function HubContent() {
             />
             <span className="font-semibold text-sm">Excellion</span>
           </div>
-          <div className="w-10" /> {/* Spacer */}
+          <Button
+            size="sm"
+            className="h-8 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-xs"
+            onClick={() => {
+              const textarea = document.querySelector('textarea');
+              textarea?.focus();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Course
+          </Button>
         </div>
 
         <div className="mx-auto w-full max-w-[960px] px-4 sm:px-8 py-10 sm:py-16 space-y-10">
