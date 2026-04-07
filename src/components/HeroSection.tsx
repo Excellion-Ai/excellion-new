@@ -159,10 +159,21 @@ const HeroSection = () => {
                 <span className="inline-block w-[2px] h-[1.1em] bg-primary/70 ml-[1px] align-text-bottom animate-blink" />
               </span>
             )}
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2 mb-1">
+                {attachments.map((a) => (
+                  <span key={a.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/20 text-xs text-primary">
+                    <FileText className="w-3 h-3" />
+                    {a.name}
+                    <button onClick={() => handleRemoveAttachment(a.id)} className="hover:text-foreground">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="absolute bottom-2 right-2 flex flex-col items-center gap-1.5">
-              <button className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors" title="Attach file">
-                <Paperclip className="w-4 h-4" />
-              </button>
+              <AttachmentMenu onAdd={handleAddAttachment} />
               <button className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors" title="Voice input">
                 <Mic className="w-4 h-4" />
               </button>
