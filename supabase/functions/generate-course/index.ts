@@ -79,15 +79,59 @@ serve(async (req) => {
     const { prompt, options, attachmentContent } = await req.json();
     if (!prompt || typeof prompt !== "string") throw new Error("prompt is required");
 
-    // Generate a random seed to encourage variety
     const designSeed = Math.random().toString(36).slice(2, 6);
+    const difficulty = options?.difficulty || "beginner";
+    const durationWeeks = options?.duration_weeks || 6;
+    const template = options?.template || "creator";
+    const lessonFormat = options?.lessonFormat || "mixed";
+    const painPoint = options?.audiencePainPoint || "";
 
-    // Build context from attached files
+    // Tone detection: analyze the user's writing style
+    const isAllCaps = (prompt.match(/[A-Z]/g)?.length || 0) > prompt.length * 0.4;
+    const hasEmoji = /[\u{1F300}-\u{1FAFF}]/u.test(prompt);
+    const hasSlang = /gonna|wanna|gotta|bro|dude|lol|tbh|fr|ngl/i.test(prompt);
+    const isFormal = /comprehensive|methodology|framework|professional|certification/i.test(prompt);
+    const tone = isFormal ? "professional and authoritative"
+      : (hasSlang || hasEmoji || isAllCaps) ? "energetic, casual, and motivating"
+      : "friendly and approachable";
+
+    // Build attachment context
     const attachmentContext = attachmentContent
-      ? `\n\nReference material from creator:\n${attachmentContent.slice(0, 8000)}\n\nStructure the course based on this content.`
+      ? `\n\nCREATOR'S REFERENCE MATERIAL:\n${attachmentContent.slice(0, 8000)}\n\nCRITICAL: Extract the creator's actual topics, frameworks, terminology, and teaching points from this material. Use THEIR words and concepts in module/lesson titles — do NOT make up generic content. The course should feel like it came from this creator, not a template.`
       : "";
 
-    const userMessage = `Course about: ${prompt}${attachmentContext}\n\nDifficulty: ${options?.difficulty || "beginner"}, Duration: ${options?.duration_weeks || 6} weeks${options?.template ? `, Style: ${options.template}` : ""}\nDesign seed: ${designSeed}\nReturn ONLY valid JSON.`;
+    // Build structured context from all guided mode fields
+    const durationContext = durationWeeks <= 2 ? "This is a SHORT intensive — fewer modules, dense content"
+      : durationWeeks <= 4 ? "This is a medium-length program — balanced pace"
+      : durationWeeks <= 8 ? "This is a comprehensive program — room for depth"
+      : "This is an extended program — include foundational and advanced content";
+
+    const formatContext = lessonFormat === "video" ? "Lessons should be structured for VIDEO delivery — short, action-oriented titles. Each lesson = one concept or demonstration."
+      : lessonFormat === "written" ? "Lessons should be structured for WRITTEN/TEXT delivery — detailed, tutorial-style titles. Each lesson = one complete written guide."
+      : "Lessons can mix video and written content — vary the structure.";
+
+    const painPointContext = painPoint
+      ? `\nAUDIENCE PAIN POINT: Students have already tried "${painPoint}" and it didn't work. Position this course as the solution — acknowledge what failed and show why this approach is different.`
+      : "";
+
+    const templateTone: Record<string, string> = {
+      creator: "warm, personal, story-driven",
+      technical: "structured, systematic, step-by-step",
+      academic: "formal, evidence-based, comprehensive",
+      visual: "concise, image-focused, creative",
+    };
+
+    const userMessage = `Course about: ${prompt}${attachmentContext}
+
+CREATOR CONTEXT:
+- Difficulty: ${difficulty}
+- Duration: ${durationWeeks} weeks. ${durationContext}
+- Lesson format: ${lessonFormat}. ${formatContext}
+- Template style: ${template} (${templateTone[template] || "friendly"})
+- Writing tone: ${tone}${painPointContext}
+- Design seed: ${designSeed}
+
+Return ONLY valid JSON. Match the tone to "${tone}".`;
 
     console.log("generate-course requesting Anthropic outline with model:", MODEL);
 
