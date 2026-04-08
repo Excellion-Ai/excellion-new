@@ -793,9 +793,7 @@ function HubContent() {
     () => localStorage.getItem("builder-initial-idea") || ""
   );
   const [guidedMode, setGuidedMode] = useState(false);
-  const [guidedQ1, setGuidedQ1] = useState("");
-  const [guidedQ2, setGuidedQ2] = useState("");
-  const [guidedQ3, setGuidedQ3] = useState("");
+  const [guided, setGuided] = useState<GuidedState>(EMPTY_GUIDED);
   const [autoTriggered, setAutoTriggered] = useState(false);
   const [projects, setProjects] = useState<BuilderProject[]>([]);
   const [courses, setCourses] = useState<CourseItem[]>([]);
