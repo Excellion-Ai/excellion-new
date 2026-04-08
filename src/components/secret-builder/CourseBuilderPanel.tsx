@@ -37,6 +37,8 @@ export interface CourseOptions {
   includeQuizzes: boolean;
   includeAssignments: boolean;
   template: CourseLayoutStyle;
+  lessonFormat: "video" | "written" | "mixed";
+  audiencePainPoint: string;
 }
 
 export interface GenerationStep {
@@ -121,9 +123,45 @@ const CourseBuilderPanel = ({
     includeQuizzes: true,
     includeAssignments: true,
     template: "creator",
+    lessonFormat: "mixed",
+    audiencePainPoint: "",
   });
 
   const detected = useMemo(() => detectTemplate(idea), [idea]);
+
+  // Smart follow-up questions based on the user's idea
+  const followUpQuestions = useMemo(() => {
+    const q: Array<{ question: string; answers: string[] }> = [];
+    const lower = idea.toLowerCase();
+    if (!lower || lower.length < 10) return q;
+
+    // Fitness-related
+    if (/fat loss|weight loss|lose weight|cutting|shred/i.test(lower)) {
+      q.push({ question: "Is this primarily nutrition, training, or both?", answers: ["Nutrition-focused", "Training-focused", "Both combined"] });
+    }
+    if (/fitness|workout|training|exercise|gym|strength/i.test(lower)) {
+      q.push({ question: "Equipment needed?", answers: ["No equipment (bodyweight)", "Basic home gym", "Full gym access"] });
+    }
+    // Business/marketing
+    if (/business|marketing|sales|agency|freelanc/i.test(lower)) {
+      q.push({ question: "What stage is your audience at?", answers: ["Complete beginners", "Have some experience", "Scaling existing business"] });
+    }
+    // Cooking/nutrition
+    if (/cook|recipe|nutrition|meal|diet|food/i.test(lower)) {
+      q.push({ question: "What cuisine or dietary style?", answers: ["General healthy eating", "Specific diet (keto, vegan, etc.)", "Meal prep focused"] });
+    }
+    // Tech/coding
+    if (/coding|programming|developer|software|web/i.test(lower)) {
+      q.push({ question: "Prior coding experience required?", answers: ["No experience needed", "Basic knowledge assumed", "Intermediate developers"] });
+    }
+    // Generic fallback
+    if (q.length === 0) {
+      q.push({ question: "How should students apply this?", answers: ["Self-paced practice", "Daily action steps", "Project-based"] });
+    }
+    return q.slice(0, 3);
+  }, [idea]);
+
+  const [followUpAnswers, setFollowUpAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (idea.length > 10) {
@@ -282,6 +320,35 @@ const CourseBuilderPanel = ({
               />
             </div>
 
+            {/* Lesson format */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-foreground">Lesson Format</Label>
+              <RadioGroup
+                value={courseOptions.lessonFormat}
+                onValueChange={(v) => updateOption("lessonFormat", v)}
+                className="flex gap-3"
+              >
+                {(["video", "written", "mixed"] as const).map((f) => (
+                  <label key={f} className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer">
+                    <RadioGroupItem value={f} className="h-3.5 w-3.5" />
+                    <span className="capitalize">{f}</span>
+                  </label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {/* Audience pain point */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-foreground">What has your audience tried that hasn't worked?</Label>
+              <input
+                type="text"
+                value={courseOptions.audiencePainPoint}
+                onChange={(e) => updateOption("audiencePainPoint", e.target.value)}
+                placeholder="e.g. Generic meal plans, boring cardio routines..."
+                className="w-full h-8 px-2 text-xs rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
             {/* Template cards */}
             <div className="space-y-2">
               <Label className="text-xs text-foreground">Template</Label>
@@ -335,12 +402,49 @@ const CourseBuilderPanel = ({
           disabled={isGenerating}
         />
 
+        {/* Smart follow-up questions */}
+        {idea.trim().length > 10 && followUpQuestions.length > 0 && !isGenerating && (
+          <div className="space-y-2 py-1">
+            {followUpQuestions.map(({ question, answers }) => (
+              <div key={question} className="space-y-1">
+                <p className="text-[11px] text-muted-foreground font-medium">{question}</p>
+                <div className="flex flex-wrap gap-1">
+                  {answers.map((a) => (
+                    <button
+                      key={a}
+                      onClick={() => setFollowUpAnswers((prev) => ({ ...prev, [question]: prev[question] === a ? "" : a }))}
+                      className={cn(
+                        "text-[10px] px-2 py-1 rounded-full border transition-colors",
+                        followUpAnswers[question] === a
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/40"
+                      )}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isGenerating}>
             <Paperclip className="h-4 w-4" />
           </Button>
           <Button
-            onClick={() => onGenerate(courseOptions)}
+            onClick={() => {
+              // Append follow-up answers to the idea for context
+              const answers = Object.entries(followUpAnswers)
+                .filter(([, v]) => v)
+                .map(([q, a]) => `${q}: ${a}`)
+                .join(". ");
+              if (answers) {
+                onIdeaChange(idea + " [" + answers + "]");
+              }
+              onGenerate(courseOptions);
+            }}
             disabled={isGenerating || !idea.trim()}
             className="gap-1.5"
           >
