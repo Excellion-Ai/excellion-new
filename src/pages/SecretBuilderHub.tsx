@@ -889,6 +889,27 @@ function HubContent() {
         .single();
       if (error || !proj) throw error;
 
+      // Store structured draft with guided options + attachments
+      const draft = {
+        prompt: prompt.trim(),
+        guided: guidedMode ? {
+          duration: guided.duration || undefined,
+          format: guided.format || undefined,
+          price: guided.price || undefined,
+          taughtBefore: guided.taughtBefore || undefined,
+          existingLink: guided.existingLink || undefined,
+          attachmentText: attachments
+            .filter((a: AttachmentItem) => (a as any).content)
+            .map((a: AttachmentItem) => `--- ${a.name} ---\n${(a as any).content}`)
+            .join("\n\n") || undefined,
+        } : {
+          attachmentText: attachments
+            .filter((a: AttachmentItem) => (a as any).content)
+            .map((a: AttachmentItem) => `--- ${a.name} ---\n${(a as any).content}`)
+            .join("\n\n") || undefined,
+        },
+      };
+      localStorage.setItem("builder-draft", JSON.stringify(draft));
       localStorage.setItem("builder-initial-idea", prompt);
       localStorage.setItem("last-project-id", proj.id);
       navigate(`/studio/${proj.id}`, { state: { initialIdea: prompt } });
@@ -898,7 +919,7 @@ function HubContent() {
     } finally {
       setIsGenerating(false);
     }
-  }, [idea, userId, navigate]);
+  }, [idea, userId, navigate, guidedMode, guided, attachments]);
 
   // Template generation removed — users start from prompts or saved courses
 
@@ -1571,7 +1592,6 @@ function HubContent() {
 
 const SecretBuilderHub = () => {
   const { user, loading } = useAuth();
-  const ALLOWED_EMAIL = "excellionai@gmail.com";
 
   if (loading) {
     return (
@@ -1581,7 +1601,7 @@ const SecretBuilderHub = () => {
     );
   }
 
-  if (!user || user.email !== ALLOWED_EMAIL) {
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
