@@ -37,8 +37,8 @@ export interface CourseOptions {
   includeQuizzes: boolean;
   includeAssignments: boolean;
   template: CourseLayoutStyle;
-  lessonFormat: "video" | "written" | "mixed";
-  audiencePainPoint: string;
+  lessonFormat?: "video" | "written" | "mixed";
+  audiencePainPoint?: string;
 }
 
 export interface GenerationStep {
@@ -325,7 +325,7 @@ const CourseBuilderPanel = ({
               <Label className="text-xs text-foreground">Lesson Format</Label>
               <RadioGroup
                 value={courseOptions.lessonFormat}
-                onValueChange={(v) => updateOption("lessonFormat", v)}
+                onValueChange={(v) => updateOption("lessonFormat", v as "video" | "written" | "mixed")}
                 className="flex gap-3"
               >
                 {(["video", "written", "mixed"] as const).map((f) => (
