@@ -164,8 +164,12 @@ serve(async (req) => {
       });
     }
 
-    // Fitness topic validation is handled by the AI system prompt itself.
-    // The AI will return a fitness_only error JSON if the topic is off-limits.
+    // ── FITNESS CONTEXT ──────────────────────────────────────
+    // The system prompt already enforces fitness-only via AI.
+    // If the prompt lacks obvious fitness keywords, add a nudge
+    // rather than hard-blocking (creators often use vague terms).
+    const combinedText = `${prompt} ${attachmentContent || ""}`;
+    const isFitnessExplicit = FITNESS_KEYWORDS.test(combinedText);
 
     const designSeed = Math.random().toString(36).slice(2, 6);
     const difficulty = options?.difficulty || "beginner";
@@ -190,7 +194,7 @@ serve(async (req) => {
       parts.push(`\nCreator's description: "${prompt}"`);
       parts.push(`\nINSTRUCTION: Build the course DIRECTLY from the document above. Use the creator's exact headings, topics, and terminology as module/lesson titles. Do NOT make up generic fitness content — extract it from their material.`);
     } else {
-      parts.push(`Create a fitness course about: ${prompt}`);
+      parts.push(`Create a fitness/health/wellness course about: ${prompt}${!isFitnessExplicit ? " (Note: Excellion is for fitness creators — frame this as a fitness/health/wellness program)" : ""}`);
     }
 
     // Context
