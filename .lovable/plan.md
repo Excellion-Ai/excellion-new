@@ -1,47 +1,64 @@
 
 
-## Stripe Course Purchase Pipeline — Status and Plan
+## Plan: Fix Builder Course Generation Pipeline
 
-### Current State: NOT FUNCTIONAL
+### Problem
+The builder is failing to generate courses due to three issues:
+1. The homepage "Start Building Free" button only scrolls to #how-it-works instead of navigating to the builder
+2. Guided mode data (duration, format, price, experience, attachments) is not passed through to the generation edge function
+3. Error messages are generic and unhelpful
 
-The database has the scaffolding (columns like `stripe_account_id`, `stripe_price_id`, `stripe_product_id` on `courses`, `stripe_account_id` on `profiles`, a `purchases` table, and a `PricingTab` component showing 2% Excellion fee), but **zero backend logic** exists to actually process course payments:
+### Changes
 
-1. **No Stripe Connect onboarding** — creators cannot connect their Stripe accounts
-2. **No course checkout edge function** — there's no function to create a checkout session for buying a course (the existing `create-checkout` is only for platform subscriptions)
-3. **Checkout page is a placeholder** — `src/pages/Checkout.tsx` renders a static placeholder
-4. **No `application_fee_amount` or `transfer_data`** anywhere — the 2% Excellion fee is only shown in the UI breakdown but never applied in Stripe
-5. **No course purchase verification** — no function to verify a course was purchased and create the enrollment
+#### 1. Fix HeroSection.tsx — Wire CTAs to the builder
+- Import `useNavigate`, `useAuth`, `useSubscription`, `supabase`, `toast`
+- Replace `handleGenerate()` with real builder navigation logic:
+  - If user is allowed (founder email or subscribed): store the prompt + guided data as a structured JSON object in `localStorage` key `builder-draft`, create a `builder_projects` row, and navigate to `/studio/:id`
+  - If user exists but not subscribed: trigger `startCheckout`
+  - If no user: navigate to `/auth`
+- Keep "See how it works" as scroll-only
+- Store guided state (duration, format, price, experience, link, file content) alongside the prompt
 
-### What Needs to Be Built
+#### 2. Update SecretBuilderHub.tsx — Read structured draft
+- In `handleGenerate`, store draft as structured JSON (prompt + guided options) in `builder-draft` localStorage key instead of just `builder-initial-idea`
+- Pass guided options via router state to `/studio/:id`
 
-**Phase 1: Stripe Connect Onboarding**
-- Create edge function `create-connect-account` — generates a Stripe Connect Express account for the creator, stores `stripe_account_id` on `profiles`, returns onboarding link
-- Create edge function `connect-account-callback` — handles return from Stripe Connect onboarding, marks `stripe_onboarding_complete = true`
-- Add "Connect Stripe" button in builder settings or profile settings
+#### 3. Update BuilderShell.tsx — Use guided options in auto-trigger
+- Read structured draft from `localStorage` key `builder-draft` (fall back to `builder-initial-idea` for backward compat)
+- Extract guided options (duration, format, audiencePainPoint) from the draft
+- Pass them into the auto-trigger `handleGenerateCourseRef.current(options)` call instead of hardcoded defaults
+- Improve error handling in the catch block to show specific messages for 401 (auth), 429 (rate limit), 504 (timeout), and parse failures
 
-**Phase 2: Course Checkout**
-- Create edge function `create-course-checkout` — creates a Stripe Checkout session in `mode: "payment"` with:
-  - `payment_intent_data.application_fee_amount` = 2% of price (the Excellion fee)
-  - `payment_intent_data.transfer_data.destination` = creator's `stripe_account_id`
-  - Line item using the course `price_cents`
-- Build out `src/pages/Checkout.tsx` — fetches course, shows summary, calls `create-course-checkout`, redirects to Stripe
+#### 4. Deploy edge function
+- Redeploy `generate-course` to ensure latest fixes are live (the JSON parse fix, rate limit fix, and fitness gate removal)
 
-**Phase 3: Purchase Fulfillment**
-- Create edge function `verify-course-purchase` — given a `session_id`, verifies payment with Stripe, inserts into `purchases` table, creates `enrollments` row, returns success
-- Build `src/pages/PurchaseSuccess.tsx` — calls verify function, shows confirmation, links to course
+### Technical details
 
-**Phase 4: Webhook Handling (Optional but Recommended)**
-- Extend existing `stripe-webhook` to handle `checkout.session.completed` for `mode: "payment"` (course purchases), as a safety net for fulfillment
+**Structured draft format** (stored in `localStorage` as JSON):
+```json
+{
+  "prompt": "Help busy moms lose 10 lbs",
+  "guided": {
+    "duration": "8 weeks",
+    "format": "Video",
+    "price": "$97-$147",
+    "taughtBefore": "Yes",
+    "existingLink": "https://...",
+    "attachmentText": "extracted PDF content..."
+  }
+}
+```
 
-### Technical Details
+**Auto-trigger options mapping** in BuilderShell:
+- `draft.guided.duration` → parse to `duration_weeks` number
+- `draft.guided.format` → `lessonFormat`
+- `draft.guided.attachmentText` → passed as `attachmentContent`
 
-- **Stripe Connect type**: Express accounts (simplest — Stripe handles payouts/tax/KYC)
-- **Fee model**: `application_fee_amount` in cents = `Math.round(price_cents * 0.02)` on the PaymentIntent
-- **Flow**: Student clicks "Enroll Now" on paid course → redirected to Stripe Checkout → Stripe splits payment (98% to creator, 2% to Excellion platform account) → student redirected to success page → enrollment created
-- **Existing `PricingTab`** component already shows the correct fee breakdown (Stripe 2.9%+$0.30 + Excellion 2%); backend just needs to match it
-- **Edge functions needed**: 3 new (`create-connect-account`, `connect-account-callback`, `create-course-checkout`), 1 modified (`stripe-webhook`), 1 new verification (`verify-course-purchase`)
-- **Pages needed**: Rebuild `Checkout.tsx`, new `PurchaseSuccess.tsx`, new Connect settings UI
+**Error toast improvements**:
+- 401 → "Session expired. Please sign in again."
+- 429 → Show the rate limit message from the server
+- 504 → "Generation timed out. Please try again."
+- Default → Show the server error message
 
-### Scope
-This is a significant feature (~5-7 edge functions and pages). Recommend building in phases, starting with Phase 1 (Connect onboarding) so creators can link their Stripe accounts, then Phase 2-3 for the actual checkout flow.
+**Files modified**: `src/components/HeroSection.tsx`, `src/pages/SecretBuilderHub.tsx`, `src/components/secret-builder/BuilderShell.tsx`
 
