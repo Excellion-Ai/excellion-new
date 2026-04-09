@@ -1,10 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Sparkles, Mic, ArrowRight, X, FileText, Link as LinkIcon, Palette } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, Mic, ArrowRight, X, FileText } from "lucide-react";
 import AttachmentMenu from "@/components/secret-builder/attachments/AttachmentMenu";
 import type { AttachmentItem } from "@/components/secret-builder/attachments/types";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
 import GuidedModeFields, { type GuidedState, EMPTY_GUIDED, buildPromptFromGuided } from "@/components/guided-mode/GuidedModeFields";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const suggestions = [
   "6-week fat loss course",
@@ -23,6 +28,8 @@ const TYPING_SPEED = 35;
 const DELETING_SPEED = 20;
 const PAUSE_AFTER_TYPE = 1200;
 const PAUSE_AFTER_DELETE = 300;
+
+const ALLOWED_EMAIL = "excellionai@gmail.com";
 
 function useTypingAnimation(phrases: string[], active: boolean) {
   const [display, setDisplay] = useState("");
@@ -68,11 +75,16 @@ function useTypingAnimation(phrases: string[], active: boolean) {
 }
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { subscribed, startCheckout } = useSubscription();
+
   const [prompt, setPrompt] = useState("");
   const [userHasTyped, setUserHasTyped] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [guidedMode, setGuidedMode] = useState(false);
   const [guided, setGuided] = useState<GuidedState>(EMPTY_GUIDED);
+  const [isStarting, setIsStarting] = useState(false);
 
   const handleAddAttachment = (item: AttachmentItem) => {
     setAttachments((prev) => [...prev, item]);
@@ -98,9 +110,89 @@ const HeroSection = () => {
     if (!built) setUserHasTyped(false);
   };
 
-  const handleGenerate = () => {
-    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+  /** Store structured draft and navigate to builder */
+  const handleStartBuilding = async () => {
+    if (isStarting) return;
+
+    // Check access
+    if (!user) {
+      // Store draft so it persists through auth
+      if (prompt.trim()) {
+        const draft = buildDraft();
+        localStorage.setItem("builder-draft", JSON.stringify(draft));
+        localStorage.setItem("builder-initial-idea", prompt);
+      }
+      navigate("/auth?redirect=/secret-builder-hub");
+      return;
+    }
+
+    const isAllowed = user.email === ALLOWED_EMAIL || subscribed;
+    if (!isAllowed) {
+      try {
+        await startCheckout("monthly");
+      } catch {
+        toast.error("Could not start checkout. Please try again.");
+      }
+      return;
+    }
+
+    if (!prompt.trim()) {
+      toast.error("Enter a course idea first.");
+      return;
+    }
+
+    setIsStarting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Session expired. Please sign in again.");
+        navigate("/auth");
+        return;
+      }
+
+      // Store structured draft
+      const draft = buildDraft();
+      localStorage.setItem("builder-draft", JSON.stringify(draft));
+      localStorage.setItem("builder-initial-idea", prompt);
+
+      // Create project
+      const { data: proj, error } = await supabase
+        .from("builder_projects")
+        .insert({ name: prompt.slice(0, 80), user_id: session.user.id })
+        .select("id")
+        .single();
+      if (error || !proj) throw error;
+
+      localStorage.setItem("last-project-id", proj.id);
+      navigate(`/studio/${proj.id}`, { state: { initialIdea: prompt } });
+    } catch (err: any) {
+      console.error("handleStartBuilding error:", err);
+      toast.error("Failed to create project. Please try again.");
+    } finally {
+      setIsStarting(false);
+    }
   };
+
+  /** Build a structured draft object from current state */
+  const buildDraft = () => ({
+    prompt: prompt.trim(),
+    guided: guidedMode ? {
+      duration: guided.duration || undefined,
+      format: guided.format || undefined,
+      price: guided.price || undefined,
+      taughtBefore: guided.taughtBefore || undefined,
+      existingLink: guided.existingLink || undefined,
+      attachmentText: attachments
+        .filter((a) => a.content)
+        .map((a) => `--- ${a.name} ---\n${a.content}`)
+        .join("\n\n") || undefined,
+    } : {
+      attachmentText: attachments
+        .filter((a) => a.content)
+        .map((a) => `--- ${a.name} ---\n${a.content}`)
+        .join("\n\n") || undefined,
+    },
+  });
 
   const handleHowItWorks = () => {
     document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
@@ -241,10 +333,11 @@ const HeroSection = () => {
               See how it works
             </button>
             <button
-              onClick={handleGenerate}
-              className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body"
+              onClick={handleStartBuilding}
+              disabled={isStarting}
+              className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body disabled:opacity-50"
             >
-              Start Building Free
+              {isStarting ? "Creating…" : "Start Building Free"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -255,7 +348,7 @@ const HeroSection = () => {
             {suggestions.map((s) => (
               <button
                 key={s}
-                onClick={() => setPrompt(s)}
+                onClick={() => { setPrompt(s); setUserHasTyped(true); }}
                 className="px-3 py-1.5 rounded-full glass-card-light text-xs text-muted-foreground hover:text-foreground transition-colors font-body"
               >
                 {s}

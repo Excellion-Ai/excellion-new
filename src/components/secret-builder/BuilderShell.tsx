@@ -182,9 +182,18 @@ const BuilderShell = ({
   const [projectId, setProjectId] = useState<string | null>(initialProjectId || null);
   const [coursePublishedUrl, setCoursePublishedUrl] = useState<string | null>(null);
 
-  // Generation — consume and clear localStorage idea immediately to prevent cross-project leaks
+  // Generation — consume and clear localStorage idea + draft immediately to prevent cross-project leaks
   const resolvedIdea = initialIdea || localStorage.getItem("builder-initial-idea") || "";
-  if (typeof window !== "undefined") localStorage.removeItem("builder-initial-idea");
+  const resolvedDraft = (() => {
+    try {
+      const raw = localStorage.getItem("builder-draft");
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("builder-initial-idea");
+    localStorage.removeItem("builder-draft");
+  }
   const [idea, setIdea] = useState(resolvedIdea);
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
@@ -318,14 +327,45 @@ const BuilderShell = ({
     if (courseSpec) return;
     setHasAutoTriggered(true);
     localStorage.removeItem("builder-initial-idea");
+    localStorage.removeItem("builder-draft");
+
+    // Extract guided options from the structured draft
+    const draftGuided = resolvedDraft?.guided || {};
+    const durationWeeks = (() => {
+      const raw = draftGuided.duration || "";
+      const match = raw.match(/(\d+)/);
+      return match ? parseInt(match[1], 10) : 6;
+    })();
+    const lessonFormat = (() => {
+      const f = (draftGuided.format || "").toLowerCase();
+      if (f.includes("video")) return "video" as const;
+      if (f.includes("written") || f.includes("text")) return "written" as const;
+      return "mixed" as const;
+    })();
+
+    // If draft has attachment text, inject it into attachments state
+    if (draftGuided.attachmentText) {
+      setAttachments((prev) => {
+        if (prev.some((a) => a.name === "Imported content")) return prev;
+        return [...prev, {
+          id: crypto.randomUUID(),
+          name: "Imported content",
+          type: "text",
+          content: draftGuided.attachmentText,
+        }];
+      });
+    }
+
     handleGenerateCourseRef.current({
       difficulty: "beginner",
-      duration_weeks: 6,
+      duration_weeks: durationWeeks,
       includeQuizzes: true,
       includeAssignments: true,
       template: "creator",
+      lessonFormat,
+      audiencePainPoint: draftGuided.existingLink ? `Reference: ${draftGuided.existingLink}` : undefined,
     });
-  }, [userId, resolvedIdea, hasAutoTriggered, isGenerating, courseSpec]);
+  }, [userId, resolvedIdea, hasAutoTriggered, isGenerating, courseSpec]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Warn before leaving with unsaved changes ──────────────
   useEffect(() => {
@@ -545,7 +585,18 @@ const BuilderShell = ({
         console.error("❌ [generate] Error:", err);
         const failedStep = genSteps.find((s) => s.status === "in_progress");
         if (failedStep) updateStep(failedStep.id, "error");
-        toast.error(`Generation failed: ${err?.message || "Unknown error"}`);
+
+        // Show specific error messages based on error type
+        const msg = err?.message || "";
+        if (msg.includes("401") || msg.includes("Unauthorized") || msg.includes("session")) {
+          toast.error("Session expired. Please sign in again.");
+        } else if (msg.includes("429") || msg.includes("rate limit") || msg.includes("Rate limit")) {
+          toast.error("Rate limit reached. Please wait a moment and try again.");
+        } else if (msg.includes("504") || msg.includes("timeout") || msg.includes("Timeout")) {
+          toast.error("Generation timed out. Please try a simpler prompt or try again.");
+        } else {
+          toast.error(`Generation failed: ${msg || "Unknown error"}`);
+        }
       } finally {
         setIsGenerating(false);
       }

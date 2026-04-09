@@ -15,7 +15,8 @@ const SecretBuilder = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
-      setIsAllowed(session?.user?.email === ALLOWED_EMAIL);
+      // Allow founder email OR any authenticated user (subscription checked elsewhere)
+      setIsAllowed(!!session);
       setAuthChecked(true);
     });
   }, []);
