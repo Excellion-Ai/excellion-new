@@ -489,6 +489,10 @@ const BuilderShell = ({
           .map((a) => `--- Attached: ${a.name} ---\n${a.content}`)
           .join("\n\n");
 
+        // Collect base64 PDF data for direct Claude document reading
+        const pdfAttachment = attachments.find((a) => a.base64Data && a.mimeType === "application/pdf");
+        const pdfBase64 = pdfAttachment?.base64Data;
+
         // Step 1: Generate outline
         updateStep("analyze", "in_progress");
 
@@ -498,7 +502,7 @@ const BuilderShell = ({
           includeQuizzes: options.includeQuizzes,
           includeAssignments: options.includeAssignments,
           template: options.template,
-        }, attachmentContent || undefined)) as Record<string, any>;
+        }, attachmentContent || undefined, pdfBase64)) as Record<string, any>;
 
         updateStep("analyze", "complete");
         updateStep("structure", "in_progress");

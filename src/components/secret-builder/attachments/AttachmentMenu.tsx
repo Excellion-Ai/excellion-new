@@ -258,6 +258,21 @@ const AttachmentMenu = ({ onAdd, disabled }: AttachmentMenuProps) => {
     const toastId = toast.loading(`Reading ${file.name}...`);
 
     try {
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+      // For PDFs: always capture base64 so we can send directly to Claude Vision
+      let base64Data: string | undefined;
+      if (isPdf) {
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        base64Data = btoa(binary);
+      }
+
+      // Try text extraction (works for text-based PDFs and other formats)
       let content = await extractFileContent(file);
 
       if (content.length > MAX_CONTENT_LENGTH) {
@@ -265,13 +280,17 @@ const AttachmentMenu = ({ onAdd, disabled }: AttachmentMenuProps) => {
           `\n\n[... truncated, ${file.name} was ${(file.size / 1024).toFixed(0)}KB total]`;
       }
 
+      // If PDF text extraction got minimal content but we have base64, note it
+      const textExtractionFailed = isPdf && content.length < 200 && base64Data;
+
       onAdd({
         id: crypto.randomUUID(),
         name: file.name,
         type: "file",
         mimeType: file.type,
         size: file.size,
-        content,
+        content: textExtractionFailed ? `[PDF will be sent directly to AI for reading — ${file.name}, ${(file.size / 1024).toFixed(0)}KB]` : content,
+        base64Data: isPdf ? base64Data : undefined,
       });
 
       // Show preview of what was extracted

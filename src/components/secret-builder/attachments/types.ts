@@ -4,6 +4,7 @@ export interface AttachmentItem {
   type: "file" | "screenshot" | "text" | "link" | "brandkit";
   url?: string;
   content?: string;
+  base64Data?: string;
   mimeType?: string;
   size?: number;
 }

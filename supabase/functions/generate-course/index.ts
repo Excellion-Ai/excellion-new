@@ -86,11 +86,11 @@ serve(async (req) => {
   }
 
   try {
-    // Payload size limit: 100KB
+    // Payload size limit: 32MB (allows base64-encoded PDFs up to ~24MB)
     const contentLength = parseInt(req.headers.get("content-length") || "0");
-    if (contentLength > 102400) {
+    if (contentLength > 32 * 1024 * 1024) {
       return new Response(
-        JSON.stringify({ error: "Request too large. Maximum payload size is 100KB." }),
+        JSON.stringify({ error: "Request too large. Maximum file size is 24MB." }),
         { status: 413, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
       );
     }
@@ -156,6 +156,7 @@ serve(async (req) => {
     const prompt = typeof body.prompt === "string" ? body.prompt.trim().slice(0, 2000) : "";
     const options = body.options || {};
     const attachmentContent = typeof body.attachmentContent === "string" ? body.attachmentContent.slice(0, 15000) : "";
+    const pdfBase64 = typeof body.pdfBase64 === "string" ? body.pdfBase64 : "";
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Please describe your course idea." }), {
@@ -208,11 +209,34 @@ serve(async (req) => {
 
     const userMessage = parts.join("\n");
 
+    // Build message content — use document block for PDFs, text for everything else
+    const messageContent: any[] = [];
+
+    if (pdfBase64) {
+      // Send PDF directly to Claude using native document support
+      console.log("generate-course: sending PDF as document block, base64 length:", pdfBase64.length);
+      messageContent.push({
+        type: "document",
+        source: {
+          type: "base64",
+          media_type: "application/pdf",
+          data: pdfBase64,
+        },
+      });
+      messageContent.push({
+        type: "text",
+        text: `Read the entire PDF document above carefully. ${userMessage}`,
+      });
+    } else {
+      messageContent.push({ type: "text", text: userMessage });
+    }
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "x-api-key": anthropicApiKey,
         "anthropic-version": "2023-06-01",
+        "anthropic-beta": "pdfs-2024-09-25",
         "content-type": "application/json",
       },
       body: JSON.stringify({
@@ -220,7 +244,7 @@ serve(async (req) => {
         max_tokens: MAX_TOKENS,
         temperature: 0.7,
         system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userMessage }],
+        messages: [{ role: "user", content: messageContent }],
       }),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
