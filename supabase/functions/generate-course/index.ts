@@ -189,11 +189,18 @@ serve(async (req) => {
     // ── BUILD USER MESSAGE ───────────────────────────────────
     const parts: string[] = [];
 
-    // If there's attachment content, make it the PRIMARY input
-    if (attachmentContent) {
+    // Priority: pdfBase64 (native document) > attachmentContent (extracted text) > no attachment
+    if (pdfBase64) {
+      // PDF will be sent as a document block — tell Claude to read it
+      console.log("generate-course: PDF base64 detected, length:", pdfBase64.length);
+      parts.push(`The creator has uploaded a PDF document. Read EVERY page carefully and build the course structure directly from their content.`);
+      parts.push(`Creator's description: "${prompt}"`);
+      parts.push(`INSTRUCTION: Use the creator's exact headings, topics, terminology, and teaching order as module/lesson titles. Do NOT make up generic content — extract everything from the PDF.`);
+    } else if (attachmentContent && !attachmentContent.startsWith("[PDF")) {
+      // Text-based attachment content (not the PDF placeholder)
       parts.push(`CREATOR'S DOCUMENT (USE THIS AS THE PRIMARY SOURCE):\n\n${attachmentContent.slice(0, 10000)}`);
       parts.push(`\nCreator's description: "${prompt}"`);
-      parts.push(`\nINSTRUCTION: Build the course DIRECTLY from the document above. Use the creator's exact headings, topics, and terminology as module/lesson titles. Do NOT make up generic fitness content — extract it from their material.`);
+      parts.push(`\nINSTRUCTION: Build the course DIRECTLY from the document above. Use the creator's exact headings, topics, and terminology as module/lesson titles.`);
     } else {
       parts.push(`Create a fitness/health/wellness course about: ${prompt}${!isFitnessExplicit ? " (Note: Excellion is for fitness creators — frame this as a fitness/health/wellness program)" : ""}`);
     }

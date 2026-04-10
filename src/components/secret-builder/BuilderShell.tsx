@@ -490,8 +490,23 @@ const BuilderShell = ({
           .join("\n\n");
 
         // Collect base64 PDF data for direct Claude document reading
-        const pdfAttachment = attachments.find((a) => a.base64Data && a.mimeType === "application/pdf");
+        const pdfAttachment = attachments.find((a) =>
+          a.base64Data && (
+            a.mimeType === "application/pdf" ||
+            a.name?.toLowerCase().endsWith(".pdf")
+          )
+        );
         const pdfBase64 = pdfAttachment?.base64Data;
+
+        // Log what we're sending for debugging
+        console.log("Generation attachments:", {
+          totalAttachments: attachments.length,
+          withContent: attachments.filter(a => a.content).length,
+          contentLength: attachmentContent.length,
+          hasPdfBase64: !!pdfBase64,
+          pdfBase64Length: pdfBase64?.length ?? 0,
+          attachmentNames: attachments.map(a => `${a.name} (type=${a.mimeType}, content=${(a.content?.length ?? 0)}chars, base64=${!!a.base64Data})`),
+        });
 
         // Step 1: Generate outline
         updateStep("analyze", "in_progress");
