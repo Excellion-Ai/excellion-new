@@ -287,7 +287,8 @@ const AttachmentMenu = ({ onAdd, disabled }: AttachmentMenuProps) => {
         id: crypto.randomUUID(),
         name: file.name,
         type: "file",
-        mimeType: file.type,
+        // Force correct mimeType for PDFs (some browsers return empty string)
+        mimeType: isPdf ? "application/pdf" : (file.type || "application/octet-stream"),
         size: file.size,
         content: textExtractionFailed ? `[PDF will be sent directly to AI for reading — ${file.name}, ${(file.size / 1024).toFixed(0)}KB]` : content,
         base64Data: isPdf ? base64Data : undefined,
