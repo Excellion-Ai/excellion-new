@@ -126,7 +126,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    // Cleanup old entries first (lightweight)
+    // Cleanup old entries (fire-and-forget, don't block on failure)
     try { await adminClient.rpc("cleanup_old_rate_limits"); } catch { /* ignore */ }
 
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
