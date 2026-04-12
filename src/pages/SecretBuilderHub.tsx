@@ -141,12 +141,18 @@ interface CourseItem {
   tagline: string | null;
 }
 
-interface AttachmentItem {
+// Use shared AttachmentItem type
+type AttachmentItem = {
   id: string;
   name: string;
   type: string;
   file?: File;
-}
+  content?: string;
+  base64Data?: string;
+  mimeType?: string;
+  size?: number;
+  url?: string;
+};
 
 // ── Quick prompts ────────────────────────────────────────────
 
