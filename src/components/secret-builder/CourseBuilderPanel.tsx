@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { CourseLayoutStyle } from "@/types/course-pages";
+import type { AttachmentItem } from "./attachments/types";
+export type { AttachmentItem };
 
 export interface CourseOptions {
   difficulty: "beginner" | "intermediate" | "advanced";
@@ -45,17 +47,6 @@ export interface GenerationStep {
   id: string;
   label: string;
   status: "pending" | "in_progress" | "complete" | "error";
-}
-
-export interface AttachmentItem {
-  id: string;
-  name: string;
-  type: string;
-  content?: string;
-  url?: string;
-  base64Data?: string;
-  mimeType?: string;
-  size?: number;
 }
 
 interface CourseBuilderPanelProps {
