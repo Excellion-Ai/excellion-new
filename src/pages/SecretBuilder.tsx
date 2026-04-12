@@ -46,6 +46,15 @@ const SecretBuilder = () => {
 
   const resolvedProjectId = paramProjectId || state.projectId || null;
 
+  // PDF data: router state is primary, sessionStorage is fallback
+  const pdfBase64 = state.pdfBase64 || sessionStorage.getItem("builder-pdf-base64") || undefined;
+  const pdfName = state.pdfName || sessionStorage.getItem("builder-pdf-name") || undefined;
+  // Clean up sessionStorage after reading (one-time use)
+  if (pdfBase64) {
+    sessionStorage.removeItem("builder-pdf-base64");
+    sessionStorage.removeItem("builder-pdf-name");
+  }
+
   return (
     <div className="min-h-screen">
       <BuilderShell
@@ -55,8 +64,8 @@ const SecretBuilder = () => {
         initialCourseId={state.courseId}
         templateSpec={state.templateSpec}
         courseMode={state.courseMode}
-        initialPdfBase64={state.pdfBase64}
-        initialPdfName={state.pdfName}
+        initialPdfBase64={pdfBase64}
+        initialPdfName={pdfName}
       />
     </div>
   );

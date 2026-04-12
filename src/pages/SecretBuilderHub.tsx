@@ -902,6 +902,14 @@ function HubContent() {
       );
 
       // Store structured draft with guided options + attachments
+      // Exclude PDF attachments from text content — PDF is sent via base64 separately
+      const textAttachments = attachments.filter((a: AttachmentItem) =>
+        a.content && a.id !== pdfAttachment?.id
+      );
+      const attachmentText = textAttachments
+        .map((a: AttachmentItem) => `--- ${a.name} ---\n${a.content}`)
+        .join("\n\n") || undefined;
+
       const draft = {
         prompt: prompt.trim(),
         guided: guidedMode ? {
@@ -910,20 +918,21 @@ function HubContent() {
           price: guided.price || undefined,
           taughtBefore: guided.taughtBefore || undefined,
           existingLink: guided.existingLink || undefined,
-          attachmentText: attachments
-            .filter((a: AttachmentItem) => a.content)
-            .map((a: AttachmentItem) => `--- ${a.name} ---\n${a.content}`)
-            .join("\n\n") || undefined,
+          attachmentText,
         } : {
-          attachmentText: attachments
-            .filter((a: AttachmentItem) => a.content)
-            .map((a: AttachmentItem) => `--- ${a.name} ---\n${a.content}`)
-            .join("\n\n") || undefined,
+          attachmentText,
         },
       };
       localStorage.setItem("builder-draft", JSON.stringify(draft));
       localStorage.setItem("builder-initial-idea", prompt);
       localStorage.setItem("last-project-id", proj.id);
+      // Store PDF base64 in sessionStorage as backup (survives navigation, not refresh)
+      if (pdfAttachment?.base64Data) {
+        try {
+          sessionStorage.setItem("builder-pdf-base64", pdfAttachment.base64Data);
+          sessionStorage.setItem("builder-pdf-name", pdfAttachment.name || "document.pdf");
+        } catch { /* sessionStorage full — router state will be the primary transport */ }
+      }
       // Pass PDF base64 via router state (in-memory, no localStorage size limit)
       navigate(`/studio/${proj.id}`, {
         state: {
