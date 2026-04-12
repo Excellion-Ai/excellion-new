@@ -500,12 +500,6 @@ const BuilderShell = ({
       ]);
 
       try {
-        // Collect text content from all attachments
-        const attachmentContent = attachments
-          .filter((a) => a.content)
-          .map((a) => `--- Attached: ${a.name} ---\n${a.content}`)
-          .join("\n\n");
-
         // Collect base64 PDF data for direct Claude document reading
         const pdfAttachment = attachments.find((a) =>
           a.base64Data && (
@@ -515,14 +509,20 @@ const BuilderShell = ({
         );
         const pdfBase64 = pdfAttachment?.base64Data;
 
+        // Collect text content from non-PDF attachments only
+        // When we have pdfBase64, the PDF is sent directly to Claude — no need for placeholder text
+        const attachmentContent = attachments
+          .filter((a) => a.content && a.id !== pdfAttachment?.id)
+          .map((a) => `--- Attached: ${a.name} ---\n${a.content}`)
+          .join("\n\n");
+
         // Log what we're sending for debugging
         console.log("Generation attachments:", {
           totalAttachments: attachments.length,
-          withContent: attachments.filter(a => a.content).length,
-          contentLength: attachmentContent.length,
           hasPdfBase64: !!pdfBase64,
           pdfBase64Length: pdfBase64?.length ?? 0,
-          attachmentNames: attachments.map(a => `${a.name} (type=${a.mimeType}, content=${(a.content?.length ?? 0)}chars, base64=${!!a.base64Data})`),
+          textContentLength: attachmentContent.length,
+          attachmentNames: attachments.map(a => `${a.name} (type=${a.mimeType}, base64=${!!a.base64Data})`),
         });
 
         // Step 1: Generate outline
@@ -637,7 +637,7 @@ const BuilderShell = ({
         setIsGenerating(false);
       }
     },
-    [idea, userId, projectId, resetSiteSpec]
+    [idea, userId, projectId, resetSiteSpec, attachments]
   );
 
   handleGenerateCourseRef.current = handleGenerateCourse;
