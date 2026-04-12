@@ -14,7 +14,9 @@ function getCorsHeaders(req: Request) {
 
 const MODEL = "claude-sonnet-4-20250514";
 const REQUEST_TIMEOUT_MS = 55000;
+const PDF_TIMEOUT_MS = 120000;
 const MAX_TOKENS = 4000;
+const MAX_TOKENS_PDF = 6000; // PDFs need more room for detailed structures
 
 // Fitness-only topic validation
 const FITNESS_KEYWORDS = /fitness|workout|training|exercise|gym|strength|cardio|hiit|yoga|pilates|mobility|flexibility|nutrition|diet|meal|protein|fat loss|weight loss|muscle|bodybuilding|calisthenics|crossfit|running|marathon|cycling|swimming|boxing|martial arts|mma|kickboxing|health|wellness|coaching|personal trainer|sports|athletic|recovery|stretching|posture|body|physique|transformation|bootcamp|endurance|conditioning|metabol|supplement|macro|keto|vegan|paleo|intermittent fasting|mindset|motivation|accountability|lifestyle|habit|sleep|stress|mental health|meditation|breathwork|holistic|functional|rehab|injury|prehab/i;
@@ -81,26 +83,20 @@ function isTimeoutError(error: unknown) {
 }
 
 serve(async (req) => {
+  const cors = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: getCorsHeaders(req) });
+    return new Response("ok", { headers: cors });
   }
 
   try {
-    // Payload size limit: 32MB (allows base64-encoded PDFs up to ~24MB)
-    const contentLength = parseInt(req.headers.get("content-length") || "0");
-    if (contentLength > 32 * 1024 * 1024) {
-      return new Response(
-        JSON.stringify({ error: "Request too large. Maximum file size is 24MB." }),
-        { status: 413, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
-      );
-    }
-
-
+    // ── STEP 1: Auth ────────────────────────────────────────
+    console.log("generate-course: step 1 — checking auth");
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
@@ -112,22 +108,73 @@ serve(async (req) => {
 
     const { data: authData, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (authError || !authData?.user) {
+      console.error("generate-course: auth failed", authError?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    console.log("generate-course: step 1 done — user:", authData.user.id.slice(0, 8));
+
+    // ── STEP 2: Parse body ──────────────────────────────────
+    console.log("generate-course: step 2 — parsing body");
+    let body: any;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      console.error("generate-course: body parse failed:", parseError);
+      return new Response(JSON.stringify({ error: "Invalid request body. The file may be too large." }), {
+        status: 400,
+        headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY") || Deno.env.get("ANTHROPIC_KEY");
-    if (!anthropicApiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
+    const prompt = typeof body.prompt === "string" ? body.prompt.trim().slice(0, 2000) : "";
+    const options = body.options || {};
+    const attachmentContent = typeof body.attachmentContent === "string" ? body.attachmentContent.slice(0, 15000) : "";
 
-    // ── RATE LIMITING: 10 generations per hour per user ─────
+    // Clean PDF base64 — strip data URL prefix if present
+    let pdfBase64 = typeof body.pdfBase64 === "string" && body.pdfBase64.length > 100 ? body.pdfBase64 : "";
+    if (pdfBase64.startsWith("data:")) {
+      const commaIdx = pdfBase64.indexOf(",");
+      if (commaIdx > 0) pdfBase64 = pdfBase64.slice(commaIdx + 1);
+    }
+
+    console.log("generate-course: step 2 done —", JSON.stringify({
+      promptLength: prompt.length,
+      promptPreview: prompt.slice(0, 80),
+      attachmentLength: attachmentContent.length,
+      hasPdf: !!pdfBase64,
+      pdfLength: pdfBase64.length,
+    }));
+
+    if (!prompt) {
+      return new Response(JSON.stringify({ error: "Please describe your course idea." }), {
+        status: 400,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── STEP 3: API key check ───────────────────────────────
+    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY") || Deno.env.get("ANTHROPIC_KEY");
+    if (!anthropicApiKey) {
+      console.error("generate-course: ANTHROPIC_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "AI service not configured. Please contact support." }), {
+        status: 500,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── STEP 4: Rate limiting ───────────────────────────────
+    console.log("generate-course: step 4 — rate limiting");
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    // Cleanup old entries (fire-and-forget, don't block on failure)
-    try { await adminClient.rpc("cleanup_old_rate_limits"); } catch { /* ignore */ }
+
+    try {
+      await adminClient.rpc("cleanup_old_rate_limits");
+    } catch { /* ignore */ }
 
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await adminClient
@@ -142,42 +189,18 @@ serve(async (req) => {
         error: "You've reached the limit of 10 course generations per hour. Please try again later.",
       }), {
         status: 429,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    // Log this call
     await adminClient.from("rate_limits").insert({
       user_id: authData.user.id,
       endpoint: "generate-course",
     });
+    console.log("generate-course: step 4 done — rate limit OK");
 
-    const body = await req.json();
-    const prompt = typeof body.prompt === "string" ? body.prompt.trim().slice(0, 2000) : "";
-    const options = body.options || {};
-    const attachmentContent = typeof body.attachmentContent === "string" ? body.attachmentContent.slice(0, 15000) : "";
-    const pdfBase64 = typeof body.pdfBase64 === "string" && body.pdfBase64.length > 100 ? body.pdfBase64 : "";
-
-    console.log("generate-course input:", JSON.stringify({
-      promptLength: prompt.length,
-      promptPreview: prompt.slice(0, 100),
-      attachmentLength: attachmentContent.length,
-      pdfContentLength: pdfBase64.length,
-      hasPdf: !!pdfBase64,
-      pdfLength: pdfBase64.length,
-    }));
-
-    if (!prompt) {
-      return new Response(JSON.stringify({ error: "Please describe your course idea." }), {
-        status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-      });
-    }
-
-    // ── FITNESS CONTEXT ──────────────────────────────────────
-    // The system prompt already enforces fitness-only via AI.
-    // If the prompt lacks obvious fitness keywords, add a nudge
-    // rather than hard-blocking (creators often use vague terms).
+    // ── STEP 5: Build prompt ────────────────────────────────
+    console.log("generate-course: step 5 — building prompt");
     const combinedText = `${prompt} ${attachmentContent || ""}`;
     const isFitnessExplicit = FITNESS_KEYWORDS.test(combinedText);
 
@@ -195,18 +218,13 @@ serve(async (req) => {
       : hasSlang ? "energetic, casual, and motivating"
       : "friendly and approachable";
 
-    // ── BUILD USER MESSAGE ───────────────────────────────────
     const parts: string[] = [];
 
-    // Priority: pdfBase64 (native document) > attachmentContent (extracted text) > no attachment
     if (pdfBase64) {
-      // PDF will be sent as a document block — tell Claude to read it
-      console.log("generate-course: PDF base64 detected, length:", pdfBase64.length);
       parts.push(`The creator has uploaded a PDF document. Read EVERY page carefully and build the course structure directly from their content.`);
       parts.push(`Creator's description: "${prompt}"`);
       parts.push(`INSTRUCTION: Use the creator's exact headings, topics, terminology, and teaching order as module/lesson titles. Do NOT make up generic content — extract everything from the PDF.`);
     } else if (attachmentContent && !attachmentContent.startsWith("[PDF")) {
-      // Text-based attachment content (not the PDF placeholder)
       parts.push(`CREATOR'S DOCUMENT (USE THIS AS THE PRIMARY SOURCE):\n\n${attachmentContent.slice(0, 10000)}`);
       parts.push(`\nCreator's description: "${prompt}"`);
       parts.push(`\nINSTRUCTION: Build the course DIRECTLY from the document above. Use the creator's exact headings, topics, and terminology as module/lesson titles.`);
@@ -214,7 +232,6 @@ serve(async (req) => {
       parts.push(`Create a fitness/health/wellness course about: ${prompt}${!isFitnessExplicit ? " (Note: Excellion is for fitness creators — frame this as a fitness/health/wellness program)" : ""}`);
     }
 
-    // Context
     const durationCtx = durationWeeks <= 2 ? "SHORT intensive" : durationWeeks <= 4 ? "medium program" : "comprehensive program";
     const formatCtx = lessonFormat === "video" ? "VIDEO lessons" : lessonFormat === "written" ? "WRITTEN lessons" : "mixed format";
     const toneMap: Record<string, string> = { creator: "warm, personal", technical: "structured, systematic", academic: "formal, evidence-based", visual: "concise, creative" };
@@ -225,12 +242,12 @@ serve(async (req) => {
 
     const userMessage = parts.join("\n");
 
-    // Build message content — use document block for PDFs, text for everything else
+    // Build message content
     const messageContent: any[] = [];
+    const hasPdf = !!pdfBase64;
 
-    if (pdfBase64) {
-      // Send PDF directly to Claude using native document support
-      console.log("generate-course: sending PDF as document block, base64 length:", pdfBase64.length);
+    if (hasPdf) {
+      console.log("generate-course: step 5 — attaching PDF document block, base64 length:", pdfBase64.length);
       messageContent.push({
         type: "document",
         source: {
@@ -247,49 +264,83 @@ serve(async (req) => {
       messageContent.push({ type: "text", text: userMessage });
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": "pdfs-2024-09-25",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        temperature: 0.7,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: messageContent }],
-      }),
-      // PDF processing takes longer — Claude needs to read all pages
-      signal: AbortSignal.timeout(pdfBase64 ? 120000 : REQUEST_TIMEOUT_MS),
-    });
+    // ── STEP 6: Call Claude API ──────────────────────────────
+    const timeoutMs = hasPdf ? PDF_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
+    const maxTokens = hasPdf ? MAX_TOKENS_PDF : MAX_TOKENS;
+    console.log("generate-course: step 6 — calling Claude API", { model: MODEL, timeoutMs, maxTokens, hasPdf });
+
+    const apiHeaders: Record<string, string> = {
+      "x-api-key": anthropicApiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    };
+    // Add PDF beta header only when sending a PDF document
+    if (hasPdf) {
+      apiHeaders["anthropic-beta"] = "pdfs-2024-09-25";
+    }
+
+    let response: Response;
+    try {
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: apiHeaders,
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: maxTokens,
+          temperature: 0.7,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: "user", content: messageContent }],
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (fetchErr) {
+      console.error("generate-course: step 6 fetch error:", fetchErr);
+      if (isTimeoutError(fetchErr)) {
+        return new Response(JSON.stringify({ error: "Course generation timed out. For large PDFs, try uploading a shorter document or describe your course without an attachment." }), {
+          status: 504,
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+      throw fetchErr;
+    }
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Anthropic API error:", response.status, errText);
-      if (response.status === 429) throw new Error("Rate limited. Please wait and try again.");
+      console.error("generate-course: Claude API error:", response.status, errText);
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "AI rate limited. Please wait a minute and try again." }), {
+          status: 429,
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+      // If PDF-specific error, give actionable advice
+      if (hasPdf && (response.status === 400 || response.status === 413)) {
+        return new Response(JSON.stringify({ error: "The PDF could not be processed. Try a smaller file (under 20 pages) or paste the content as text instead." }), {
+          status: 400,
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
       throw new Error(`AI generation failed (${response.status}). Please try again.`);
     }
 
+    // ── STEP 7: Parse response ──────────────────────────────
+    console.log("generate-course: step 7 — parsing Claude response");
     const data = await response.json();
     const stopReason = data.stop_reason;
     const text = data.content?.[0]?.text || "";
 
-    console.log("generate-course stop_reason:", stopReason, "text length:", text.length);
-    // Log first 500 chars of raw response for debugging
-    console.log("generate-course raw response preview:", text.slice(0, 500));
+    console.log("generate-course: stop_reason:", stopReason, "text length:", text.length);
+    console.log("generate-course: raw response preview:", text.slice(0, 500));
 
     if (stopReason === "max_tokens") {
-      console.warn("generate-course: output was truncated by max_tokens — response may be incomplete JSON");
+      console.warn("generate-course: output was truncated by max_tokens");
     }
 
     let course: any;
     try {
       course = parseCourseJson(text);
     } catch (parseErr) {
-      console.error("generate-course JSON parse failed. Raw text:", text.slice(0, 1000));
+      console.error("generate-course: JSON parse failed. Raw text:", text.slice(0, 1000));
       throw new Error("The AI response wasn't valid JSON. This can happen with complex PDF content. Please try again or simplify your attachment.");
     }
 
@@ -297,24 +348,21 @@ serve(async (req) => {
     if (course?.error === "fitness_only") {
       return new Response(JSON.stringify({ error: course.message }), {
         status: 400,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    // Validate required fields — fill in defaults for missing ones instead of crashing
+    // ── STEP 8: Validate & fill defaults ────────────────────
+    console.log("generate-course: step 8 — validating course structure");
+
     if (!course?.title) {
       console.error("generate-course: missing title. Keys present:", Object.keys(course || {}));
-      console.error("generate-course: full parsed object:", JSON.stringify(course).slice(0, 500));
-      // Try to salvage — use prompt as title
       course = course || {};
       course.title = course.title || prompt.slice(0, 80);
     }
 
     if (!Array.isArray(course.modules) || course.modules.length === 0) {
       console.error("generate-course: missing/empty modules. Keys present:", Object.keys(course || {}));
-      console.error("generate-course: full parsed object:", JSON.stringify(course).slice(0, 500));
-
-      // If we have some other structure, try to extract modules from it
       if (Array.isArray(course.curriculum)) {
         course.modules = course.curriculum;
       } else if (course.outline && Array.isArray(course.outline)) {
@@ -324,7 +372,7 @@ serve(async (req) => {
       }
     }
 
-    // Ensure each module has lessons array
+    // Normalize modules
     course.modules = course.modules.map((mod: any, i: number) => ({
       id: mod.id || `mod-${i}`,
       title: mod.title || `Module ${i + 1}`,
@@ -358,20 +406,20 @@ serve(async (req) => {
       };
     }
 
-    console.log("generate-course success:", course.title, course.modules.length, "modules");
+    console.log("generate-course: SUCCESS —", course.title, ",", course.modules.length, "modules");
 
     return new Response(JSON.stringify(course), {
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("generate-course error:", e);
+    console.error("generate-course: UNHANDLED ERROR:", e);
     const status = isTimeoutError(e) ? 504 : 500;
     const message = isTimeoutError(e)
-      ? "Course generation timed out. Please try again."
+      ? "Course generation timed out. For large PDFs, try a shorter document."
       : e instanceof Error ? e.message : "Unknown error";
     return new Response(JSON.stringify({ error: message }), {
       status,
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 });
