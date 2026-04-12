@@ -533,18 +533,18 @@ const BuilderShell = ({
 
         // Collect text content from non-PDF attachments only
         // When we have pdfBase64, the PDF is sent directly to Claude — no need for placeholder text
-        const attachmentContent = attachments
+        const attachmentContent = sourceAttachments
           .filter((a) => a.content && a.id !== pdfAttachment?.id)
           .map((a) => `--- Attached: ${a.name} ---\n${a.content}`)
           .join("\n\n");
 
         // Log what we're sending for debugging
         console.log("Generation attachments:", {
-          totalAttachments: attachments.length,
+          totalAttachments: sourceAttachments.length,
           hasPdfBase64: !!pdfBase64,
           pdfBase64Length: pdfBase64?.length ?? 0,
           textContentLength: attachmentContent.length,
-          attachmentNames: attachments.map(a => `${a.name} (type=${a.mimeType}, base64=${!!a.base64Data})`),
+          attachmentNames: sourceAttachments.map(a => `${a.name} (type=${a.mimeType}, base64=${!!a.base64Data})`),
         });
 
         // Step 1: Generate outline
@@ -662,7 +662,7 @@ const BuilderShell = ({
         setIsGenerating(false);
       }
     },
-    [idea, userId, projectId, resetSiteSpec, attachments]
+    [attachments, idea, userId, projectId, resetSiteSpec]
   );
 
   handleGenerateCourseRef.current = handleGenerateCourse;
