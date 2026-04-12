@@ -112,7 +112,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AttachmentMenu from "@/components/secret-builder/attachments/AttachmentMenu";
 import { AI } from "@/services/ai";
 import GuidedModeFields, { type GuidedState, EMPTY_GUIDED, buildPromptFromGuided } from "@/components/guided-mode/GuidedModeFields";
-import GuidedPromptBuilder from "@/components/builder/GuidedPromptBuilder";
+import { GuidedPromptBuilder } from "@/components/builder/GuidedPromptBuilder";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -934,11 +934,10 @@ function HubContent() {
           sessionStorage.setItem("builder-pdf-name", pdfAttachment.name || "document.pdf");
         } catch { /* sessionStorage full — router state will be the primary transport */ }
       }
-      // Pass PDF base64 via router state (in-memory, no localStorage size limit)
+      // Don't pass large pdfBase64 via router state — sessionStorage is the transport
       navigate(`/studio/${proj.id}`, {
         state: {
           initialIdea: prompt,
-          pdfBase64: pdfAttachment?.base64Data || undefined,
           pdfName: pdfAttachment?.name || undefined,
         },
       });
@@ -1263,16 +1262,19 @@ function HubContent() {
 
           {/* ── Input Card ─────────────────────────────── */}
           <Card className="border-border/60 bg-card">
-            <CardContent className="p-5 space-y-3">
+            <CardContent className="p-5">
               <GuidedPromptBuilder
                 onPromptChange={(prompt) => setIdea(prompt)}
-                onGenerate={(prompt) => { setIdea(prompt); handleGenerate(prompt); }}
+                onGenerate={(prompt) => {
+                  setIdea(prompt);
+                  handleGenerate(prompt);
+                }}
                 isGenerating={isGenerating}
               />
 
               {/* Attachments */}
               {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-2">
+                <div className="flex flex-wrap gap-1.5 pt-3">
                   {attachments.map((a) => (
                     <Badge
                       key={a.id}
@@ -1291,39 +1293,8 @@ function HubContent() {
                   ))}
                 </div>
               )}
-
-              {/* Attach files */}
-              <div className="flex items-center gap-1 pt-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <AttachmentMenu
-                          onAdd={(item) => setAttachments((prev) => [...prev, item])}
-                          disabled={isGenerating}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>Attach files</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
             </CardContent>
           </Card>
-
-          {/* ── Quick prompts ─────────────────────────────── */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {QUICK_PROMPTS.map((prompt) => (
-              <button
-                key={prompt.label}
-                onClick={() => setIdea(prompt.label)}
-                className="flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-xs sm:text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground hover:border-primary/30"
-              >
-                <prompt.icon className="h-3.5 w-3.5" />
-                {prompt.label}
-              </button>
-            ))}
-          </div>
 
           {/* ── Your Courses ──────────────────────────────── */}
           {isLoading ? (
