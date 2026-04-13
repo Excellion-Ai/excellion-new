@@ -262,7 +262,7 @@ const HeroSection = () => {
             <em className="not-italic text-gradient-gold">1 weekend.</em>
           </h1>
 
-          <p className="text-sm text-primary/80 font-body font-medium mb-6">Join 200+ fitness coaches already building on Excellion</p>
+          <p className="text-sm text-primary/80 font-body font-medium mb-6">Built for coaches who are done waiting to launch</p>
 
           <p
             className="max-w-2xl mx-auto mb-10 font-body font-light rounded-lg inline-block"
