@@ -41,6 +41,7 @@ export interface CourseOptions {
   template: CourseLayoutStyle;
   lessonFormat?: "video" | "written" | "mixed";
   audiencePainPoint?: string;
+  brandStyle?: { preset: string; customPrimary?: string; customAccent?: string };
 }
 
 export interface GenerationStep {

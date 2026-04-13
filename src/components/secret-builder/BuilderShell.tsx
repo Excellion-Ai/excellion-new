@@ -16,6 +16,7 @@ import { AI } from "@/services/ai";
 import { useHistory } from "@/hooks/useHistory";
 import { useSubscription } from "@/hooks/useSubscription";
 import { ExtendedCourse } from "@/types/course-pages";
+import { BRAND_STYLE_CONFIGS, type BrandStylePreset } from "@/components/builder/GuidedPromptBuilder";
 import {
   CourseOptions,
   GenerationStep,
@@ -96,10 +97,22 @@ function mapAIResponseToCourse(ai: any, options: CourseOptions): ExtendedCourse 
 
   // Use AI-generated design config, falling back to defaults only for missing fields
   const aiDesign = ai.design_config || {};
+
+  // Apply brand style preset colors if selected
+  const brandStyle = options.brandStyle;
+  const presetColors = brandStyle?.preset && brandStyle.preset !== "custom" && BRAND_STYLE_CONFIGS[brandStyle.preset as Exclude<BrandStylePreset, "custom">]
+    ? BRAND_STYLE_CONFIGS[brandStyle.preset as Exclude<BrandStylePreset, "custom">]
+    : undefined;
+  const customColors = brandStyle?.preset === "custom" && brandStyle.customPrimary
+    ? { primary: brandStyle.customPrimary, accent: brandStyle.customAccent || brandStyle.customPrimary }
+    : undefined;
+  const brandColors = presetColors || customColors;
+
   const designConfig = {
     colors: {
       ...DEFAULT_DESIGN_CONFIG.colors,
       ...(aiDesign.colors || {}),
+      ...(brandColors || {}),
     },
     fonts: {
       ...DEFAULT_DESIGN_CONFIG.fonts,
@@ -553,6 +566,15 @@ const BuilderShell = ({
         // Step 1: Generate outline
         updateStep("analyze", "in_progress");
 
+        // Read brand style from options or sessionStorage (set by Hub/Hero)
+        const brandStyle = options.brandStyle || (() => {
+          try {
+            const raw = sessionStorage.getItem("builder-brand-style");
+            sessionStorage.removeItem("builder-brand-style");
+            return raw ? JSON.parse(raw) : undefined;
+          } catch { return undefined; }
+        })();
+
         const outlineResponse = (await AI.generateCourse(ideaToUse, {
           difficulty: options.difficulty,
           duration_weeks: options.duration_weeks,
@@ -561,6 +583,7 @@ const BuilderShell = ({
           template: options.template,
           lessonFormat: options.lessonFormat,
           audiencePainPoint: options.audiencePainPoint,
+          brandStyle,
         }, attachmentContent || undefined, pdfBase64)) as Record<string, any>;
 
         updateStep("analyze", "complete");

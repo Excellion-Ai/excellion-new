@@ -128,6 +128,7 @@ const BuilderChatPanel = ({
   const [activeTab, setActiveTab] = useState<"build" | "help">("build");
   const [showOptions, setShowOptions] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [pendingBrandStyle, setPendingBrandStyle] = useState<CourseOptions["brandStyle"]>(undefined);
   const [helpInput, setHelpInput] = useState("");
   const [helpMessages, setHelpMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -163,7 +164,7 @@ const BuilderChatPanel = ({
       setChatInput("");
     } else {
       if (!idea.trim()) return;
-      onGenerate(courseOptions);
+      onGenerate({ ...courseOptions, brandStyle: pendingBrandStyle });
     }
   };
 
@@ -518,7 +519,7 @@ const BuildTab = ({
         ) : (
           <GuidedPromptBuilder
             onPromptChange={onIdeaChange}
-            onGenerate={(prompt) => { onIdeaChange(prompt); onSubmit(); }}
+            onGenerate={(prompt, brandStyle) => { onIdeaChange(prompt); setPendingBrandStyle(brandStyle); setTimeout(() => onSubmit(), 0); }}
             isGenerating={isBusy}
             hasAttachment={attachments.length > 0}
             onUploadClick={() => attachMenuRef.current?.openFilePicker()}

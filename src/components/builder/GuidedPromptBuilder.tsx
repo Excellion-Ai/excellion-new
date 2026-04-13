@@ -1,8 +1,23 @@
 import { useState, useEffect } from "react";
 
+export type BrandStylePreset = "dark-bold" | "clean-minimal" | "bright-energetic" | "soft-calm" | "custom";
+
+export interface BrandStyle {
+  preset: BrandStylePreset;
+  customPrimary?: string;
+  customAccent?: string;
+}
+
+export const BRAND_STYLE_CONFIGS: Record<Exclude<BrandStylePreset, "custom">, { primary: string; accent: string; background: string; cardBackground: string; text: string; textMuted: string }> = {
+  "dark-bold": { primary: "#C9A84C", accent: "#f5c542", background: "#0a0a0a", cardBackground: "#111111", text: "#ffffff", textMuted: "#9ca3af" },
+  "clean-minimal": { primary: "#111111", accent: "#555555", background: "#ffffff", cardBackground: "#f5f5f5", text: "#111111", textMuted: "#6b7280" },
+  "bright-energetic": { primary: "#ef4444", accent: "#f97316", background: "#0f0f0f", cardBackground: "#1a1a1a", text: "#ffffff", textMuted: "#9ca3af" },
+  "soft-calm": { primary: "#7c9885", accent: "#b8c9b8", background: "#0e1210", cardBackground: "#151a17", text: "#e8efe8", textMuted: "#8a9b8f" },
+};
+
 interface GuidedPromptBuilderProps {
   onPromptChange: (prompt: string) => void;
-  onGenerate: (prompt: string) => void;
+  onGenerate: (prompt: string, brandStyle?: BrandStyle) => void;
   isGenerating?: boolean;
   onUploadClick?: () => void;
   hasAttachment?: boolean;
@@ -25,6 +40,13 @@ const GOAL_OPTIONS = [
 ];
 
 const DURATION_OPTIONS = ["4-week", "6-week", "8-week", "12-week", "90-day", "Self-paced"];
+
+const STYLE_OPTIONS: { key: BrandStylePreset; label: string; desc: string; swatches: [string, string] }[] = [
+  { key: "dark-bold", label: "Dark & Bold", desc: "Dark background, gold accents", swatches: ["#0a0a0a", "#C9A84C"] },
+  { key: "clean-minimal", label: "Clean & Minimal", desc: "White background, simple", swatches: ["#ffffff", "#111111"] },
+  { key: "bright-energetic", label: "Bright & Energetic", desc: "Vibrant colors, bold fonts", swatches: ["#0f0f0f", "#ef4444"] },
+  { key: "soft-calm", label: "Soft & Calm", desc: "Muted tones, pastel accents", swatches: ["#0e1210", "#7c9885"] },
+];
 
 function joinList(items: string[]): string {
   if (items.length === 0) return "";
@@ -91,13 +113,14 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
   const [duration, setDuration] = useState("");
   const [skipped, setSkipped] = useState(false);
   const [materialChoice, setMaterialChoice] = useState<"upload" | "skip" | null>(null);
+  const [brandPreset, setBrandPreset] = useState<BrandStylePreset | null>(null);
+  const [customPrimary, setCustomPrimary] = useState("#C9A84C");
+  const [customAccent, setCustomAccent] = useState("#f5c542");
   const [manualPrompt, setManualPrompt] = useState("");
 
-  // Custom audience overrides chip selection
   const effectiveAudiences = customAudience.trim() ? [customAudience.trim()] : audiences;
   const prompt = buildPrompt(effectiveAudiences, goals, duration);
 
-  // Auto-set materialChoice to "upload" when an attachment is added externally
   useEffect(() => {
     if (hasAttachment && materialChoice !== "upload") {
       setMaterialChoice("upload");
@@ -111,9 +134,15 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
     }
   }, [audiences, customAudience, goals, duration, skipped]);
 
+  function getBrandStyle(): BrandStyle | undefined {
+    if (!brandPreset) return undefined;
+    if (brandPreset === "custom") return { preset: "custom", customPrimary, customAccent };
+    return { preset: brandPreset };
+  }
+
   function handleGenerate() {
     const final = manualPrompt.trim();
-    if (final) onGenerate(final);
+    if (final) onGenerate(final, getBrandStyle());
   }
 
   if (skipped) {
@@ -147,7 +176,8 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
   const hasGoal = goals.length > 0;
   const hasDuration = !!duration;
   const hasMaterialChoice = materialChoice !== null;
-  const currentStep = !hasAudience ? 1 : !hasGoal ? 2 : !hasDuration ? 3 : !hasMaterialChoice ? 4 : 5;
+  const hasBrandStyle = brandPreset !== null;
+  const currentStep = !hasAudience ? 1 : !hasGoal ? 2 : !hasDuration ? 3 : !hasMaterialChoice ? 4 : !hasBrandStyle ? 5 : 6;
 
   return (
     <div className="flex flex-col gap-4">
@@ -162,7 +192,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
         </div>
       )}
 
-      {/* Step 1: Audience (multi-select or custom) */}
+      {/* Step 1: Audience */}
       <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <StepLabel number={1} text="Who are you coaching?" active={currentStep === 1} />
         <div className="flex flex-wrap gap-2">
@@ -184,7 +214,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
         />
       </div>
 
-      {/* Step 2: Goal (multi-select) */}
+      {/* Step 2: Goal */}
       {hasAudience && (
         <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <StepLabel number={2} text="What's the transformation?" active={currentStep === 2} />
@@ -196,7 +226,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
         </div>
       )}
 
-      {/* Step 3: Duration (single-select) */}
+      {/* Step 3: Duration */}
       {hasGoal && (
         <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <StepLabel number={3} text="How long?" active={currentStep === 3} />
@@ -216,10 +246,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
             <div className="flex flex-col items-start">
               <button
                 type="button"
-                onClick={() => {
-                  setMaterialChoice("upload");
-                  onUploadClick?.();
-                }}
+                onClick={() => { setMaterialChoice("upload"); onUploadClick?.(); }}
                 className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
                   materialChoice === "upload"
                     ? "bg-primary/20 border-primary text-primary font-medium"
@@ -235,12 +262,69 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
         </div>
       )}
 
+      {/* Step 5: Brand style */}
+      {hasMaterialChoice && (
+        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <StepLabel number={5} text="Your brand style" active={currentStep === 5} />
+          <div className="flex flex-wrap gap-2">
+            {STYLE_OPTIONS.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setBrandPreset(s.key)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm border transition-all ${
+                  brandPreset === s.key
+                    ? "bg-primary/20 border-primary text-primary font-medium"
+                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                <span className="flex gap-0.5 shrink-0">
+                  <span className="w-3 h-3 rounded-full border border-white/20" style={{ background: s.swatches[0] }} />
+                  <span className="w-3 h-3 rounded-full border border-white/20" style={{ background: s.swatches[1] }} />
+                </span>
+                <span className="flex flex-col items-start leading-tight">
+                  <span className="text-xs font-medium">{s.label}</span>
+                  <span className="text-[10px] opacity-60">{s.desc}</span>
+                </span>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setBrandPreset("custom")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm border transition-all ${
+                brandPreset === "custom"
+                  ? "bg-primary/20 border-primary text-primary font-medium"
+                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              <span className="flex gap-0.5 shrink-0">
+                <span className="w-3 h-3 rounded-full border border-white/20" style={{ background: customPrimary }} />
+                <span className="w-3 h-3 rounded-full border border-white/20" style={{ background: customAccent }} />
+              </span>
+              <span className="text-xs font-medium">Custom</span>
+            </button>
+          </div>
+          {brandPreset === "custom" && (
+            <div className="flex items-center gap-4 mt-1 animate-in fade-in duration-200">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                Primary
+                <input type="color" value={customPrimary} onChange={(e) => setCustomPrimary(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+              </label>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                Accent
+                <input type="color" value={customAccent} onChange={(e) => setCustomAccent(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex items-center justify-between pt-1">
         <button type="button" onClick={() => setSkipped(true)} className="text-xs text-muted-foreground hover:text-foreground underline">
           Skip — type my own prompt
         </button>
-        {currentStep === 5 && (
+        {currentStep === 6 && (
           <button
             type="button"
             onClick={handleGenerate}

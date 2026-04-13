@@ -83,6 +83,7 @@ const HeroSection = () => {
   const [userHasTyped, setUserHasTyped] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
   const [isStarting, setIsStarting] = useState(false);
+  const [pendingBrandStyle, setPendingBrandStyle] = useState<any>(undefined);
   const attachMenuRef = useRef<AttachmentMenuHandle>(null);
 
   const handleAddAttachment = (item: AttachmentItem) => {
@@ -195,6 +196,7 @@ const HeroSection = () => {
         .filter((a) => a.content)
         .map((a) => `--- ${a.name} ---\n${a.content}`)
         .join("\n\n") || undefined,
+      brandStyle: pendingBrandStyle || undefined,
     },
   });
 
@@ -280,8 +282,9 @@ const HeroSection = () => {
                 if (p && !userHasTyped) setUserHasTyped(true);
                 if (!p) setUserHasTyped(false);
               }}
-              onGenerate={(p) => {
+              onGenerate={(p, brandStyle) => {
                 setPrompt(p);
+                setPendingBrandStyle(brandStyle);
                 setUserHasTyped(true);
                 handleStartBuilding();
               }}
