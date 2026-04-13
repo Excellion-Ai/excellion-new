@@ -1254,8 +1254,11 @@ function HubContent() {
 
               <GuidedPromptBuilder
                 onPromptChange={(prompt) => setIdea(prompt)}
-                onGenerate={(prompt) => {
+                onGenerate={(prompt, brandStyle) => {
                   setIdea(prompt);
+                  if (brandStyle) {
+                    try { sessionStorage.setItem("builder-brand-style", JSON.stringify(brandStyle)); } catch {}
+                  }
                   handleGenerate(prompt);
                 }}
                 isGenerating={isGenerating}
