@@ -72,7 +72,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border">
           <p className="text-muted-foreground text-sm text-center font-body">
-            © 2025 Excellion. All rights reserved.
+            © 2026 Excellion. All rights reserved.
           </p>
         </div>
       </div>
