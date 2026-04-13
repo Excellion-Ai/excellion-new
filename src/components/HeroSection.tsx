@@ -203,7 +203,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24">
       {/* Background — CSS gradients only, no image */}
       <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(201, 168, 76, 0.07) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(201, 168, 76, 0.05) 0%, transparent 50%), linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0d0d0d 100%)' }} />
 
@@ -261,15 +261,7 @@ const HeroSection = () => {
           <p className="text-sm text-primary/80 font-body font-medium mb-6">Built for coaches who are done waiting to launch</p>
 
           <p
-            className="max-w-2xl mx-auto mb-10 font-body font-light rounded-lg inline-block"
-            style={{
-              fontSize: "18px",
-              color: "rgba(255,255,255,0.90)",
-              textShadow: "0 2px 12px rgba(0,0,0,0.8)",
-              background: "rgba(0,0,0,0.3)",
-              borderRadius: "8px",
-              padding: "8px 16px",
-            }}
+            className="max-w-2xl mx-auto mb-10 font-body font-light text-lg text-white/90"
           >
             Excellion generates your course outline, lesson plan, sales page copy, and student portal from 1 prompt. Spend the weekend polishing, filming, and publishing.
           </p>
