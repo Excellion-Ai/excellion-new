@@ -95,7 +95,9 @@ const Auth = () => {
       // character here produces a malformed URL and Supabase returns
       // server_error, so we deliberately avoid template interpolation
       // or window.location.origin (which would drift between envs).
-      const redirectUrl = "https://excellioncourses.com/dashboard";
+      // /auth/callback is a dedicated route that runs the session exchange
+      // and then routes by role.
+      const redirectUrl = "https://excellioncourses.com/auth/callback";
       console.log("[Auth] signInWithOAuth redirectTo:", redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",

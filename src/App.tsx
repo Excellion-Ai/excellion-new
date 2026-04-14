@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 // Pages
 const WebBuilderHome = lazyWithRetry(() => import("./pages/WebBuilderHome"), "WebBuilderHome");
 const Auth = lazyWithRetry(() => import("./pages/Auth"), "Auth");
+const AuthCallback = lazyWithRetry(() => import("./pages/AuthCallback"), "AuthCallback");
 const SecretBuilderHub = lazyWithRetry(() => import("./pages/SecretBuilderHub"), "SecretBuilderHub");
 const SecretBuilder = lazyWithRetry(() => import("./pages/SecretBuilder"), "SecretBuilder");
 const CoursePage = lazyWithRetry(() => import("./pages/CoursePage"), "CoursePage");
@@ -84,6 +85,7 @@ const App = () => (
             {/* Core */}
             <Route path="/" element={<WebBuilderHome />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/dashboard" element={<SecretBuilderHub />} />
             <Route path="/secret-builder-hub" element={<SecretBuilderHub />} />
             <Route path="/onboarding/role" element={<RoleSelection />} />
