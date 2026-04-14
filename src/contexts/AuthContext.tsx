@@ -22,7 +22,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up the listener FIRST (per Supabase docs)
+    // Rely on onAuthStateChange — Supabase fires INITIAL_SESSION exactly once
+    // AFTER it finishes processing any OAuth code/token in the URL.
+    // Using getSession() in parallel can resolve null before the OAuth
+    // exchange completes and flip loading to false prematurely, which
+    // causes auth guards to bounce freshly signed-in users back to /auth.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -30,13 +34,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     );
-
-    // Then check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, []);

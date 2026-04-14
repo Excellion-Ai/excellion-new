@@ -81,6 +81,7 @@ const App = () => (
             {/* Core */}
             <Route path="/" element={<WebBuilderHome />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<SecretBuilderHub />} />
             <Route path="/secret-builder-hub" element={<SecretBuilderHub />} />
             <Route path="/secret-builder" element={<SecretBuilder />} />
             <Route path="/secret-builder/:projectId" element={<SecretBuilder />} />

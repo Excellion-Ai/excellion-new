@@ -18,7 +18,7 @@ const Auth = () => {
 
   // Get redirect destination from URL params
   const searchParams = new URLSearchParams(window.location.search);
-  const redirectTo = searchParams.get("redirect") || "/secret-builder-hub";
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
 
   // Redirect if already authenticated
   useEffect(() => {
