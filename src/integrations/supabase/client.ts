@@ -13,5 +13,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    // Disable auto-detection so /auth/callback handles the PKCE code exchange
+    // exclusively. Without this, detectSessionInUrl consumes the ?code= param
+    // on page load, leaving nothing for exchangeCodeForSession() → "Unable to
+    // exchange external code" error.
+    detectSessionInUrl: false,
   }
 });
