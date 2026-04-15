@@ -78,7 +78,7 @@ function useTypingAnimation(phrases: string[], active: boolean) {
 const HeroSection = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { subscribed, startCheckout } = useSubscription();
+  const { subscribed } = useSubscription();
 
   const [prompt, setPrompt] = useState("");
   const [userHasTyped, setUserHasTyped] = useState(false);
@@ -103,29 +103,42 @@ const HeroSection = () => {
     if (userHasTyped && !e.target.value) setUserHasTyped(false);
   };
 
+  /** Persist guided-prompt answers so they survive auth + paywall + checkout. */
+  const persistDraft = () => {
+    if (!prompt.trim()) return;
+    const draft = buildDraft();
+    const serialized = JSON.stringify(draft);
+    // localStorage for durability across tabs; sessionStorage mirrors it so
+    // the "save answers to sessionStorage" contract is explicit even when
+    // the user returns via Stripe's redirect.
+    localStorage.setItem("builder-draft", serialized);
+    localStorage.setItem("builder-initial-idea", prompt);
+    try {
+      sessionStorage.setItem("builder-draft", serialized);
+      sessionStorage.setItem("builder-initial-idea", prompt);
+    } catch { /* sessionStorage quota is best-effort */ }
+  };
+
   /** Store structured draft and navigate to builder */
   const handleStartBuilding = async () => {
     if (isStarting) return;
 
     // Check access
     if (!user) {
-      // Store draft so it persists through auth
-      if (prompt.trim()) {
-        const draft = buildDraft();
-        localStorage.setItem("builder-draft", JSON.stringify(draft));
-        localStorage.setItem("builder-initial-idea", prompt);
-      }
-      navigate("/auth?redirect=/secret-builder-hub");
+      // Store draft so it persists through auth + paywall + checkout
+      persistDraft();
+      // /dashboard is the canonical post-auth destination — the guard
+      // there routes unsubscribed coaches to /paywall.
+      navigate("/auth?redirect=/dashboard");
       return;
     }
 
     const isAllowed = user.email === ALLOWED_EMAIL || subscribed;
     if (!isAllowed) {
-      try {
-        await startCheckout("monthly");
-      } catch {
-        toast.error("Could not start checkout. Please try again.");
-      }
+      // Save the draft, then send them to the paywall. After payment,
+      // /dashboard will pick up the saved prompt and pre-fill the builder.
+      persistDraft();
+      navigate("/paywall");
       return;
     }
 

@@ -1,27 +1,20 @@
 import { useLocation, useParams, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import BuilderShell from "@/components/secret-builder/BuilderShell";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 
-const ALLOWED_EMAIL = "excellionai@gmail.com";
+const FOUNDER_EMAIL = "excellionai@gmail.com";
 
 const SecretBuilder = () => {
   const location = useLocation();
   const { projectId: paramProjectId } = useParams<{ projectId: string }>();
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAllowed, setIsAllowed] = useState(false);
+  const { user, ready, role } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscription();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      // Allow founder email OR any authenticated user (subscription checked elsewhere)
-      setIsAllowed(!!session);
-      setAuthChecked(true);
-    });
-  }, []);
-
-  if (!authChecked) {
+  // Wait for BOTH auth + subscription to resolve before deciding where this
+  // user belongs. Without this, an unsubscribed user would briefly render
+  // the full builder before the guard kicks in.
+  if (!ready || (user && subLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -29,8 +22,11 @@ const SecretBuilder = () => {
     );
   }
 
-  if (!isAuthenticated || !isAllowed) {
-    return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!role) return <Navigate to="/onboarding/role" replace />;
+  if (role === "student") return <Navigate to="/dashboard/student" replace />;
+  if (!subscribed && user.email !== FOUNDER_EMAIL) {
+    return <Navigate to="/paywall" replace />;
   }
 
   // Extract navigation state passed from SecretBuilderHub
