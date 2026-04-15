@@ -77,31 +77,31 @@ const Paywall = () => {
       <main className="flex-1 px-4 py-12 sm:py-16 flex items-center justify-center">
         <div className="w-full max-w-3xl text-center">
           <h1 className="text-3xl sm:text-5xl font-heading font-bold text-foreground mb-4 leading-tight">
-            Your course platform is ready.{" "}
-            <span className="text-gradient-gold">Let's launch it.</span>
+            Build Your Fitness Course{" "}
+            <span className="text-gradient-gold">This Weekend</span>
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground font-body mb-8 sm:mb-10">
-            Watch how Excellion builds a full fitness course in 60 seconds
+            Everything you need to go from idea to live course in 48 hours
           </p>
 
-          {/* Video placeholder — swap in the demo video URL when ready */}
+          {/* Video thumbnail */}
           <div
             role="img"
-            aria-label="Demo video coming soon"
-            className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border bg-gradient-to-br from-zinc-900 via-zinc-950 to-black mb-10"
+            aria-label="See Excellion in Action"
+            className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border bg-gradient-to-br from-zinc-900 via-zinc-950 to-black mb-10 cursor-pointer group"
           >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_0_40px_rgba(201,168,76,0.45)]">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+              <span className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_0_40px_rgba(201,168,76,0.45)] group-hover:scale-110 transition-transform">
                 <Play className="w-7 h-7 sm:w-8 sm:h-8 ml-1" fill="currentColor" />
               </span>
-            </div>
-            <div className="absolute bottom-3 left-4 text-xs text-muted-foreground font-body">
-              Demo coming soon
+              <span className="text-sm sm:text-base font-body font-medium text-foreground/80">
+                See Excellion in Action
+              </span>
             </div>
           </div>
 
           {/* What's included */}
-          <ul className="text-left max-w-xl mx-auto space-y-3 mb-10">
+          <ul className="text-left max-w-xl mx-auto space-y-3 mb-8">
             {FEATURES.map((f) => (
               <li key={f} className="flex items-start gap-3 text-base text-foreground/90 font-body">
                 <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
@@ -110,11 +110,19 @@ const Paywall = () => {
             ))}
           </ul>
 
+          {/* Founder quote */}
+          <div className="max-w-xl mx-auto mb-10 px-6 py-5 rounded-xl border border-border bg-card/50">
+            <p className="text-sm sm:text-base text-foreground/80 italic font-body leading-relaxed mb-2">
+              "Built by a coach who was tired of seeing great programs stuck in Google Docs."
+            </p>
+            <p className="text-xs text-muted-foreground font-body">— John, Founder</p>
+          </div>
+
           {/* Price */}
           <div className="mb-6">
             <p className="text-xl sm:text-2xl font-heading font-bold text-foreground">
-              <span className="text-gradient-gold">$29</span> for your first month,
-              <span className="block sm:inline"> then $79/mo</span>
+              Launch Price: <span className="text-gradient-gold">$29/mo</span>{" "}
+              <span className="text-muted-foreground line-through text-base font-normal">$79/mo</span>
             </p>
           </div>
 
@@ -131,10 +139,13 @@ const Paywall = () => {
                 Loading checkout…
               </>
             ) : (
-              "Start Building"
+              "Start Building My Course"
             )}
           </button>
-          <p className="text-sm text-muted-foreground font-body mt-4">
+          <p className="text-sm text-muted-foreground font-body mt-3">
+            Takes 60 seconds to generate your first course
+          </p>
+          <p className="text-xs text-muted-foreground font-body mt-1">
             Cancel anytime. No contracts.
           </p>
         </div>
