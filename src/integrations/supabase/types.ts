@@ -736,6 +736,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          role: string | null
           stripe_account_id: string | null
           stripe_account_status: string | null
           stripe_onboarding_complete: boolean | null
@@ -748,6 +749,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          role?: string | null
           stripe_account_id?: string | null
           stripe_account_status?: string | null
           stripe_onboarding_complete?: boolean | null
@@ -760,6 +762,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          role?: string | null
           stripe_account_id?: string | null
           stripe_account_status?: string | null
           stripe_onboarding_complete?: boolean | null
