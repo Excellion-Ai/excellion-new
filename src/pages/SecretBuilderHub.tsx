@@ -1232,63 +1232,56 @@ function HubContent() {
         </div>
 
         <div className="mx-auto w-full max-w-[960px] px-4 sm:px-8 py-10 sm:py-16 space-y-10">
-          {/* ── Hero heading ──────────────────────────────── */}
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Let's build your next course
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto">
-              Describe what you want. Excellion generates a full course you can
-              edit, customize, and publish.
-            </p>
-          </div>
-
-          {/* ── Input Card ─────────────────────────────── */}
-          <Card className="border-border/60 bg-card">
-            <CardContent className="p-5">
-              <AttachmentMenu
-                ref={attachMenuRef}
-                onAdd={(item) => setAttachments((prev) => [...prev, item])}
-                disabled={isGenerating}
-              />
-
-              <GuidedPromptBuilder
-                onPromptChange={(prompt) => setIdea(prompt)}
-                onGenerate={(prompt, brandStyle) => {
-                  setIdea(prompt);
-                  if (brandStyle) {
-                    try { sessionStorage.setItem("builder-brand-style", JSON.stringify(brandStyle)); } catch {}
-                  }
-                  handleGenerate(prompt);
-                }}
-                isGenerating={isGenerating}
-                hasAttachment={attachments.length > 0}
-                onUploadClick={() => attachMenuRef.current?.openFilePicker()}
-              />
-
-              {/* Attachments */}
-              {attachments.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-3">
-                  {attachments.map((a) => (
-                    <Badge
-                      key={a.id}
-                      variant="secondary"
-                      className="gap-1 pr-1 text-xs"
-                    >
-                      <FileText className="h-3 w-3" />
-                      <span className="truncate max-w-[120px]">{a.name}</span>
-                      <button
-                        onClick={() => removeAttachment(a.id)}
-                        className="ml-0.5 rounded-sm hover:bg-muted-foreground/20 p-0.5"
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
-                    </Badge>
+          {/* ── Welcome / Hero ────────────────────────────── */}
+          {!isLoading && courses.length === 0 ? (
+            <div className="text-center space-y-8 py-8">
+              <div className="space-y-3">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Welcome to Excellion</h1>
+                <p className="text-muted-foreground text-base sm:text-lg max-w-lg mx-auto">Let's build your first fitness course in 60 seconds</p>
+              </div>
+              <Card className="border-border/60 bg-card max-w-2xl mx-auto">
+                <CardContent className="p-5">
+                  <AttachmentMenu ref={attachMenuRef} onAdd={(item) => setAttachments((prev) => [...prev, item])} disabled={isGenerating} />
+                  <GuidedPromptBuilder onPromptChange={(prompt) => setIdea(prompt)} onGenerate={(prompt, brandStyle) => { setIdea(prompt); if (brandStyle) { try { sessionStorage.setItem("builder-brand-style", JSON.stringify(brandStyle)); } catch {} } handleGenerate(prompt); }} isGenerating={isGenerating} hasAttachment={attachments.length > 0} onUploadClick={() => attachMenuRef.current?.openFilePicker()} />
+                  {attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-3">
+                      {attachments.map((a) => (
+                        <Badge key={a.id} variant="secondary" className="gap-1 pr-1 text-xs"><FileText className="h-3 w-3" /><span className="truncate max-w-[120px]">{a.name}</span><button onClick={() => removeAttachment(a.id)} className="ml-0.5 rounded-sm hover:bg-muted-foreground/20 p-0.5"><X className="h-2.5 w-2.5" /></button></Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              <div className="space-y-3 max-w-2xl mx-auto">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Try an example</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {["8-week strength training program", "30-day weight loss challenge", "12-week bodybuilding fundamentals"].map((exPrompt) => (
+                    <button key={exPrompt} onClick={() => { setIdea(exPrompt); handleGenerate(exPrompt); }} disabled={isGenerating} className="px-4 py-2 rounded-full border border-border bg-card hover:bg-primary/10 hover:border-primary/40 text-sm text-foreground transition-colors disabled:opacity-50">{exPrompt}</button>
                   ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-center space-y-3">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Let's build your next course</h1>
+                <p className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto">Describe what you want. Excellion generates a full course you can edit, customize, and publish.</p>
+              </div>
+              <Card className="border-border/60 bg-card">
+                <CardContent className="p-5">
+                  <AttachmentMenu ref={attachMenuRef} onAdd={(item) => setAttachments((prev) => [...prev, item])} disabled={isGenerating} />
+                  <GuidedPromptBuilder onPromptChange={(prompt) => setIdea(prompt)} onGenerate={(prompt, brandStyle) => { setIdea(prompt); if (brandStyle) { try { sessionStorage.setItem("builder-brand-style", JSON.stringify(brandStyle)); } catch {} } handleGenerate(prompt); }} isGenerating={isGenerating} hasAttachment={attachments.length > 0} onUploadClick={() => attachMenuRef.current?.openFilePicker()} />
+                  {attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-3">
+                      {attachments.map((a) => (
+                        <Badge key={a.id} variant="secondary" className="gap-1 pr-1 text-xs"><FileText className="h-3 w-3" /><span className="truncate max-w-[120px]">{a.name}</span><button onClick={() => removeAttachment(a.id)} className="ml-0.5 rounded-sm hover:bg-muted-foreground/20 p-0.5"><X className="h-2.5 w-2.5" /></button></Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
 
           {/* ── Your Courses ──────────────────────────────── */}
           {isLoading ? (
