@@ -33,7 +33,7 @@ const Navigation = () => {
     try {
       await supabase.auth.signOut();
       toast.success("Signed out successfully");
-      navigate("/");
+      window.location.href = "/";
     } catch {
       toast.error("Failed to sign out");
     }
