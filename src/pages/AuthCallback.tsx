@@ -137,9 +137,9 @@ const AuthCallback = () => {
         subscription.unsubscribe();
         // eslint-disable-next-line no-console
         console.error("[oauth-debug] /auth/callback timed out waiting for session");
-        setErrorMsg("Sign-in timed out. The OAuth code may have failed to exchange.");
+        setErrorMsg("Sign-in timed out. Please try again.");
         setStatus("error");
-      }, 10_000);
+      }, 15_000);
     };
 
     void run();
