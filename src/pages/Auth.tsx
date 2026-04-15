@@ -90,14 +90,12 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     console.log("[Auth] Google sign-in clicked");
     try {
-      // Hardcoded string literal — must match an entry in Supabase's OAuth
-      // redirect allowlist EXACTLY. Any whitespace, newline, or stray
-      // character here produces a malformed URL and Supabase returns
-      // server_error, so we deliberately avoid template interpolation
-      // or window.location.origin (which would drift between envs).
-      // /auth/callback is a dedicated route that runs the session exchange
-      // and then routes by role.
-      const redirectUrl = "https://excellioncourses.com/auth/callback";
+      // Use the current origin so the PKCE code-verifier (stored in
+      // localStorage) is available when the callback page exchanges the
+      // code. A hardcoded origin breaks preview/staging environments.
+      // IMPORTANT: every origin used here must be listed in Supabase's
+      // Auth → URL Configuration → Redirect URLs allowlist.
+      const redirectUrl = `${window.location.origin}/auth/callback`;
       console.log("[Auth] signInWithOAuth redirectTo:", redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
