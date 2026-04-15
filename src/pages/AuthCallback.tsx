@@ -2,163 +2,103 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { destinationForRole, fetchRoleForUser } from "@/lib/roleRouting";
-import { identifyUser, analytics } from "@/lib/analytics";
+import { identifyUser } from "@/lib/analytics";
 
 /**
- * Dedicated OAuth callback route. Google redirects users here after
- * completing sign-in. Responsibilities:
- *   1. Log what arrived in the URL (for debugging)
- *   2. Ensure Supabase has exchanged the ?code for a session — either
- *      via detectSessionInUrl (auto) or explicit exchangeCodeForSession
- *   3. Look up the user's role and navigate to the correct dashboard
- *   4. Show a clear error screen if the exchange fails
+ * Dedicated OAuth callback route. Google redirects users here with a
+ * ?code= PKCE authorization code. We exchange it for a session and then
+ * navigate to /dashboard — guards there handle role-based routing
+ * (coach vs student vs onboarding).
+ *
+ * Default UI is a spinner. We only render the error screen when
+ * exchangeCodeForSession explicitly returns an error object — no
+ * timeouts, no speculative "maybe it failed" states.
  */
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"processing" | "error">("processing");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let unsubscribe: (() => void) | null = null;
 
     // eslint-disable-next-line no-console
     console.log("[oauth-debug] /auth/callback MOUNTED", {
       href: window.location.href,
-      pathname: window.location.pathname,
       search: window.location.search,
       hash: window.location.hash,
     });
 
-    const routeToDashboard = async (userId: string, email?: string, isNewSignIn = false) => {
+    const goToDashboard = (userId?: string, email?: string) => {
       if (cancelled) return;
-      try {
-        identifyUser(userId, { email });
-      } catch { /* analytics is best-effort */ }
-      if (isNewSignIn) {
+      if (userId) {
         try {
-          analytics.signedUp({ method: "google", email });
-        } catch { /* noop */ }
+          identifyUser(userId, { email });
+        } catch { /* analytics is best-effort */ }
       }
-      const role = await fetchRoleForUser(userId);
-      if (cancelled) return;
-      const dest = role ? destinationForRole(role) : "/onboarding/role";
-      // eslint-disable-next-line no-console
-      console.log("[oauth-debug] /auth/callback → navigate", { role, dest });
-      navigate(dest, { replace: true });
+      navigate("/dashboard", { replace: true });
     };
 
+    // Fallback: if onAuthStateChange fires SIGNED_IN (e.g. session was
+    // already set, or exchange succeeded via another path), forward to
+    // the dashboard. No timeout — the spinner stays up until a session
+    // is available or exchangeCodeForSession returns an error.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // eslint-disable-next-line no-console
+      console.log("[oauth-debug] /auth/callback onAuthStateChange", { event, hasSession: !!session });
+      if (event === "SIGNED_IN" && session) {
+        goToDashboard(session.user.id, session.user.email);
+      }
+    });
+
     const run = async () => {
-      const sp = new URLSearchParams(window.location.search);
-      const hp = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-      const code = sp.get("code");
-      const errorParam = sp.get("error") || hp.get("error");
-      const errorDescription = sp.get("error_description") || hp.get("error_description");
-
+      const code = new URLSearchParams(window.location.search).get("code");
       // eslint-disable-next-line no-console
-      console.log("[oauth-debug] /auth/callback params", {
-        hasCode: !!code,
-        errorParam,
-        errorDescription,
-        queryParams: Object.fromEntries(sp.entries()),
-        hashParams: Object.fromEntries(hp.entries()),
-      });
+      console.log("[oauth-debug] /auth/callback code present?", !!code);
 
-      // Google/Supabase explicitly returned an error
-      if (errorParam) {
-        // eslint-disable-next-line no-console
-        console.error("[oauth-debug] /auth/callback error from provider", { errorParam, errorDescription });
-        setErrorMsg(errorDescription || errorParam);
-        setStatus("error");
+      if (!code) {
+        // No code in URL — possibly the user hit this route while already
+        // logged in. If a session already exists, forward immediately.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) goToDashboard(session.user.id, session.user.email);
         return;
       }
 
-      // Supabase's detectSessionInUrl may have already exchanged the code.
-      // Check for an existing session first.
-      const { data: { session: existing }, error: getError } = await supabase.auth.getSession();
-      if (getError) {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (cancelled) return;
+
+      if (error) {
         // eslint-disable-next-line no-console
-        console.error("[oauth-debug] /auth/callback getSession error", getError);
+        console.error("[oauth-debug] /auth/callback exchangeCodeForSession error", error);
+        setErrorMsg(error.message);
+        return;
       }
-      if (existing) {
+
+      if (data.session) {
         // eslint-disable-next-line no-console
-        console.log("[oauth-debug] /auth/callback — session already set", {
-          userId: existing.user.id,
-          provider: existing.user.app_metadata?.provider,
+        console.log("[oauth-debug] /auth/callback exchange succeeded", {
+          userId: data.session.user.id,
         });
-        const ageMs = existing.user.created_at ? Date.now() - new Date(existing.user.created_at).getTime() : Infinity;
-        await routeToDashboard(existing.user.id, existing.user.email, ageMs < 60_000);
-        return;
+        goToDashboard(data.session.user.id, data.session.user.email);
       }
-
-      // No session yet. Try an explicit PKCE exchange if we have a ?code=
-      if (code) {
-        // eslint-disable-next-line no-console
-        console.log("[oauth-debug] /auth/callback attempting exchangeCodeForSession");
-        const { data, error: exchErr } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchErr) {
-          // eslint-disable-next-line no-console
-          console.error("[oauth-debug] /auth/callback exchangeCodeForSession failed", exchErr);
-          setErrorMsg(exchErr.message);
-          setStatus("error");
-          return;
-        }
-        if (data.session) {
-          // eslint-disable-next-line no-console
-          console.log("[oauth-debug] /auth/callback exchange succeeded", {
-            userId: data.session.user.id,
-            provider: data.session.user.app_metadata?.provider,
-          });
-          const ageMs = data.session.user.created_at ? Date.now() - new Date(data.session.user.created_at).getTime() : Infinity;
-          await routeToDashboard(data.session.user.id, data.session.user.email, ageMs < 60_000);
-          return;
-        }
-      }
-
-      // Still no session — wait for onAuthStateChange to fire (with a timeout).
-      // eslint-disable-next-line no-console
-      console.log("[oauth-debug] /auth/callback waiting for onAuthStateChange…");
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        // eslint-disable-next-line no-console
-        console.log("[oauth-debug] /auth/callback onAuthStateChange", { event, hasSession: !!session });
-        if (session) {
-          subscription.unsubscribe();
-          if (timeoutId) clearTimeout(timeoutId);
-          const ageMs = session.user.created_at ? Date.now() - new Date(session.user.created_at).getTime() : Infinity;
-          await routeToDashboard(session.user.id, session.user.email, ageMs < 60_000);
-        }
-      });
-      unsubscribe = () => subscription.unsubscribe();
-
-      timeoutId = setTimeout(() => {
-        if (cancelled) return;
-        subscription.unsubscribe();
-        // eslint-disable-next-line no-console
-        console.error("[oauth-debug] /auth/callback timed out waiting for session");
-        setErrorMsg("Sign-in timed out. Please try again.");
-        setStatus("error");
-      }, 15_000);
+      // If exchange returned neither an error nor a session, the
+      // onAuthStateChange SIGNED_IN listener will catch the session
+      // when it arrives.
     };
 
     void run();
 
     return () => {
       cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      if (unsubscribe) unsubscribe();
+      subscription.unsubscribe();
     };
   }, [navigate]);
 
-  if (status === "error") {
+  if (errorMsg) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="max-w-md w-full rounded-2xl border border-border bg-card p-8 text-center">
           <h1 className="text-xl font-heading font-bold text-foreground mb-2">Sign-in failed</h1>
-          <p className="text-sm text-muted-foreground font-body mb-6 break-words">
-            {errorMsg || "Something went wrong completing sign-in. Please try again."}
-          </p>
+          <p className="text-sm text-muted-foreground font-body mb-6 break-words">{errorMsg}</p>
           <button
             type="button"
             onClick={() => navigate("/auth", { replace: true })}
