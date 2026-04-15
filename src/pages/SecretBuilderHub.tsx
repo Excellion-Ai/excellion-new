@@ -1511,17 +1511,6 @@ const SecretBuilderHub = () => {
   const { user, ready, role } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
 
-  // eslint-disable-next-line no-console
-  console.log("[oauth-debug] /dashboard guard render", {
-    ready,
-    hasUser: !!user,
-    userId: user?.id ?? null,
-    role,
-    subscribed,
-    subLoading,
-    url: typeof window !== "undefined" ? window.location.href : null,
-  });
-
   // Wait for BOTH auth + subscription to resolve so we don't flash a
   // redirect to /paywall while the Stripe check is still in flight.
   if (!ready || (user && subLoading)) {
@@ -1534,13 +1523,11 @@ const SecretBuilderHub = () => {
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  // No role chosen yet → onboarding.
-  if (!role) return <Navigate to="/onboarding/role" replace />;
-
   // Students get their own dashboard.
   if (role === "student") return <Navigate to="/dashboard/student" replace />;
 
-  // Coach without an active subscription → paywall. Founder bypasses.
+  // Coach (or auto-assigned coach, i.e. null role) without an active
+  // subscription → paywall. Founder email bypasses.
   if (!subscribed && user.email !== FOUNDER_EMAIL) {
     return <Navigate to="/paywall" replace />;
   }

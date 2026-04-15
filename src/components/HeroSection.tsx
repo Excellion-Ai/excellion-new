@@ -104,18 +104,20 @@ const HeroSection = () => {
   };
 
   /** Persist guided-prompt answers so they survive auth + paywall + checkout. */
-  const persistDraft = () => {
-    if (!prompt.trim()) return;
+  const persistDraft = (promptOverride?: string) => {
+    const effective = (promptOverride || prompt).trim();
+    if (!effective) return;
     const draft = buildDraft();
+    if (promptOverride) draft.prompt = effective;
     const serialized = JSON.stringify(draft);
     // localStorage for durability across tabs; sessionStorage mirrors it so
     // the "save answers to sessionStorage" contract is explicit even when
     // the user returns via Stripe's redirect.
     localStorage.setItem("builder-draft", serialized);
-    localStorage.setItem("builder-initial-idea", prompt);
+    localStorage.setItem("builder-initial-idea", effective);
     try {
       sessionStorage.setItem("builder-draft", serialized);
-      sessionStorage.setItem("builder-initial-idea", prompt);
+      sessionStorage.setItem("builder-initial-idea", effective);
     } catch { /* sessionStorage quota is best-effort */ }
   };
 
@@ -126,8 +128,8 @@ const HeroSection = () => {
 
     // Check access
     if (!user) {
-      // Store draft so it persists through auth + paywall + checkout
-      persistDraft();
+      // Store draft so it persists through auth + paywall + checkout.
+      persistDraft(overridePrompt);
       // /dashboard is the canonical post-auth destination — the guard
       // there routes unsubscribed coaches to /paywall.
       navigate("/auth?redirect=/dashboard");
@@ -138,7 +140,7 @@ const HeroSection = () => {
     if (!isAllowed) {
       // Save the draft, then send them to the paywall. After payment,
       // /dashboard will pick up the saved prompt and pre-fill the builder.
-      persistDraft();
+      persistDraft(overridePrompt);
       navigate("/paywall");
       return;
     }

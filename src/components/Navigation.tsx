@@ -24,6 +24,9 @@ const Navigation = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { subscribed } = useSubscription();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const closeMobile = () => setMobileOpen(false);
 
   const handleSignOut = async () => {
     closeMobile();
@@ -38,11 +41,9 @@ const Navigation = () => {
 
   const ALLOWED_EMAIL = "excellionai@gmail.com";
   const handleStartBuilding = () => {
-    // Always route through /dashboard — its guard handles the full chain:
-    //   no user → /auth
-    //   no role → /onboarding/role
-    //   coach, not subscribed → /paywall
-    //   subscribed coach → builder
+    closeMobile();
+    // Route unsubscribed coaches through /paywall; everyone else hits
+    // /dashboard, whose guard handles auth/role/subscription redirects.
     if (!user) {
       navigate("/auth?redirect=/dashboard");
       return;
