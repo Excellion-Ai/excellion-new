@@ -34,6 +34,7 @@ const Contact = lazyWithRetry(() => import("./pages/Contact"), "Contact");
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"), "FAQ");
 const Legal = lazyWithRetry(() => import("./pages/Legal"), "Legal");
 const BuilderPricing = lazyWithRetry(() => import("./pages/BuilderPricing"), "BuilderPricing");
+const Paywall = lazyWithRetry(() => import("./pages/Paywall"), "Paywall");
 const BuilderFAQ = lazyWithRetry(() => import("./pages/BuilderFAQ"), "BuilderFAQ");
 const ThankYou = lazyWithRetry(() => import("./pages/ThankYou"), "ThankYou");
 const MaintenanceRequest = lazyWithRetry(() => import("./pages/MaintenanceRequest"), "MaintenanceRequest");
@@ -109,6 +110,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
             <Route path="/pricing" element={<BuilderPricing />} />
+            <Route path="/paywall" element={<Paywall />} />
 
             {/* Admin */}
             <Route path="/admin" element={<Admin />} />

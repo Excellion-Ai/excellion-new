@@ -18,7 +18,7 @@ const CheckoutSuccess = () => {
 
   useEffect(() => {
     if (countdown <= 0) {
-      navigate("/secret-builder-hub");
+      navigate("/dashboard");
       return;
     }
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
@@ -48,7 +48,7 @@ const CheckoutSuccess = () => {
           </div>
 
           <button
-            onClick={() => navigate("/secret-builder-hub")}
+            onClick={() => navigate("/dashboard")}
             className="px-6 py-3 rounded-[10px] btn-primary text-sm font-body"
           >
             Go to Dashboard Now

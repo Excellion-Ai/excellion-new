@@ -107,6 +107,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import AttachmentMenu from "@/components/secret-builder/attachments/AttachmentMenu";
 import type { AttachmentMenuHandle } from "@/components/secret-builder/attachments/AttachmentMenu";
 import { AI } from "@/services/ai";
@@ -1503,10 +1504,27 @@ function HubContent() {
 
 // ── Page wrapper with Auth + Role Guard ─────────────────────
 
+// Founder bypass — always has full builder access regardless of Stripe state.
+const FOUNDER_EMAIL = "excellionai@gmail.com";
+
 const SecretBuilderHub = () => {
   const { user, ready, role } = useAuth();
+  const { subscribed, loading: subLoading } = useSubscription();
 
-  if (!ready) {
+  // eslint-disable-next-line no-console
+  console.log("[oauth-debug] /dashboard guard render", {
+    ready,
+    hasUser: !!user,
+    userId: user?.id ?? null,
+    role,
+    subscribed,
+    subLoading,
+    url: typeof window !== "undefined" ? window.location.href : null,
+  });
+
+  // Wait for BOTH auth + subscription to resolve so we don't flash a
+  // redirect to /paywall while the Stripe check is still in flight.
+  if (!ready || (user && subLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -1514,16 +1532,19 @@ const SecretBuilderHub = () => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  if (!user) return <Navigate to="/auth" replace />;
+
+  // No role chosen yet → onboarding.
+  if (!role) return <Navigate to="/onboarding/role" replace />;
 
   // Students get their own dashboard.
-  if (role === "student") {
-    return <Navigate to="/dashboard/student" replace />;
+  if (role === "student") return <Navigate to="/dashboard/student" replace />;
+
+  // Coach without an active subscription → paywall. Founder bypasses.
+  if (!subscribed && user.email !== FOUNDER_EMAIL) {
+    return <Navigate to="/paywall" replace />;
   }
 
-  // Coach (or auto-assigned coach) → show hub
   return <HubContent />;
 };
 

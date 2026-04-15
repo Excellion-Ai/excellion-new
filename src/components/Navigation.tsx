@@ -23,10 +23,7 @@ const Navigation = () => {
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { subscribed, startCheckout } = useSubscription();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const closeMobile = () => setMobileOpen(false);
+  const { subscribed } = useSubscription();
 
   const handleSignOut = async () => {
     closeMobile();
@@ -40,19 +37,21 @@ const Navigation = () => {
   };
 
   const ALLOWED_EMAIL = "excellionai@gmail.com";
-  const handleStartBuilding = async () => {
-    closeMobile();
-    if (user && (user.email === ALLOWED_EMAIL || subscribed)) {
-      navigate("/dashboard");
-    } else if (user) {
-      try {
-        await startCheckout("monthly");
-      } catch {
-        navigate("/auth");
-      }
-    } else {
-      navigate("/auth");
+  const handleStartBuilding = () => {
+    // Always route through /dashboard — its guard handles the full chain:
+    //   no user → /auth
+    //   no role → /onboarding/role
+    //   coach, not subscribed → /paywall
+    //   subscribed coach → builder
+    if (!user) {
+      navigate("/auth?redirect=/dashboard");
+      return;
     }
+    if (user.email === ALLOWED_EMAIL || subscribed) {
+      navigate("/dashboard");
+      return;
+    }
+    navigate("/paywall");
   };
 
   const scrollTo = (id: string) => {
