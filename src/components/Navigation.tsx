@@ -33,7 +33,7 @@ const Navigation = () => {
     try {
       await supabase.auth.signOut();
       toast.success("Signed out successfully");
-      navigate("/");
+      window.location.href = "/";
     } catch {
       toast.error("Failed to sign out");
     }
@@ -94,7 +94,12 @@ const Navigation = () => {
           Billing
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            handleSignOut();
+          }}
+        >
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out
         </DropdownMenuItem>
