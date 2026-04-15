@@ -104,29 +104,32 @@ const HeroSection = () => {
   };
 
   /** Persist guided-prompt answers so they survive auth + paywall + checkout. */
-  const persistDraft = () => {
-    if (!prompt.trim()) return;
+  const persistDraft = (promptOverride?: string) => {
+    const effective = (promptOverride || prompt).trim();
+    if (!effective) return;
     const draft = buildDraft();
+    if (promptOverride) draft.prompt = effective;
     const serialized = JSON.stringify(draft);
     // localStorage for durability across tabs; sessionStorage mirrors it so
     // the "save answers to sessionStorage" contract is explicit even when
     // the user returns via Stripe's redirect.
     localStorage.setItem("builder-draft", serialized);
-    localStorage.setItem("builder-initial-idea", prompt);
+    localStorage.setItem("builder-initial-idea", effective);
     try {
       sessionStorage.setItem("builder-draft", serialized);
-      sessionStorage.setItem("builder-initial-idea", prompt);
+      sessionStorage.setItem("builder-initial-idea", effective);
     } catch { /* sessionStorage quota is best-effort */ }
   };
 
   /** Store structured draft and navigate to builder */
-  const handleStartBuilding = async () => {
+  const handleStartBuilding = async (overridePrompt?: string) => {
     if (isStarting) return;
+    const effectivePrompt = overridePrompt || prompt;
 
     // Check access
     if (!user) {
-      // Store draft so it persists through auth + paywall + checkout
-      persistDraft();
+      // Store draft so it persists through auth + paywall + checkout.
+      persistDraft(overridePrompt);
       // /dashboard is the canonical post-auth destination — the guard
       // there routes unsubscribed coaches to /paywall.
       navigate("/auth?redirect=/dashboard");
@@ -137,12 +140,12 @@ const HeroSection = () => {
     if (!isAllowed) {
       // Save the draft, then send them to the paywall. After payment,
       // /dashboard will pick up the saved prompt and pre-fill the builder.
-      persistDraft();
+      persistDraft(overridePrompt);
       navigate("/paywall");
       return;
     }
 
-    if (!prompt.trim()) {
+    if (!effectivePrompt.trim()) {
       toast.error("Enter a course idea first.");
       return;
     }
@@ -158,13 +161,14 @@ const HeroSection = () => {
 
       // Store structured draft
       const draft = buildDraft();
+      if (overridePrompt) draft.prompt = overridePrompt.trim();
       localStorage.setItem("builder-draft", JSON.stringify(draft));
-      localStorage.setItem("builder-initial-idea", prompt);
+      localStorage.setItem("builder-initial-idea", effectivePrompt);
 
       // Create project
       const { data: proj, error } = await supabase
         .from("builder_projects")
-        .insert({ name: prompt.slice(0, 80), user_id: session.user.id })
+        .insert({ name: effectivePrompt.slice(0, 80), user_id: session.user.id })
         .select("id")
         .single();
       if (error || !proj) throw error;
@@ -190,7 +194,7 @@ const HeroSection = () => {
 
       navigate(`/studio/${proj.id}`, {
         state: {
-          initialIdea: prompt,
+          initialIdea: effectivePrompt,
           pdfName: pdfAttachment?.name,
         },
       });
@@ -219,7 +223,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24">
+    <section className="relative min-h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden pt-20">
       {/* Background image */}
       <div className="absolute inset-0">
         <img
@@ -231,26 +235,26 @@ const HeroSection = () => {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 0%, rgba(0,0,0,0.5) 100%)' }} />
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 text-center py-20">
+      <div className="relative z-10 max-w-3xl mx-auto px-4 text-center py-8 md:py-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-3">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm text-primary font-body font-semibold tracking-wide">Now Live — Start Building Free</span>
+            <span className="text-sm text-primary font-body font-semibold tracking-wide">Full Course in 1 Weekend</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-black text-foreground leading-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-foreground leading-tight mb-3">
             Launch your fitness course in{" "}
             <em className="not-italic text-gradient-gold">1 weekend.</em>
           </h1>
 
-          <p className="text-sm text-primary/80 font-body font-medium mb-6">Built for coaches who are done waiting to launch</p>
+          <p className="text-sm text-primary/80 font-body font-medium mb-3">Built for coaches who are done waiting to launch</p>
 
           <p
-            className="max-w-2xl mx-auto mb-10 font-body font-light text-lg text-white/90"
+            className="max-w-2xl mx-auto mb-6 font-body font-light text-base text-white/90"
           >
             Excellion generates your course outline, lesson plan, sales page copy, and student portal from 1 prompt. Spend the weekend polishing, filming, and publishing.
           </p>
@@ -260,7 +264,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="premium-card p-6 space-y-4"
+          className="premium-card p-4 space-y-3"
         >
           <div className="rounded-xl border border-primary/20 bg-black/40 backdrop-blur-sm p-4">
             <GuidedPromptBuilder
@@ -273,7 +277,7 @@ const HeroSection = () => {
                 setPrompt(p);
                 setPendingBrandStyle(brandStyle);
                 setUserHasTyped(true);
-                handleStartBuilding();
+                handleStartBuilding(p);
               }}
               isGenerating={isStarting}
               hasAttachment={attachments.length > 0}
@@ -315,16 +319,16 @@ const HeroSection = () => {
               See how it works
             </button>
             <button
-              onClick={handleStartBuilding}
+              onClick={() => handleStartBuilding()}
               disabled={isStarting}
               className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body disabled:opacity-50"
             >
-              {isStarting ? "Creating…" : "Start Building Free"}
+              {isStarting ? "Creating…" : "Start Building"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          <p className="text-xs text-muted-foreground font-body">No credit card required.</p>
+          <p className="text-xs text-muted-foreground font-body">No credit card needed.</p>
 
           <div className="flex flex-wrap gap-2 justify-center pt-2">
             {suggestions.map((s) => (
