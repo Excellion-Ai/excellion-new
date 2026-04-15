@@ -214,6 +214,7 @@ const BuilderChatPanel = ({
           helpInput={helpInput}
           setHelpInput={setHelpInput}
           messages={helpMessages}
+          setMessages={setHelpMessages}
           messagesEndRef={messagesEndRef}
         />
       )}
@@ -545,7 +546,7 @@ const HelpTab = ({
 
     try {
       const allMessages = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
-      const data = await AI.help(allMessages);
+      const data = await AI.help(allMessages) as any;
       const reply = data?.reply || data?.text || "Sorry, I couldn't generate a response.";
       setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "assistant", content: reply }]);
     } catch (err: any) {
