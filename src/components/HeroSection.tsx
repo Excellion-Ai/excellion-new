@@ -264,7 +264,7 @@ const HeroSection = () => {
                 setPrompt(p);
                 setPendingBrandStyle(brandStyle);
                 setUserHasTyped(true);
-                handleStartBuilding();
+                handleStartBuilding(p);
               }}
               isGenerating={isStarting}
               hasAttachment={attachments.length > 0}
@@ -306,7 +306,7 @@ const HeroSection = () => {
               See how it works
             </button>
             <button
-              onClick={handleStartBuilding}
+              onClick={() => handleStartBuilding()}
               disabled={isStarting}
               className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body disabled:opacity-50"
             >
