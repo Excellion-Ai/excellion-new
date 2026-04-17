@@ -218,11 +218,20 @@ const CoursePage = () => {
   // ── Enroll ───────────────────────────────────────────────
 
   const handleEnroll = async () => {
+    // eslint-disable-next-line no-console
+    console.log("[enroll] handleEnroll invoked", {
+      courseId: course?.id,
+      stripePaymentUrl: course?.stripe_payment_url ?? null,
+      isFree: course?.is_free,
+      priceCents: course?.price_cents,
+    });
     if (enrolling || !course) return;
     // Stripe Payment Link takes precedence — coach-managed external checkout.
     // Redirects straight to buy.stripe.com without requiring sign-in or
     // touching the platform's enrollments/checkout tables.
     if (course.stripe_payment_url) {
+      // eslint-disable-next-line no-console
+      console.log("[enroll] redirecting to Stripe Payment Link:", course.stripe_payment_url);
       window.location.href = course.stripe_payment_url;
       return;
     }
@@ -297,6 +306,7 @@ const CoursePage = () => {
         onRefine={() => {}}
         onOpenSettings={() => {}}
         onOpenPublishSettings={() => {}}
+        onEnrollClick={handleEnroll}
         onSignIn={() => navigate("/auth", { state: { redirect: `/course/${identifier}` } })}
         logoUrl={course.design_config?.logoUrl}
       />
