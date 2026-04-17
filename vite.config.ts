@@ -30,7 +30,11 @@ export default defineConfig(({ mode }) => ({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',
+        // Strip informational logs in production but keep console.error
+        // so real prod bugs still surface in the browser console.
+        pure_funcs: mode === 'production'
+          ? ['console.log', 'console.debug', 'console.info', 'console.warn']
+          : [],
         drop_debugger: mode === 'production',
       },
     },

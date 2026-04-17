@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import excellionLogo from "@/assets/excellion-logo.png";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import {
   Sparkles,
   MoreVertical,
@@ -1646,21 +1646,15 @@ const FOUNDER_EMAIL = "excellionai@gmail.com";
 const SecretBuilderHub = () => {
   const { user, ready, role } = useAuth();
   const { subscribed, loading: subLoading } = useSubscription();
-  const [forceRender, setForceRender] = useState(false);
+  const location = useLocation();
 
-  // Hard safety net: never let a user stare at an infinite spinner.
-  // After 10s, render the page anyway and warn.
-  useEffect(() => {
-    if (forceRender) return;
-    const t = setTimeout(() => {
-      setForceRender(true);
-      toast.warning("Taking longer than expected — loading may be incomplete.");
-    }, 10000);
-    return () => clearTimeout(t);
-  }, [forceRender]);
+  // Once we've rendered the hub once, never swap back to a spinner on a
+  // transient loading flicker (token refresh, tab focus, etc.). The
+  // 5s-timeout-based data load handles the worst-case data hang.
+  const hasRenderedRef = useRef(false);
 
-  const stillLoading = (!ready || (user && subLoading)) && !forceRender;
-  if (stillLoading) {
+  const stillLoading = !ready || (!!user && subLoading);
+  if (!hasRenderedRef.current && stillLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -1668,7 +1662,8 @@ const SecretBuilderHub = () => {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
+  // Preserve the path they tried to reach so Auth.tsx can send them back.
+  if (!user) return <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
 
   // Students get their own dashboard.
   if (role === "student") return <Navigate to="/dashboard/student" replace />;
@@ -1679,6 +1674,7 @@ const SecretBuilderHub = () => {
     return <Navigate to="/paywall" replace />;
   }
 
+  hasRenderedRef.current = true;
   return <HubContent />;
 };
 

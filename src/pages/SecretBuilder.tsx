@@ -26,7 +26,7 @@ const SecretBuilder = () => {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   if (role === "student") return <Navigate to="/dashboard/student" replace />;
   if (!subscribed && user.email !== FOUNDER_EMAIL) {
     return <Navigate to="/paywall" replace />;
