@@ -433,10 +433,13 @@ const BuilderShell = ({
     if (!handleGenerateCourseRef.current) return;
     // Don't auto-trigger if we already loaded an existing course
     if (courseSpec) return;
-    // Opening an existing project (URL has :projectId) — loadExisting
-    // is fetching the course asynchronously. Never auto-generate here;
-    // the user already has a saved course for this project.
-    if (initialProjectId) return;
+    // Opening an existing project from the hub (URL has :projectId but no
+    // prompt from the landing page). loadExisting is fetching the course
+    // asynchronously — never auto-generate over a saved course.
+    // BUT: if initialIdea is set, the user came from the landing page's
+    // "Generate" button which created a fresh project + passed the prompt
+    // via router state. In that case, DO auto-trigger.
+    if (initialProjectId && !initialIdea) return;
     setHasAutoTriggered(true);
     localStorage.removeItem("builder-initial-idea");
     localStorage.removeItem("builder-draft");
