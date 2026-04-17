@@ -30,12 +30,28 @@ const Navigation = () => {
 
   const handleSignOut = async () => {
     closeMobile();
+    // eslint-disable-next-line no-console
+    console.log("[signout] handleSignOut invoked", {
+      userId: user?.id ?? null,
+      email: user?.email ?? null,
+      href: window.location.href,
+    });
     try {
-      await supabase.auth.signOut();
+      // eslint-disable-next-line no-console
+      console.log("[signout] calling supabase.auth.signOut()…");
+      const { error } = await supabase.auth.signOut();
+      // eslint-disable-next-line no-console
+      console.log("[signout] supabase.auth.signOut() returned", { error: error?.message ?? null });
+      if (error) throw error;
       toast.success("Signed out successfully");
+      // Hard navigation to reset React Query cache, AuthContext, useSubscription cache, etc.
+      // eslint-disable-next-line no-console
+      console.log("[signout] redirecting to / via window.location.href");
       window.location.href = "/";
-    } catch {
-      toast.error("Failed to sign out");
+    } catch (err: any) {
+      // eslint-disable-next-line no-console
+      console.error("[signout] signOut failed:", err);
+      toast.error(err?.message || "Failed to sign out");
     }
   };
 
