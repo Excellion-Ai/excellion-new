@@ -28,7 +28,7 @@ const Navigation = () => {
 
   const closeMobile = () => setMobileOpen(false);
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     closeMobile();
     // eslint-disable-next-line no-console
     console.log("[signout] handleSignOut invoked", {
@@ -36,23 +36,35 @@ const Navigation = () => {
       email: user?.email ?? null,
       href: window.location.href,
     });
-    try {
+
+    // Absolute 3s failsafe: no matter what — pending promises, stuck
+    // signOut network call, React state race — the tab redirects to /.
+    const failsafe = window.setTimeout(() => {
       // eslint-disable-next-line no-console
-      console.log("[signout] calling supabase.auth.signOut()…");
-      const { error } = await supabase.auth.signOut();
-      // eslint-disable-next-line no-console
-      console.log("[signout] supabase.auth.signOut() returned", { error: error?.message ?? null });
-      if (error) throw error;
-      toast.success("Signed out successfully");
-      // Hard navigation to reset React Query cache, AuthContext, useSubscription cache, etc.
-      // eslint-disable-next-line no-console
-      console.log("[signout] redirecting to / via window.location.href");
+      console.warn("[signout] 3s failsafe — forcing redirect to /");
       window.location.href = "/";
-    } catch (err: any) {
-      // eslint-disable-next-line no-console
-      console.error("[signout] signOut failed:", err);
-      toast.error(err?.message || "Failed to sign out");
-    }
+    }, 3000);
+
+    // Race signOut against a 1.5s timeout. The SDK clears the session
+    // from localStorage in the first microtask; the network call to
+    // invalidate the refresh token server-side is async and can hang
+    // on a dead JWT — we don't wait for it.
+    Promise.race([
+      supabase.auth.signOut(),
+      new Promise<{ error: null }>((resolve) =>
+        window.setTimeout(() => resolve({ error: null }), 1500)
+      ),
+    ])
+      .catch((err: any) => {
+        // eslint-disable-next-line no-console
+        console.error("[signout] signOut threw:", err);
+      })
+      .finally(() => {
+        window.clearTimeout(failsafe);
+        // eslint-disable-next-line no-console
+        console.log("[signout] redirecting to /");
+        window.location.href = "/";
+      });
   };
 
   const ALLOWED_EMAIL = "excellionai@gmail.com";
