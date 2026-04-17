@@ -215,18 +215,25 @@ const BuilderShell = ({
   const [projectId, setProjectId] = useState<string | null>(initialProjectId || null);
   const [coursePublishedUrl, setCoursePublishedUrl] = useState<string | null>(null);
 
-  // Generation — consume and clear localStorage idea + draft immediately to prevent cross-project leaks
-  const resolvedIdea = initialIdea || localStorage.getItem("builder-initial-idea") || "";
-  const resolvedDraft = (() => {
+  // Generation — consume localStorage idea + draft only on first mount.
+  // Use a ref so the values survive re-renders but the side-effect
+  // (clearing localStorage) runs exactly once via the effect below.
+  const resolvedIdeaRef = useRef(
+    initialIdea || (typeof window !== "undefined" ? localStorage.getItem("builder-initial-idea") : null) || ""
+  );
+  const resolvedDraftRef = useRef<Record<string, any> | null>((() => {
     try {
-      const raw = localStorage.getItem("builder-draft");
+      const raw = typeof window !== "undefined" ? localStorage.getItem("builder-draft") : null;
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
-  })();
-  if (typeof window !== "undefined") {
+  })());
+  useEffect(() => {
+    // One-time cleanup so stale ideas don't leak into the next project.
     localStorage.removeItem("builder-initial-idea");
     localStorage.removeItem("builder-draft");
-  }
+  }, []);
+  const resolvedIdea = resolvedIdeaRef.current;
+  const resolvedDraft = resolvedDraftRef.current;
   const [idea, setIdea] = useState(resolvedIdea);
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
@@ -371,6 +378,10 @@ const BuilderShell = ({
     if (!handleGenerateCourseRef.current) return;
     // Don't auto-trigger if we already loaded an existing course
     if (courseSpec) return;
+    // Opening an existing project (URL has :projectId) — loadExisting
+    // is fetching the course asynchronously. Never auto-generate here;
+    // the user already has a saved course for this project.
+    if (initialProjectId) return;
     setHasAutoTriggered(true);
     localStorage.removeItem("builder-initial-idea");
     localStorage.removeItem("builder-draft");
