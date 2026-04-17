@@ -949,21 +949,13 @@ function HubContent() {
       if (trashedRes.data) setTrashedCourses(trashedRes.data as CourseItem[]);
       setIsLoading(false);
 
-      // If we still have no data after timeout + retry, the session is
-      // truly dead. Show a clear re-auth prompt instead of an empty page.
+      // If refresh failed, the Supabase SDK has already emitted SIGNED_OUT,
+      // AuthContext has nulled `user`, and the guard at the bottom of this
+      // file will render <Navigate to="/auth"> on the next tick. No toast
+      // needed — the redirect IS the re-auth UX.
       if (!activeRes.data && !projRes.data) {
         // eslint-disable-next-line no-console
-        console.error("[hub-load] all queries returned null — session is dead, prompting re-auth");
-        toast.error("Session expired — please sign in again", {
-          duration: Infinity,
-          action: {
-            label: "Sign in",
-            onClick: async () => {
-              await supabase.auth.signOut().catch(() => {});
-              window.location.href = "/auth";
-            },
-          },
-        });
+        console.error("[hub-load] all queries returned null — session is dead, guard will redirect to /auth");
       }
     };
     load();
