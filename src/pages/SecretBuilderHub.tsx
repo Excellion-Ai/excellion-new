@@ -21,7 +21,6 @@ import {
   FileText,
   Zap,
   Send,
-  ExternalLink,
   Headphones,
   BarChart3,
   BookOpenCheck,
@@ -175,7 +174,6 @@ const QUICK_PROMPTS = [
 // ── Sidebar nav items ────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { title: "Excellion Homepage", icon: ExternalLink, path: "/" },
   { title: "Expert Support", icon: Headphones, path: "/contact" },
   { title: "Analytics", icon: BarChart3, path: "/dashboard/analytics" },
   { title: "Resources", icon: BookOpenCheck, path: "/courses" },
