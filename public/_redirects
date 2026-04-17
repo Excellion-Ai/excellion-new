@@ -1,0 +1,3 @@
+# SPA fallback: serve index.html for any path that doesn't match a static file.
+# Works on Netlify and Cloudflare Pages.
+/*  /index.html  200
