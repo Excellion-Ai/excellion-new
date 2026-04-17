@@ -826,16 +826,16 @@ function HubContent() {
       console.log("[hub-load] skipped — no userId from useAuth() yet");
       return;
     }
-    const load = async () => {
-      // eslint-disable-next-line no-console
-      console.log("[hub-load] starting load for userId (from useAuth):", userId);
 
-      // Ensure the Supabase client has a valid JWT before querying.
-      // getUser() can hang indefinitely when the token is stale, so we
-      // race it against a 5-second timeout. If it fails or mismatches,
-      // we force a token refresh. The course queries themselves use the
-      // JWT implicitly (RLS checks auth.uid()), so we need it valid.
+    // Kick off a background session refresh but DO NOT block the data
+    // queries on it. The Supabase client attaches the JWT from localStorage
+    // to every request, so SELECT/UPDATE work independently of getUser()
+    // (which was hanging indefinitely in prod and leaving the dashboard
+    // empty). If the refresh eventually completes or fails, we log it.
+    (async () => {
       try {
+        // eslint-disable-next-line no-console
+        console.log("[hub-load] starting background getUser() + refresh probe");
         const getUserWithTimeout = Promise.race([
           supabase.auth.getUser(),
           new Promise<{ data: { user: null }; error: Error }>((resolve) =>
@@ -843,28 +843,39 @@ function HubContent() {
           ),
         ]);
         const { data: { user: jwtUser }, error: jwtErr } = await getUserWithTimeout;
-
         // eslint-disable-next-line no-console
         console.log("[hub-load] getUser() →", {
           jwtUserId: jwtUser?.id ?? null,
           matchesAuthContext: jwtUser?.id === userId,
           jwtError: jwtErr?.message ?? null,
         });
-
         if (jwtErr || !jwtUser || jwtUser.id !== userId) {
           // eslint-disable-next-line no-console
-          console.warn("[hub-load] stale/missing JWT — forcing session refresh");
-          const { error: refreshErr } = await supabase.auth.refreshSession();
+          console.warn("[hub-load] stale/missing JWT — attempting refreshSession()");
+          const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
           // eslint-disable-next-line no-console
-          console.log("[hub-load] refreshSession() →", { error: refreshErr?.message ?? null });
+          console.log("[hub-load] refreshSession() →", {
+            hasSession: !!refreshData?.session,
+            newUserId: refreshData?.user?.id ?? null,
+            error: refreshErr?.message ?? null,
+          });
         }
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error("[hub-load] getUser/refresh threw:", e);
+        console.error("[hub-load] background probe threw:", e);
       }
+    })();
 
-      // Proceed with the data queries regardless — userId from useAuth
-      // is valid and the JWT should now be refreshed (or was fine).
+    // Fire data queries immediately — do NOT await the JWT probe above.
+    // AuthContext's userId is trusted and already validated by its own
+    // onAuthStateChange listener. RLS will still gate these queries on
+    // auth.uid() matching, which requires a valid JWT in the request
+    // header — and the Supabase client supplies that from localStorage
+    // regardless of whether getUser() ever resolves.
+    const load = async () => {
+      // eslint-disable-next-line no-console
+      console.log("[hub-load] firing data queries with userId:", userId);
+
       const [projRes, activeRes, trashedRes] = await Promise.all([
         supabase
           .from("builder_projects")
@@ -909,7 +920,31 @@ function HubContent() {
         error: trashedRes.error?.message ?? null,
       });
 
-      if (activeRes.error) {
+      // If the SELECT failed due to permission/RLS, attempt a refresh +
+      // retry once before giving up.
+      if (activeRes.error && /permission|jwt|denied/i.test(activeRes.error.message)) {
+        // eslint-disable-next-line no-console
+        console.warn("[hub-load] SELECT permission/JWT error — retrying after refreshSession");
+        const { error: refreshErr } = await supabase.auth.refreshSession();
+        // eslint-disable-next-line no-console
+        console.log("[hub-load] retry refreshSession() →", { error: refreshErr?.message ?? null });
+        const retry = await supabase
+          .from("courses")
+          .select(
+            "id, title, description, status, thumbnail_url, curriculum, updated_at, deleted_at, builder_project_id, type, slug, subdomain, published_at, total_students, layout_template, design_config, tagline"
+          )
+          .eq("user_id", userId)
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false })
+          .limit(50);
+        // eslint-disable-next-line no-console
+        console.log("[hub-load] retry courses (active) →", {
+          count: retry.data?.length ?? 0,
+          error: retry.error?.message ?? null,
+        });
+        if (retry.data) setCourses(retry.data as CourseItem[]);
+        else if (retry.error) toast.error(`Couldn't load courses: ${retry.error.message}`);
+      } else if (activeRes.error) {
         toast.error(`Couldn't load courses: ${activeRes.error.message}`);
       }
 
