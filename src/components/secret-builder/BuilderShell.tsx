@@ -1218,6 +1218,7 @@ const BuilderShell = ({
         onOpenChange={setShowPaymentLinkDialog}
         currentUrl={stripePaymentUrl}
         onSave={handleSavePaymentLink}
+        courseTitle={courseSpec?.title}
       />
     </div>
   );
