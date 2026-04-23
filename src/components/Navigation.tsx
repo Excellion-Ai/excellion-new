@@ -156,6 +156,9 @@ const Navigation = () => {
             <button onClick={() => scrollTo("faq")} className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               FAQ
             </button>
+            <Link to="/founding" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+              Founding
+            </Link>
           </div>
 
           {/* Desktop Actions */}
@@ -206,6 +209,9 @@ const Navigation = () => {
                     </button>
                     <button onClick={() => scrollTo("faq")} className="text-muted-foreground hover:text-foreground transition-colors text-sm text-left py-2 touch-manipulation">
                       FAQ
+                    </button>
+                    <button onClick={() => mobileNavigate("/founding")} className="text-muted-foreground hover:text-foreground transition-colors text-sm text-left py-2 touch-manipulation">
+                      Founding
                     </button>
                   </div>
 

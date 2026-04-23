@@ -33,6 +33,11 @@ const Footer = () => {
                   Pricing
                 </Link>
               </li>
+              <li>
+                <Link to="/founding" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-body">
+                  Founding Coaches
+                </Link>
+              </li>
             </ul>
           </div>
 
