@@ -126,6 +126,7 @@ const App = () => (
             <Route path="/builder-faq" element={<BuilderFAQ />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/founding" element={<Founding />} />
             <Route path="/maintenance-request" element={<MaintenanceRequest />} />
             <Route path="/builder-test" element={<BuilderTest />} />
 
