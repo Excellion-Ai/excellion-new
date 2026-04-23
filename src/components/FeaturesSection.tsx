@@ -49,8 +49,8 @@ const FeaturesSection = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">Built for fitness influencers</h2>
-          <p className="text-muted-foreground text-lg font-body">Create, sell, and deliver a course in one place.</p>
+          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">Built for fitness coaches and creators</h2>
+          <p className="text-muted-foreground text-lg font-body">Everything you need to build, sell, and deliver your course. No tech skills required.</p>
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
