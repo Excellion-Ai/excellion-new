@@ -3,7 +3,7 @@ interface DemoVideoProps {
 }
 
 const DemoVideo = ({ videoId }: DemoVideoProps) => (
-  <section className="py-16 px-4">
+  <section className="hidden py-16 px-4">
     <p className="text-center text-amber-400 text-sm font-semibold uppercase tracking-wider mb-6">
       See it in 46 seconds
     </p>
