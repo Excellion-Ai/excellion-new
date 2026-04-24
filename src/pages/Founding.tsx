@@ -104,7 +104,12 @@ const Founding = () => {
       </section>
 
       {/* SOCIAL PROOF */}
-      <SocialProofFounding claimed={SPOTS_TOTAL - SPOTS_REMAINING} total={SPOTS_TOTAL} />
+      <SocialProofFounding
+        claimed={SPOTS_TOTAL - SPOTS_REMAINING}
+        total={SPOTS_TOTAL}
+        tiktokUrl="https://www.tiktok.com/@excellionai"
+        xUrl="https://x.com/ExcellionAI"
+      />
 
       {/* WHAT YOU GET */}
       <section className="w-full" style={{ paddingTop: "64px", paddingBottom: "96px" }}>
