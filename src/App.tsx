@@ -42,6 +42,7 @@ const MaintenanceRequest = lazyWithRetry(() => import("./pages/MaintenanceReques
 const BuilderTest = lazyWithRetry(() => import("./pages/BuilderTest"), "BuilderTest");
 const FoundingApply = lazyWithRetry(() => import("./pages/FoundingApply"), "FoundingApply");
 const FoundingThanks = lazyWithRetry(() => import("./pages/FoundingThanks"), "FoundingThanks");
+const Founding = lazyWithRetry(() => import("./pages/Founding"), "Founding");
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"), "NotFound");
 
 // Onboarding
