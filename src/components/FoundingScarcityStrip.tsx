@@ -38,7 +38,7 @@ const FoundingScarcityStrip = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-[#0d0d0d] border-b border-primary/20 py-2 px-4">
+    <div className="sticky top-0 left-0 right-0 z-[60] bg-[#0d0d0d] border-b border-primary/20 py-2 px-4">
       <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm font-body">
         <span className="relative flex h-2 w-2 shrink-0">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
