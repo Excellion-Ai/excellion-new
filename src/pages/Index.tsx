@@ -22,10 +22,10 @@ const Index = () => {
       <div className="noise-overlay" />
 
       <Navbar />
-      <HeroSection />
-
-      {/* All sections below hero get a plain dark background */}
-      <div className="bg-[#0A0A0A] relative z-10">
+      <main>
+        <HeroSection />
+        {/* All sections below hero get a plain dark background */}
+        <div className="bg-[#0A0A0A] relative z-10">
         <SocialProofTicker />
         <SectionDivider />
         <StatsBar />
@@ -46,7 +46,8 @@ const Index = () => {
         <SectionDivider />
         <CTASection />
         <Footer />
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
