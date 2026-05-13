@@ -1,4 +1,5 @@
 import { Mail, Twitter } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -22,6 +23,14 @@ const infoCards = [
 const Contact = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>Contact | Excellion</title>
+        <meta name="description" content="Get in touch with the Excellion team. Email us or reach out on X — we usually reply within one business day." />
+        <link rel="canonical" href="/contact" />
+        <meta property="og:title" content="Contact | Excellion" />
+        <meta property="og:description" content="Get in touch with the Excellion team. Email us or reach out on X — we usually reply within one business day." />
+        <meta property="og:url" content="/contact" />
+      </Helmet>
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-24">
         <div className="w-full max-w-2xl mx-auto">
