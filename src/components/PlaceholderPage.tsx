@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Navigation from "./Navigation";
 import Footer from "./Footer";
 
@@ -8,6 +9,14 @@ interface PlaceholderPageProps {
 
 const PlaceholderPage = ({ title, description = "This page is under construction." }: PlaceholderPageProps) => (
   <div className="min-h-screen bg-background text-foreground">
+    <Helmet>
+      <title>{`${title} | Excellion`}</title>
+      <meta name="description" content={description} />
+      <link rel="canonical" href={typeof window !== "undefined" ? window.location.pathname : "/"} />
+      <meta property="og:title" content={`${title} | Excellion`} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={typeof window !== "undefined" ? window.location.href : "/"} />
+    </Helmet>
     <Navigation />
     <main className="pt-24 pb-16 px-4">
       <div className="max-w-2xl mx-auto text-center space-y-4">

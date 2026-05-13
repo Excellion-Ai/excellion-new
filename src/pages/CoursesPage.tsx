@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -41,6 +42,14 @@ const CoursesPage = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Helmet>
+        <title>Browse Courses | Excellion</title>
+        <meta name="description" content="Discover fitness, coaching, and training courses published on Excellion. Browse the latest programs from independent creators." />
+        <link rel="canonical" href="/courses" />
+        <meta property="og:title" content="Browse Courses | Excellion" />
+        <meta property="og:description" content="Discover fitness, coaching, and training courses published on Excellion." />
+        <meta property="og:url" content="/courses" />
+      </Helmet>
       <Navigation />
       <main className="pt-24 pb-16 px-4 max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">

@@ -1,0 +1,20 @@
+# Excellion Courses
+
+> AI-powered course site builder for fitness influencers and coaches. Describe a course, and Excellion generates the curriculum, sales page, and student portal in minutes.
+
+## Pages
+
+- [Home](/): Product overview and how it works.
+- [About](/about): The story and team behind Excellion.
+- [Courses](/courses): Browse public courses published on Excellion.
+- [Pricing](/pricing): Plans and pricing for course creators.
+- [FAQ](/faq): Common questions about the builder, publishing, and payments.
+- [Contact](/contact): Get in touch with the team.
+- [Founding Cohort](/founding): Founding coach program (10 spots).
+- [Apply](/founding/apply): Apply to the founding cohort.
+
+## Optional
+
+- [Privacy](/privacy)
+- [Terms](/terms)
+- [Legal](/legal)
