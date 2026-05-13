@@ -45,9 +45,9 @@ const Index = () => {
         <FAQSection />
         <SectionDivider />
         <CTASection />
-        <Footer />
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
