@@ -51,11 +51,46 @@ serve(async (req: Request) => {
       });
     }
 
-    // Verify the user owns this course
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Paywall: custom domains require active or trialing subscription.
+    const { data: comp } = await serviceClient
+      .from("comp_access")
+      .select("email")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (!comp) {
+      const Stripe = (await import("https://esm.sh/stripe@18.5.0")).default;
+      const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+      if (stripeKey) {
+        const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+        const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+        let hasActiveSub = false;
+        if (customers.data.length > 0) {
+          const subs = await stripe.subscriptions.list({ customer: customers.data[0].id, status: "active", limit: 1 });
+          if (!subs.data.length) {
+            const trials = await stripe.subscriptions.list({ customer: customers.data[0].id, status: "trialing", limit: 1 });
+            hasActiveSub = trials.data.length > 0;
+          } else {
+            hasActiveSub = true;
+          }
+        }
+        if (!hasActiveSub) {
+          return new Response(JSON.stringify({
+            error: "An active subscription is required to connect a custom domain. Start your free month first.",
+          }), {
+            status: 403,
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
+
+    // Verify the user owns this course
 
     const { data: course } = await serviceClient
       .from("courses")

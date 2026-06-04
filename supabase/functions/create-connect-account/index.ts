@@ -54,6 +54,47 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { email: user.email });
 
+    // Paywall: Stripe Connect requires active or trialing subscription.
+    // Check comp_access first (bypasses Stripe), then check Stripe.
+    const { data: comp } = await supabaseAdmin
+      .from("comp_access")
+      .select("email")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (!comp) {
+      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      let hasActiveSub = false;
+      if (customers.data.length > 0) {
+        const subs = await stripe.subscriptions.list({
+          customer: customers.data[0].id,
+          status: "active",
+          limit: 1,
+        });
+        if (!subs.data.length) {
+          const trials = await stripe.subscriptions.list({
+            customer: customers.data[0].id,
+            status: "trialing",
+            limit: 1,
+          });
+          hasActiveSub = trials.data.length > 0;
+        } else {
+          hasActiveSub = true;
+        }
+      }
+      if (!hasActiveSub) {
+        logStep("Subscription required for Stripe Connect");
+        return new Response(JSON.stringify({
+          error: "An active subscription is required to connect payments. Start your free month first.",
+        }), {
+          status: 403,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        });
+      }
+    }
+    logStep("Subscription check passed");
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Check if user already has a Connect account
