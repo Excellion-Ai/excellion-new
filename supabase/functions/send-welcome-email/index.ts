@@ -17,6 +17,16 @@ function getCorsHeaders(req: Request) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_RE = /^[\p{L}\s'-]{1,60}$/u;
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -37,6 +47,23 @@ serve(async (req) => {
   );
 
   try {
+    // ── Require authenticated caller ───────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: authData, error: authError } = await authClient.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !authData?.user) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+
     const body = await req.json();
     const { user_id, email, first_name } = body;
 
@@ -44,9 +71,15 @@ serve(async (req) => {
     if (!user_id || !UUID_RE.test(user_id)) {
       return json({ error: "user_id must be a valid UUID" }, 400);
     }
+    if (user_id !== authData.user.id) {
+      return json({ error: "user_id does not match authenticated user" }, 403);
+    }
     if (!email || !EMAIL_RE.test(email)) {
       return json({ error: "email must be a valid email address" }, 400);
     }
+    const safeFirstName = typeof first_name === "string" && NAME_RE.test(first_name.trim())
+      ? first_name.trim()
+      : "";
 
     console.log("[welcome-email] processing", { user_id, email });
 
@@ -84,7 +117,8 @@ serve(async (req) => {
     }
 
     // ── Build email ───────────────────────────────────────
-    const name = first_name?.trim() || "there";
+    const name = escapeHtml(safeFirstName || "there");
+    const textName = safeFirstName || "there";
     const subject =
       "Your Excellion account is live. Here's what to build first.";
 
@@ -109,7 +143,7 @@ serve(async (req) => {
 <p>John<br>Founder, Excellion</p>
 </body></html>`;
 
-    const textBody = `Hi ${name},
+    const textBody = `Hi ${textName},
 
 Welcome to Excellion. You just joined the first wave of fitness coaches skipping Kajabi and building on their own domain.
 

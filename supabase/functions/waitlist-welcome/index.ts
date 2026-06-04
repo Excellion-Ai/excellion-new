@@ -1,10 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,10 +21,29 @@ serve(async (req) => {
     }
 
     const { email } = await req.json();
-    if (!email) {
+    if (!email || typeof email !== "string" || !EMAIL_RE.test(email)) {
       return new Response(
-        JSON.stringify({ error: "email is required" }),
+        JSON.stringify({ error: "valid email is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Only send to addresses already on the waitlist ────
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+    const { data: wl, error: wlError } = await supabase
+      .from("waitlist")
+      .select("email")
+      .eq("email", email)
+      .limit(1)
+      .maybeSingle();
+    if (wlError || !wl) {
+      return new Response(
+        JSON.stringify({ error: "email not on waitlist" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

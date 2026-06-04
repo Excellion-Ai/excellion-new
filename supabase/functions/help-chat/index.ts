@@ -54,7 +54,7 @@ serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || Deno.env.get("ANTHROPIC_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
-    const { messages, systemPrompt } = await req.json();
+    const { messages } = await req.json();
     if (!messages || !Array.isArray(messages)) throw new Error("messages array is required");
 
     const anthropicMessages = messages.map((m: { role: string; content: string }) => ({
@@ -72,7 +72,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 4096,
-        system: systemPrompt || SYSTEM_PROMPT,
+        system: SYSTEM_PROMPT,
         messages: anthropicMessages,
       }),
     });
