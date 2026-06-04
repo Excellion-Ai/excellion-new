@@ -206,31 +206,23 @@ serve(async (req) => {
   }
 
   try {
-    // ── STEP 1: Auth ────────────────────────────────────────
-    console.log("generate-course: step 1 — checking auth");
+    // ── STEP 1: Auth (optional for anonymous preview) ──────
+    console.log("generate-course: step 1 -- checking auth");
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
+    let userId: string | null = null;
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: authData, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (authError || !authData?.user) {
-      console.error("generate-course: auth failed", authError?.message);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
+    if (authHeader?.startsWith("Bearer ")) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: authData } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+      if (authData?.user) {
+        userId = authData.user.id;
+      }
     }
-    console.log("generate-course: step 1 done — user:", authData.user.id.slice(0, 8));
+    console.log("generate-course: step 1 done", { authenticated: !!userId });
 
     // ── STEP 2: Parse body ──────────────────────────────────
     console.log("generate-course: step 2 — parsing body");
@@ -298,17 +290,20 @@ serve(async (req) => {
       await adminClient.rpc("cleanup_old_rate_limits");
     } catch { /* ignore */ }
 
+    // Rate limit: 10/hour for authenticated, 3/hour for anonymous (by IP)
+    const rateLimitKey = userId || req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
+    const maxPerHour = userId ? 10 : 3;
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await adminClient
       .from("rate_limits")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", authData.user.id)
+      .eq("user_id", rateLimitKey)
       .eq("endpoint", "generate-course")
       .gte("called_at", oneHourAgo);
 
-    if ((count ?? 0) >= 10) {
+    if ((count ?? 0) >= maxPerHour) {
       return new Response(JSON.stringify({
-        error: "You've reached the limit of 10 course generations per hour. Please try again later.",
+        error: `You've reached the limit of ${maxPerHour} course generations per hour. Please try again later.`,
       }), {
         status: 429,
         headers: { ...cors, "Content-Type": "application/json" },
@@ -316,7 +311,7 @@ serve(async (req) => {
     }
 
     await adminClient.from("rate_limits").insert({
-      user_id: authData.user.id,
+      user_id: rateLimitKey,
       endpoint: "generate-course",
     });
     console.log("generate-course: step 4 done — rate limit OK");

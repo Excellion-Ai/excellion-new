@@ -91,22 +91,18 @@ serve(async (req) => {
     const isWaitlist = !!waitlistEntry;
     logStep("Waitlist check", { isWaitlist });
 
-    // Select price and coupon
+    // Select price. Free first month via trial_period_days (card required up front).
     let priceId: string;
-    let couponId: string | undefined;
 
     if (plan === "annual") {
       priceId = PRICES.annual;
-      couponId = undefined; // No first-month discount on annual
     } else if (isWaitlist) {
       priceId = PRICES.waitlist_monthly;
-      couponId = COUPONS.waitlist_first_month;
     } else {
       priceId = PRICES.public_monthly;
-      couponId = COUPONS.public_first_month;
     }
 
-    logStep("Price selected", { priceId, couponId });
+    logStep("Price selected", { priceId, plan });
 
     // Find or reference existing Stripe customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -117,13 +113,17 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://excellioncourses.lovable.app";
 
-    // Build checkout session params
+    // Build checkout session params with 30-day free trial (card required)
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       client_reference_id: user.id,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
+      subscription_data: {
+        trial_period_days: plan === "annual" ? undefined : 30,
+      },
+      payment_method_collection: "always",
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
       metadata: {
@@ -132,11 +132,6 @@ serve(async (req) => {
         plan,
       },
     };
-
-    // Apply coupon for first-month discount
-    if (couponId) {
-      sessionParams.discounts = [{ coupon: couponId }];
-    }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id, url: session.url });

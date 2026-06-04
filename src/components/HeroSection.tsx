@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, X, FileText } from "lucide-react";
+import { Sparkles, ArrowRight, X, FileText, Lock, Mail, Loader2 } from "lucide-react";
 import heroImg from "@/assets/hero-bg.jpg";
 import AttachmentMenu from "@/components/secret-builder/attachments/AttachmentMenu";
 import type { AttachmentMenuHandle } from "@/components/secret-builder/attachments/AttachmentMenu";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { analytics, trackEvent } from "@/lib/analytics";
 
 const suggestions = [
   "6-week fat loss course",
@@ -121,88 +122,148 @@ const HeroSection = () => {
     } catch { /* sessionStorage quota is best-effort */ }
   };
 
+  // Anonymous preview state
+  const [anonOutline, setAnonOutline] = useState<any>(null);
+  const [emailCapture, setEmailCapture] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
+
   /** Store structured draft and navigate to builder */
   const handleStartBuilding = async (overridePrompt?: string) => {
     if (isStarting) return;
     const effectivePrompt = overridePrompt || prompt;
-
-    // Check access
-    if (!user) {
-      // Store draft so it persists through auth + paywall + checkout.
-      persistDraft(overridePrompt);
-      // /dashboard is the canonical post-auth destination — the guard
-      // there routes unsubscribed coaches to /paywall.
-      navigate("/auth?mode=signup&redirect=/dashboard");
-      return;
-    }
-
-    const isAllowed = user.email === ALLOWED_EMAIL || subscribed;
-    if (!isAllowed) {
-      // Save the draft, then send them to the paywall. After payment,
-      // /dashboard will pick up the saved prompt and pre-fill the builder.
-      persistDraft(overridePrompt);
-      navigate("/paywall");
-      return;
-    }
 
     if (!effectivePrompt.trim()) {
       toast.error("Enter a course idea first.");
       return;
     }
 
+    trackEvent("niche_selected", { niche: effectivePrompt.slice(0, 80) });
+
+    // Logged-in flow: create project and navigate to studio
+    if (user) {
+      setIsStarting(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Session expired. Please sign in again.");
+          navigate("/auth?mode=signin");
+          return;
+        }
+
+        const draft = buildDraft();
+        if (overridePrompt) draft.prompt = overridePrompt.trim();
+        localStorage.setItem("builder-draft", JSON.stringify(draft));
+        localStorage.setItem("builder-initial-idea", effectivePrompt);
+
+        const { data: proj, error } = await supabase
+          .from("builder_projects")
+          .insert({ name: effectivePrompt.slice(0, 80), user_id: session.user.id })
+          .select("id")
+          .single();
+        if (error || !proj) throw error;
+
+        const pdfAttachment = attachments.find((a) =>
+          a.base64Data && (
+            a.mimeType === "application/pdf" ||
+            a.name?.toLowerCase().endsWith(".pdf")
+          )
+        );
+
+        localStorage.setItem("last-project-id", proj.id);
+
+        if (pdfAttachment?.base64Data) {
+          try {
+            sessionStorage.setItem("builder-pdf-base64", pdfAttachment.base64Data);
+            sessionStorage.setItem("builder-pdf-name", pdfAttachment.name);
+          } catch (e) {
+            console.warn("Failed to store PDF in sessionStorage:", e);
+          }
+        }
+
+        navigate(`/studio/${proj.id}`, {
+          state: {
+            initialIdea: effectivePrompt,
+            pdfName: pdfAttachment?.name,
+          },
+        });
+      } catch (err: any) {
+        console.error("handleStartBuilding error:", err);
+        toast.error("Failed to create project. Please try again.");
+      } finally {
+        setIsStarting(false);
+      }
+      return;
+    }
+
+    // Anonymous flow: generate course outline without login, show locked preview
     setIsStarting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Session expired. Please sign in again.");
-        navigate("/auth?mode=signin");
-        return;
-      }
-
-      // Store structured draft
       const draft = buildDraft();
       if (overridePrompt) draft.prompt = overridePrompt.trim();
-      localStorage.setItem("builder-draft", JSON.stringify(draft));
-      localStorage.setItem("builder-initial-idea", effectivePrompt);
 
-      // Create project
-      const { data: proj, error } = await supabase
-        .from("builder_projects")
-        .insert({ name: effectivePrompt.slice(0, 80), user_id: session.user.id })
-        .select("id")
-        .single();
-      if (error || !proj) throw error;
-
-      const pdfAttachment = attachments.find((a) =>
-        a.base64Data && (
-          a.mimeType === "application/pdf" ||
-          a.name?.toLowerCase().endsWith(".pdf")
-        )
-      );
-
-      localStorage.setItem("last-project-id", proj.id);
-
-      // Store PDF in sessionStorage (router state can silently drop large payloads)
-      if (pdfAttachment?.base64Data) {
-        try {
-          sessionStorage.setItem("builder-pdf-base64", pdfAttachment.base64Data);
-          sessionStorage.setItem("builder-pdf-name", pdfAttachment.name);
-        } catch (e) {
-          console.warn("Failed to store PDF in sessionStorage:", e);
-        }
-      }
-
-      navigate(`/studio/${proj.id}`, {
-        state: {
-          initialIdea: effectivePrompt,
-          pdfName: pdfAttachment?.name,
+      const { data, error } = await supabase.functions.invoke("generate-course", {
+        body: {
+          prompt: effectivePrompt,
+          options: {
+            difficulty: "beginner",
+            duration_weeks: 6,
+            template: "creator",
+          },
         },
       });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      trackEvent("outline_generated", {
+        title: data.title,
+        module_count: data.modules?.length,
+        anonymous: true,
+      });
+
+      // Store in sessionStorage so it survives the auth redirect
+      const outlinePayload = { ...data, _prompt: effectivePrompt, _draft: draft };
+      try {
+        sessionStorage.setItem("anon-course-outline", JSON.stringify(outlinePayload));
+      } catch { /* quota */ }
+
+      setAnonOutline(outlinePayload);
     } catch (err: any) {
-      console.error("handleStartBuilding error:", err);
-      toast.error("Failed to create project. Please try again.");
+      console.error("Anonymous generation error:", err);
+      toast.error(err?.message || "Generation failed. Try again.");
     } finally {
       setIsStarting(false);
+    }
+  };
+
+  const handleClaimAccount = () => {
+    trackEvent("claim_account_clicked");
+    persistDraft();
+    navigate("/auth?mode=signup&redirect=/dashboard");
+  };
+
+  const handleEmailOutline = async () => {
+    if (!emailCapture.trim() || !anonOutline || emailSending) return;
+    setEmailSending(true);
+    trackEvent("email_fallback_submitted", { email: emailCapture });
+
+    try {
+      const { error } = await (supabase as any)
+        .from("leads")
+        .insert({
+          email: emailCapture.trim().toLowerCase(),
+          source: "builder_preview",
+          niche: anonOutline._prompt?.slice(0, 200) || null,
+          outline: anonOutline,
+        });
+
+      if (error) throw error;
+      toast.success("Outline sent to your inbox.");
+      setEmailCapture("");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not send. Try again.");
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -347,6 +408,112 @@ const HeroSection = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Anonymous locked preview */}
+      {anonOutline && !user && (
+        <div className="relative z-10 max-w-4xl mx-auto px-4 pb-20 -mt-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="rounded-2xl border border-border bg-card/95 backdrop-blur-md overflow-hidden"
+          >
+            {/* Course header */}
+            <div className="p-6 sm:p-8 border-b border-border">
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-foreground mb-2">
+                {anonOutline.title}
+              </h2>
+              <p className="text-sm text-muted-foreground font-body">
+                {anonOutline.description}
+              </p>
+              {(() => { trackEvent("preview_locked_viewed", { title: anonOutline.title }); return null; })()}
+            </div>
+
+            {/* Module list: fully visible structure */}
+            <div className="divide-y divide-border">
+              {(anonOutline.modules || []).map((mod: any, mi: number) => (
+                <div key={mod.id || mi} className="px-6 sm:px-8 py-5">
+                  <h3 className="text-sm font-semibold text-foreground font-body mb-3">
+                    {mod.title}
+                  </h3>
+                  <div className="space-y-2">
+                    {(mod.lessons || []).map((les: any, li: number) => {
+                      const isFirstLesson = mi === 0 && li === 0;
+                      return (
+                        <div key={les.id || li}>
+                          <div className="flex items-center gap-2 text-sm font-body">
+                            {isFirstLesson ? (
+                              <span className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                              </span>
+                            ) : (
+                              <Lock className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                            )}
+                            <span className={isFirstLesson ? "text-foreground" : "text-muted-foreground"}>
+                              {les.title}
+                            </span>
+                            {!isFirstLesson && (
+                              <span className="ml-auto text-[10px] text-muted-foreground/40 uppercase tracking-wider">
+                                Locked
+                              </span>
+                            )}
+                          </div>
+                          {/* First lesson: show full content */}
+                          {isFirstLesson && les.description && (
+                            <p className="mt-2 ml-6 text-xs text-muted-foreground font-body leading-relaxed">
+                              {les.description}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Claim CTA */}
+            <div className="p-6 sm:p-8 bg-gradient-to-t from-primary/5 to-transparent border-t border-border">
+              <div className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground font-body">
+                  This outline was generated just for you. Create a free account to keep it.
+                </p>
+                <button
+                  onClick={handleClaimAccount}
+                  className="w-full sm:w-auto px-8 py-3 rounded-xl btn-primary text-sm font-body font-semibold inline-flex items-center justify-center gap-2 touch-manipulation"
+                >
+                  Create a free account to keep your course
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <p className="text-xs text-muted-foreground/60 font-body">
+                  Your draft saves to your account on signup. It will be lost if you leave.
+                </p>
+
+                {/* Email fallback */}
+                <div className="flex items-center gap-2 max-w-sm mx-auto pt-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="email"
+                      value={emailCapture}
+                      onChange={(e) => setEmailCapture(e.target.value)}
+                      placeholder="or email this outline to me"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-xs font-body focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <button
+                    onClick={handleEmailOutline}
+                    disabled={emailSending || !emailCapture.trim()}
+                    className="px-4 py-2.5 rounded-lg border border-border text-xs font-body font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50 shrink-0"
+                  >
+                    {emailSending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Send"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </section>
   );
 };

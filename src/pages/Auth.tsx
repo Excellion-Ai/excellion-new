@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
-import { analytics, identifyUser } from "@/lib/analytics";
+import { analytics, identifyUser, trackEvent } from "@/lib/analytics";
 
 type Mode = "signup" | "signin";
 
@@ -44,6 +44,35 @@ const Auth = () => {
     const routeAfterAuth = async (session: any) => {
       if (!session || cancelled) return;
       identifyUser(session.user.id, { email: session.user.email });
+
+      // Claim anonymous draft if one exists from pre-signup generation
+      try {
+        const raw = sessionStorage.getItem("anon-course-outline");
+        if (raw) {
+          sessionStorage.removeItem("anon-course-outline");
+          const outline = JSON.parse(raw);
+          const prompt = outline._prompt || outline.title || "My Course";
+
+          // Store as builder-initial-idea so BuilderShell auto-generates
+          localStorage.setItem("builder-initial-idea", prompt);
+          localStorage.setItem("builder-draft", JSON.stringify(outline._draft || { prompt }));
+
+          // Create builder project
+          const { data: proj } = await supabase
+            .from("builder_projects")
+            .insert({ name: prompt.slice(0, 80), user_id: session.user.id })
+            .select("id")
+            .single();
+
+          if (proj?.id) {
+            navigate(`/studio/${proj.id}`, { state: { initialIdea: prompt }, replace: true });
+            return;
+          }
+        }
+      } catch {
+        // Draft claim failed silently. Fall through to normal routing.
+      }
+
       const dest = explicitRedirect || "/dashboard";
       navigate(dest, { replace: true });
     };
@@ -53,6 +82,7 @@ const Auth = () => {
         if (event === "SIGNED_IN" && session.user.created_at && Date.now() - new Date(session.user.created_at).getTime() < 60_000) {
           const method = session.user.app_metadata?.provider || "email";
           analytics.signedUp({ method, email: session.user.email });
+          trackEvent("signup_completed", { method, has_draft: !!sessionStorage.getItem("anon-course-outline") });
           // Fire welcome email for genuinely new signups. Non-blocking.
           supabase.functions.invoke("send-welcome-email", {
             body: {

@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "How does pricing work?",
-    a: "$29 your first month, then $79/month ongoing (or $790/year). Everything is included: courses, student portal, analytics, custom domain, and more. Cancel anytime.",
+    a: "Building and publishing your course is free. When you are ready to connect payments or a custom domain, the pro plan is $79/month with a free first month. 0% revenue share. Cancel anytime.",
   },
 ];
 

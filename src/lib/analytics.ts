@@ -6,6 +6,14 @@ export const ANALYTICS_EVENTS = {
   COURSE_GENERATED: "course_generated",
   PRICING_PAGE_VIEWED: "pricing_page_viewed",
   PUBLISH_BUTTON_CLICKED: "publish_button_clicked",
+  NICHE_SELECTED: "niche_selected",
+  OUTLINE_GENERATED: "outline_generated",
+  PREVIEW_LOCKED_VIEWED: "preview_locked_viewed",
+  CLAIM_ACCOUNT_CLICKED: "claim_account_clicked",
+  SIGNUP_COMPLETED: "signup_completed",
+  EMAIL_FALLBACK_SUBMITTED: "email_fallback_submitted",
+  PUBLISH_CLICKED: "publish_clicked",
+  SUBSCRIPTION_STARTED: "subscription_started",
 } as const;
 
 export function identifyUser(userId: string, traits?: Record<string, unknown>) {
