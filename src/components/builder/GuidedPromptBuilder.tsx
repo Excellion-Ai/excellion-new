@@ -337,8 +337,16 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
 
       {/* Actions — sticky to card bottom on mobile so CTA stays reachable */}
       <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-border/40 flex items-center justify-between gap-3 sm:static sm:mx-0 sm:px-0 sm:py-1 sm:pt-1 sm:bg-transparent sm:backdrop-blur-none sm:border-t-0">
-        <button type="button" onClick={() => setSkipped(true)} className="text-xs text-muted-foreground hover:text-foreground underline shrink-0 py-2">
-          Skip — type my own prompt
+        <button
+          type="button"
+          onClick={() => setSkipped(true)}
+          className="group inline-flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground bg-transparent hover:bg-foreground/5 border border-border/40 hover:border-border transition-all duration-200"
+        >
+          Type my own prompt
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-200 group-hover:translate-x-0.5">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
         </button>
         {currentStep === 6 && (
           <button
