@@ -53,6 +53,14 @@ serve(async (req) => {
       });
     }
 
+    const { data: hasAccess, error: accessError } = await supabase.rpc("user_has_paid_access");
+    if (accessError || !hasAccess) {
+      return new Response(JSON.stringify({ error: "Subscription required" }), {
+        status: 402,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      });
+    }
+
     // ── RATE LIMITING: 50 lesson generations per hour per user ──
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,

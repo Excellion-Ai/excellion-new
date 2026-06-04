@@ -1235,6 +1235,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_has_paid_access: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

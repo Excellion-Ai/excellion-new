@@ -96,6 +96,10 @@ serve(async (req) => {
     if (authError || !authData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
     }
+    const { data: hasAccess, error: accessError } = await supabase.rpc("user_has_paid_access");
+    if (accessError || !hasAccess) {
+      return new Response(JSON.stringify({ error: "Subscription required" }), { status: 402, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
+    }
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || Deno.env.get("ANTHROPIC_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");

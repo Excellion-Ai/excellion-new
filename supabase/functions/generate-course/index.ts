@@ -211,18 +211,30 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let userId: string | null = null;
 
-    if (authHeader?.startsWith("Bearer ")) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
-      const { data: authData } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-      if (authData?.user) {
-        userId = authData.user.id;
-      }
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...cors, "Content-Type": "application/json" },
+      });
     }
-    console.log("generate-course: step 1 done", { authenticated: !!userId });
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: authData, error: authError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (authError || !authData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    userId = authData.user.id;
+    const { data: hasAccess, error: accessError } = await supabase.rpc("user_has_paid_access");
+    if (accessError || !hasAccess) {
+      return new Response(JSON.stringify({ error: "Subscription required" }), {
+        status: 402, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    console.log("generate-course: step 1 done", { authenticated: true });
 
     // ── STEP 2: Parse body ──────────────────────────────────
     console.log("generate-course: step 2 — parsing body");
