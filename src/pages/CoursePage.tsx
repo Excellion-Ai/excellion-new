@@ -230,9 +230,15 @@ const CoursePage = () => {
     // Redirects straight to buy.stripe.com without requiring sign-in or
     // touching the platform's enrollments/checkout tables.
     if (course.stripe_payment_url) {
-      // eslint-disable-next-line no-console
-      console.log("[enroll] redirecting to Stripe Payment Link:", course.stripe_payment_url);
-      window.location.href = course.stripe_payment_url;
+      const url = course.stripe_payment_url;
+      // Client-side validation: only redirect to real Stripe domains.
+      // Server-side CHECK constraint enforces the same at write time.
+      if (!/^https:\/\/(buy\.stripe\.com|checkout\.stripe\.com)\//.test(url)) {
+        toast.error("Invalid payment link. Contact the course creator.");
+        setEnrolling(false);
+        return;
+      }
+      window.location.href = url;
       return;
     }
     setEnrolling(true);
