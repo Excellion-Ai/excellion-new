@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 export type UserRole = "coach" | "student";
 
@@ -90,6 +90,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfileLoading(false);
   }, [user, fetchProfile]);
 
+  // Track whether the initial auth bootstrap has completed. Once true,
+  // TOKEN_REFRESHED and repeat SIGNED_IN events are silently absorbed
+  // so they never flash the loading spinner or trigger re-navigation.
+  const initializedRef = useRef(false);
+
   useEffect(() => {
     let resolved = false;
 
@@ -102,14 +107,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (newSession?.user) {
         setProfileLoading(true);
         try {
-          // 3s timeout on profile fetch — if the Supabase query hangs
-          // (dead JWT, network), assume coach and let the user through.
           const fresh = await Promise.race([
             fetchProfile(newSession.user.id),
             new Promise<AuthProfile>((resolve) =>
               setTimeout(() => {
-                // eslint-disable-next-line no-console
-                console.warn("[auth-ctx] profile fetch timed out after 3s — defaulting to coach");
+                console.warn("[auth-ctx] profile fetch timed out after 3s");
                 resolve({ id: newSession.user.id, role: "coach" });
               }, 3000)
             ),
@@ -123,14 +125,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(null);
         setProfileLoading(false);
       }
+
+      initializedRef.current = true;
     };
 
-    // onAuthStateChange fires INITIAL_SESSION once the SDK has read +
-    // validated the stored session. This is the primary path.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        // eslint-disable-next-line no-console
-        console.log("[auth-ctx] onAuthStateChange", { event: _event, hasSession: !!newSession });
+      async (event: AuthChangeEvent, newSession) => {
+        // After the first load, only react to real auth transitions.
+        // TOKEN_REFRESHED fires on tab refocus and must not flash the
+        // loading spinner or re-navigate. USER_UPDATED is also safe to
+        // absorb silently (profile data hasn't changed).
+        if (initializedRef.current) {
+          if (event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+            // Silently update the session/user refs so the JWT stays
+            // fresh, but do NOT touch loading/profileLoading/ready.
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            return;
+          }
+          // SIGNED_IN when we already have a session = duplicate event,
+          // not a real new sign-in. Only handle it if we had no user.
+          if (event === "SIGNED_IN" && user) {
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            return;
+          }
+        }
+        // Real transitions: first load (INITIAL_SESSION), actual
+        // SIGNED_IN from no-session, and SIGNED_OUT.
         await handleSession(newSession);
       }
     );
