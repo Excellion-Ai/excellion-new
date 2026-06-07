@@ -288,8 +288,26 @@ const CoursePage = () => {
       <Helmet>
         <title>{course.seo_title || course.title} | Excellion</title>
         <meta name="description" content={course.seo_description || course.description || course.tagline || "Online course on Excellion"} />
-        {(course.social_image_url || course.thumbnail_url) && <meta property="og:image" content={course.social_image_url || course.thumbnail_url} />}
+        <link rel="canonical" href={`https://excellioncourses.com/course/${identifier}`} />
         <meta property="og:title" content={course.seo_title || course.title} />
+        <meta property="og:description" content={course.seo_description || course.description || course.tagline || "Online course on Excellion"} />
+        <meta property="og:url" content={`https://excellioncourses.com/course/${identifier}`} />
+        {(course.social_image_url || course.thumbnail_url) && <meta property="og:image" content={course.social_image_url || course.thumbnail_url} />}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Course",
+            name: course.title,
+            description: course.seo_description || course.description || course.tagline || "",
+            provider: {
+              "@type": "Organization",
+              name: course.instructor_name || "Excellion",
+              sameAs: "https://excellioncourses.com",
+            },
+            ...(course.thumbnail_url ? { image: course.thumbnail_url } : {}),
+            url: `https://excellioncourses.com/course/${identifier}`,
+          })}
+        </script>
       </Helmet>
 
       {/* Owner preview banner */}

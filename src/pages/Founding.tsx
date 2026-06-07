@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import SocialProofFounding from "@/components/founding/SocialProofFounding";
 
 const SPOTS_TOTAL = 10;
@@ -54,6 +55,11 @@ const Founding = () => {
 
   return (
     <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh" }} className="overflow-x-hidden">
+      <SEO
+        title="Founding Coaches — Lifetime Deal | Excellion"
+        description="Join the first 10 founding coaches on Excellion. Lock in lifetime pricing, direct access to the team, and shape the future of the platform."
+        path="/founding"
+      />
       <Navigation />
 
       {/* HERO */}
