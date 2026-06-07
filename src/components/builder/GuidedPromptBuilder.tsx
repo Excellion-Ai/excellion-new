@@ -135,10 +135,10 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
     }
   }, [audiences, customAudience, goals, duration, skipped]);
 
-  function getBrandStyle(): BrandStyle | undefined {
-    if (!brandPreset) return undefined;
-    if (brandPreset === "custom") return { preset: "custom", customPrimary, customAccent };
-    return { preset: brandPreset };
+  function getBrandStyle(): BrandStyle {
+    const preset = brandPreset ?? "dark-bold";
+    if (preset === "custom") return { preset: "custom", customPrimary, customAccent };
+    return { preset };
   }
 
   function handleGenerate() {
@@ -335,17 +335,19 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
         </div>
       )}
 
-      {/* Actions — sticky to card bottom on mobile so CTA stays reachable */}
+      {/* Actions — sticky to card bottom on mobile so CTA stays reachable.
+          The Generate button is ALWAYS visible once the user has an audience.
+          If the prompt is empty, it shows disabled with helper text. */}
       <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-border/40 flex items-center justify-between gap-3 sm:static sm:mx-0 sm:px-0 sm:py-1 sm:pt-1 sm:bg-transparent sm:backdrop-blur-none sm:border-t-0">
         <button type="button" onClick={() => setSkipped(true)} className="text-xs text-muted-foreground hover:text-foreground underline shrink-0 py-2">
           Skip — type my own prompt
         </button>
-        {currentStep === 6 && (
+        <div className="flex flex-col items-end gap-1">
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={isGenerating}
-            className="min-h-[44px] flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground font-medium text-sm rounded-xl transition-colors animate-in fade-in zoom-in-95 duration-200 touch-manipulation"
+            disabled={!hasAudience || isGenerating}
+            className="min-h-[44px] flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground font-medium text-sm rounded-xl transition-colors touch-manipulation"
           >
             {isGenerating ? "Generating..." : "Generate course"}
             {!isGenerating && (
@@ -355,7 +357,10 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
               </svg>
             )}
           </button>
-        )}
+          {!hasAudience && (
+            <span className="text-[10px] text-muted-foreground/60">Pick an audience to continue</span>
+          )}
+        </div>
       </div>
 
     </div>
