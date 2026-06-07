@@ -21,7 +21,7 @@
     --secondary-foreground: 0 0% 15%;
 
     --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 35%;
 
     --accent: 38 45% 55%;
     --accent-foreground: 0 0% 100%;
@@ -74,7 +74,7 @@
     --secondary-foreground: 38 35% 75%;
 
     --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 70%;
 
     --accent: 38 45% 55%;
     --accent-foreground: 0 0% 4%;
