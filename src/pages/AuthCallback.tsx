@@ -11,11 +11,38 @@ const AuthCallback = () => {
   useEffect(() => {
     let cancelled = false;
 
-    const goToDashboard = (userId?: string, email?: string) => {
+    const routeAfterAuth = async (session: { user: { id: string; email?: string; created_at?: string; user_metadata?: any; app_metadata?: any } }) => {
       if (cancelled) return;
-      if (userId) {
-        try { identifyUser(userId, { email }); } catch { /* best-effort */ }
+      try { identifyUser(session.user.id, { email: session.user.email }); } catch {}
+
+      // Claim anonymous draft if one exists from pre-signup generation.
+      // This handles Google OAuth (full-page redirect) where Auth.tsx
+      // never mounts. The draft was stashed in localStorage by HeroSection.
+      try {
+        const raw = localStorage.getItem("anon-course-outline");
+        if (raw) {
+          localStorage.removeItem("anon-course-outline");
+          const outline = JSON.parse(raw);
+          const prompt = outline._prompt || outline.title || "My Course";
+
+          localStorage.setItem("builder-initial-idea", prompt);
+          localStorage.setItem("builder-draft", JSON.stringify(outline._draft || { prompt }));
+
+          const { data: proj } = await supabase
+            .from("builder_projects")
+            .insert({ name: prompt.slice(0, 80), user_id: session.user.id })
+            .select("id")
+            .single();
+
+          if (proj?.id) {
+            navigate(`/studio/${proj.id}`, { state: { initialIdea: prompt }, replace: true });
+            return;
+          }
+        }
+      } catch {
+        // Draft claim failed. Fall through to dashboard.
       }
+
       navigate("/dashboard", { replace: true });
     };
 
@@ -33,7 +60,7 @@ const AuthCallback = () => {
             },
           }).catch(() => {});
         }
-        goToDashboard(session.user.id, session.user.email);
+        void routeAfterAuth(session);
       }
     });
 

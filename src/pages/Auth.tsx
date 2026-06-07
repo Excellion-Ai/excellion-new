@@ -45,11 +45,12 @@ const Auth = () => {
       if (!session || cancelled) return;
       identifyUser(session.user.id, { email: session.user.email });
 
-      // Claim anonymous draft if one exists from pre-signup generation
+      // Claim anonymous draft if one exists from pre-signup generation.
+      // Stored in localStorage (survives Google OAuth full-page redirect).
       try {
-        const raw = sessionStorage.getItem("anon-course-outline");
+        const raw = localStorage.getItem("anon-course-outline");
         if (raw) {
-          sessionStorage.removeItem("anon-course-outline");
+          localStorage.removeItem("anon-course-outline");
           const outline = JSON.parse(raw);
           const prompt = outline._prompt || outline.title || "My Course";
 
