@@ -206,22 +206,34 @@ serve(async (req) => {
   }
 
   try {
-    // ── STEP 1: Auth (optional for anonymous preview) ──────
-    console.log("generate-course: step 1 -- checking auth");
+    // ── STEP 1: Auth (GENUINELY optional for anonymous preview) ──
+    // DO NOT add 401 returns here. Anonymous visitors generate courses
+    // from the homepage without any token. This is the top-of-funnel
+    // hook. If a Bearer token is present, extract the user ID for rate
+    // limiting. If not, proceed as anonymous with IP-based rate limiting.
+    // DO NOT add user_has_paid_access or any subscription check here.
+    // Generation is free for everyone. Payment gates live in
+    // create-connect-account and verify-domain-dns only.
+    console.log("generate-course: step 1 -- checking auth (optional)");
     const authHeader = req.headers.get("Authorization");
     let userId: string | null = null;
 
     if (authHeader?.startsWith("Bearer ")) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
-      const { data: authData } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-      if (authData?.user) {
-        userId = authData.user.id;
+      try {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        const { data: authData } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+        if (authData?.user) {
+          userId = authData.user.id;
+        }
+      } catch {
+        // Token invalid or expired. Proceed as anonymous.
       }
     }
+    // No 401 here. No 402 here. Anonymous is intentional.
     console.log("generate-course: step 1 done", { authenticated: !!userId });
 
     // ── STEP 2: Parse body ──────────────────────────────────
