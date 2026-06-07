@@ -113,7 +113,7 @@ const CoachPortfolioTemplate = ({
                     ))}
                   </ul>
                   <Button variant="outline" size="sm" className="w-full border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
-                    Learn More
+                    Learn about this module
                   </Button>
                 </CardContent>
               </Card>
