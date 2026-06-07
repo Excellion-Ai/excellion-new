@@ -1,9 +1,15 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Privacy Policy | Excellion"
+        description="How Excellion collects, uses, and protects personal information from coaches, course creators, and their students."
+        path="/privacy"
+      />
       <Navigation />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
         <h1 className="text-3xl font-heading font-bold text-foreground mb-2">Privacy Policy</h1>

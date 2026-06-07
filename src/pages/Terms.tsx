@@ -1,9 +1,15 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 const Terms = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Terms of Service | Excellion"
+        description="The terms that govern your use of Excellion — account responsibilities, content ownership, payments, refunds, and acceptable use."
+        path="/terms"
+      />
       <Navigation />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
         <h1 className="text-3xl font-heading font-bold text-foreground mb-2">Terms of Service</h1>
