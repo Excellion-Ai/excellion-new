@@ -485,7 +485,7 @@ const HeroSection = () => {
                   Create a free account to keep your course
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <p className="text-xs text-muted-foreground/60 font-body">
+                <p className="text-xs text-muted-foreground font-body">
                   Your draft saves to your account on signup. It will be lost if you leave.
                 </p>
 
