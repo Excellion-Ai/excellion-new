@@ -1,5 +1,5 @@
 import Navigation from "@/components/Navigation";
-import SEO from "@/components/SEO";
+import { Helmet } from "react-helmet-async";
 // FoundingScarcityStrip removed from homepage funnel. /founding route preserved.
 import HeroSection from "@/components/HeroSection";
 import SocialProofBlock from "@/components/SocialProofBlock";
@@ -38,12 +38,21 @@ const faqJsonLd = {
 const WebBuilderHome = () => {
   return (
     <div className="min-h-screen bg-background">
-      <SEO
-        title="Excellion Courses | AI Course Builder for Fitness Coaches"
-        description="Generate your fitness course, sales page, and student portal in minutes with Excellion's AI course builder. Launch in one weekend, 0% revenue share."
-        path="/"
-        jsonLd={[faqJsonLd]}
-      />
+      <Helmet>
+        <title>Course Builder for Fitness Coaches | Excellion</title>
+        <meta name="description" content="Excellion builds your course outline, lesson plan, sales copy, and student portal from one prompt. Sell on your own domain for $79/mo. 0% revenue share." />
+        <link rel="canonical" href="https://excellioncourses.com/" />
+        <meta property="og:title" content="Launch Your Fitness Course in a Weekend | Excellion" />
+        <meta property="og:description" content="Generate your full course from one prompt, then sell it on your own domain. 0% revenue share, your own Stripe." />
+        <meta property="og:image" content="https://excellioncourses.com/og/home.png" />
+        <meta property="og:url" content="https://excellioncourses.com/" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Launch Your Fitness Course in a Weekend | Excellion" />
+        <meta name="twitter:description" content="Your full course from one prompt. Sell on your own domain, keep 100%." />
+        <meta name="twitter:image" content="https://excellioncourses.com/og/home.png" />
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      </Helmet>
       {/* FoundingScarcityStrip removed */}
       <Navigation />
       <main>

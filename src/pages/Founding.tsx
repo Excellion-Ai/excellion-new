@@ -1,6 +1,6 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import SEO from "@/components/SEO";
+import { Helmet } from "react-helmet-async";
 import SocialProofFounding from "@/components/founding/SocialProofFounding";
 
 const SPOTS_TOTAL = 10;
@@ -55,11 +55,20 @@ const Founding = () => {
 
   return (
     <div style={{ backgroundColor: BG, color: TEXT, minHeight: "100vh" }} className="overflow-x-hidden">
-      <SEO
-        title="Founding Coaches — Lifetime Deal | Excellion"
-        description="Join the first 10 founding coaches on Excellion. Lock in lifetime pricing, direct access to the team, and shape the future of the platform."
-        path="/founding"
-      />
+      <Helmet>
+        <title>Founding Coach Program | Excellion</title>
+        <meta name="description" content="A small group of founding coaches get Excellion free for life. Ship one public course, share your results, and lock lifetime access before public pricing." />
+        <link rel="canonical" href="https://excellioncourses.com/founding" />
+        <meta property="og:title" content="Become a Founding Coach | Excellion" />
+        <meta property="og:description" content="Free for life for a limited founding group. Build and sell your course on your own domain, keep 100% of revenue." />
+        <meta property="og:image" content="https://excellioncourses.com/og/founding.png" />
+        <meta property="og:url" content="https://excellioncourses.com/founding" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Become a Founding Coach | Excellion" />
+        <meta name="twitter:description" content="Free for life for a limited founding group. Own your domain, keep 100%." />
+        <meta name="twitter:image" content="https://excellioncourses.com/og/founding.png" />
+      </Helmet>
       <Navigation />
 
       {/* HERO */}
