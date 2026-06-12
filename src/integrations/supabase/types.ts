@@ -1224,6 +1224,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      current_user_has_comp_access: { Args: never; Returns: boolean }
       generate_clean_slug: {
         Args: { course_id?: string; title: string }
         Returns: string
