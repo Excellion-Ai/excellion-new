@@ -113,6 +113,12 @@ const Checkout = () => {
       <main className="pt-24 pb-16 px-4 flex items-center justify-center min-h-[80vh]">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+          <SEO
+            title="Checkout — Excellion"
+            description="Securely complete your course purchase on Excellion."
+            path="/checkout"
+            noindex
+          />
           <p className="text-muted-foreground font-body">
             {course ? `Redirecting to checkout for "${course.title}"...` : "Preparing checkout..."}
           </p>
