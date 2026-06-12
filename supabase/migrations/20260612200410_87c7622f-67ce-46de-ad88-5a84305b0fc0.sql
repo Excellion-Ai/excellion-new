@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.current_user_has_comp_access();
