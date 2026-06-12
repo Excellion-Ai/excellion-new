@@ -423,7 +423,7 @@ const CurriculumSection = ({
                           <Play className="h-3 w-3 text-primary/50" />
                           <span>{l.title}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground/60">{l.duration}</span>
+                        <span className="text-xs text-muted-foreground">{l.duration}</span>
                       </li>
                     ))}
                   </ul>

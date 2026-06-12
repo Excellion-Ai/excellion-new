@@ -118,7 +118,7 @@ const WaitlistSection = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.45 }}
-          className="text-muted-foreground/60 font-body text-xs mt-8 italic"
+          className="text-muted-foreground font-body text-xs mt-8 italic"
         >
           Spots are limited. The creators who move first will lead. Everyone else will follow.
         </motion.p>
