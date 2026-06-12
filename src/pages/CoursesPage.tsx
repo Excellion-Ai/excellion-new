@@ -91,7 +91,7 @@ const CoursesPage = () => {
                   </div>
                 )}
                 <CardContent className="p-4 space-y-2">
-                  <h3 className="font-semibold text-sm line-clamp-2">{course.title}</h3>
+                  <h2 className="font-semibold text-sm line-clamp-2">{course.title}</h2>
                   {course.description && (
                     <p className="text-xs text-muted-foreground line-clamp-2">{course.description}</p>
                   )}
