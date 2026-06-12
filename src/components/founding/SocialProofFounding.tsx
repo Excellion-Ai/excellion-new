@@ -28,7 +28,7 @@ const cards = [
   {
     Icon: Activity,
     title: "Clients go quiet. Revenue goes with them.",
-    body: "Every coach loses clients not to competition but to silence. Accountability is the product. That's why the check-in system ships in May, built into every course on Excellion.",
+    body: "Every coach loses clients not to competition but to silence. Accountability is the product. That is why the check-in system is built into every course on Excellion.",
   },
   {
     Icon: Unlink2,

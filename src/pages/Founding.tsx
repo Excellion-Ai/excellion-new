@@ -124,6 +124,7 @@ const Founding = () => {
         total={SPOTS_TOTAL}
         tiktokUrl="https://www.tiktok.com/@excellionai"
         xUrl="https://x.com/ExcellionAI"
+        founderPhoto="/founder.jpg"
       />
 
       {/* WHAT YOU GET */}
