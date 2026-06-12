@@ -37,12 +37,12 @@ const FoundingScarcityStrip = ({ claimed = 0 }: Props) => {
         />
         {isFull ? (
           <p className="font-[DM_Sans] text-[13px] sm:text-sm text-foreground">
-            10/10 Founding Coaches claimed. Standard pricing in effect.
+            5/5 Founding Coaches claimed. Standard pricing in effect.
           </p>
         ) : (
           <>
             <p className="font-[DM_Sans] text-[13px] sm:text-sm text-foreground">
-              10 Founding Coach spots. Free for life.
+              5 Founding Coach spots. Free for life.
             </p>
             <Link
               to="/founding"

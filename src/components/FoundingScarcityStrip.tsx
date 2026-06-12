@@ -54,7 +54,7 @@ const FoundingScarcityStrip = () => {
           <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
         </span>
         <span className="text-foreground/90">
-          <strong className="text-foreground">10 Founding Coach spots.</strong>{" "}
+          <strong className="text-foreground">5 Founding Coach spots.</strong>{" "}
           Free for life.
         </span>
         <Link

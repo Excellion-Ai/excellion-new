@@ -10,7 +10,7 @@
 - [Pricing](/pricing): Plans and pricing for course creators.
 - [FAQ](/faq): Common questions about the builder, publishing, and payments.
 - [Contact](/contact): Get in touch with the team.
-- [Founding Cohort](/founding): Founding coach program (10 spots).
+- [Founding Cohort](/founding): Founding coach program (5 spots).
 - [Apply](/founding/apply): Apply to the founding cohort.
 
 ## Optional
