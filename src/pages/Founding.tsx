@@ -3,8 +3,8 @@ import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 import SocialProofFounding from "@/components/founding/SocialProofFounding";
 
-const SPOTS_TOTAL = 10;
-const SPOTS_REMAINING = 10;
+const SPOTS_TOTAL = 5;
+const SPOTS_REMAINING = 5;
 const SIGNUP_URL = "https://excellioncourses.com/auth?ref=founding";
 
 const GOLD = "#C9A84C";
@@ -112,7 +112,7 @@ const Founding = () => {
               marginBottom: "40px",
             }}
           >
-            10 spots. Lifetime free access. Your course, your domain, your revenue.
+            5 spots. Lifetime free access. Your course, your domain, your revenue.
           </p>
           <GoldButton>Claim Your Founding Spot</GoldButton>
         </div>
@@ -307,6 +307,17 @@ const Founding = () => {
             }}
           >
             Once these spots are gone, they are gone forever.
+          </p>
+          <p
+            style={{
+              fontFamily: bodyFont,
+              fontSize: "15px",
+              color: TEXT,
+              marginTop: "16px",
+              fontWeight: 500,
+            }}
+          >
+            Founding applications close June 30, 2026.
           </p>
         </div>
       </section>

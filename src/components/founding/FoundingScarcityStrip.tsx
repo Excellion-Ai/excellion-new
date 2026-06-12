@@ -19,7 +19,7 @@ const FoundingScarcityStrip = ({ claimed = 0 }: Props) => {
 
   if (!mounted || dismissed) return null;
 
-  const isFull = claimed >= 10;
+  const isFull = claimed >= 5;
 
   const handleDismiss = () => {
     localStorage.setItem(STORAGE_KEY, "1");

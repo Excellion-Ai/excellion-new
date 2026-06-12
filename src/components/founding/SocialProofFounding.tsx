@@ -139,7 +139,7 @@ const GhostButton = ({ href, children }: { href: string; children: React.ReactNo
 
 const SocialProofFounding = ({
   claimed = 0,
-  total = 10,
+  total = 5,
   founderPhoto = "",
   founderPhoto2 = "",
   shipCadenceLine = "Shipped daily since April 1. No VC. No marketing budget.",
@@ -191,7 +191,7 @@ const SocialProofFounding = ({
               fontWeight: 400,
             }}
           >
-            Not another platform to rent. Not another $500 monthly bill. The first 10
+            Not another platform to rent. Not another $500 monthly bill. The first 5
             coaches build on their own domain, free for life.
           </p>
         </div>
