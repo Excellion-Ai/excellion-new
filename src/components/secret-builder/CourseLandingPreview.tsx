@@ -292,6 +292,8 @@ const HeroSection = ({
             <img
               src={bgImage}
               alt={course.title}
+              width="1200"
+              height="400"
               className="w-full h-auto object-cover max-h-[400px]"
             />
           </motion.div>
