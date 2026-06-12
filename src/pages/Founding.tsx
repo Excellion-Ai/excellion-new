@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import SocialProofFounding from "@/components/founding/SocialProofFounding";
 
 const SPOTS_TOTAL = 10;
-const SPOTS_REMAINING = 10;
+const SPOTS_REMAINING = 6;
 const SIGNUP_URL = "https://excellioncourses.com/auth?ref=founding";
 
 const GOLD = "#C9A84C";
@@ -271,7 +271,7 @@ const Founding = () => {
               fontWeight: 600,
             }}
           >
-            <span style={{ color: GOLD }}>{SPOTS_REMAINING}</span> of {SPOTS_TOTAL} spots remaining
+            <span style={{ color: GOLD }}>4</span> out of {SPOTS_TOTAL} spots taken
           </div>
           <div
             role="progressbar"
