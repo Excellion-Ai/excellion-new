@@ -38,6 +38,11 @@ const Footer = () => {
                   Founding Coaches
                 </Link>
               </li>
+              <li>
+                <Link to="/kajabi-alternative" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-body">
+                  Kajabi Alternative
+                </Link>
+              </li>
             </ul>
           </div>
 
