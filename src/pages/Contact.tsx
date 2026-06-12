@@ -25,7 +25,7 @@ const Contact = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Contact | Excellion"
-        description="Get in touch with the Excellion team. Email us or reach out on X — we usually reply within one business day."
+        description="Get in touch with the Excellion team. Email us or reach out on X. We usually reply within one business day."
         path="/contact"
       />
       <Navbar />

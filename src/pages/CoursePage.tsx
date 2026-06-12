@@ -293,6 +293,10 @@ const CoursePage = () => {
         <meta property="og:description" content={course.seo_description || course.description || course.tagline || "Online course on Excellion"} />
         <meta property="og:url" content={`https://excellioncourses.com/course/${identifier}`} />
         {(course.social_image_url || course.thumbnail_url) && <meta property="og:image" content={course.social_image_url || course.thumbnail_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={course.seo_title || course.title} />
+        <meta name="twitter:description" content={course.seo_description || course.description || course.tagline || "Online course on Excellion"} />
+        {(course.social_image_url || course.thumbnail_url) && <meta name="twitter:image" content={course.social_image_url || course.thumbnail_url} />}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -313,7 +317,7 @@ const CoursePage = () => {
       {/* Owner preview banner */}
       {isOwnerPreview && (
         <div className="bg-yellow-500/10 border-b border-yellow-500/25 text-yellow-400 text-center py-2 px-4 text-sm">
-          Preview mode — only you can see this.{" "}
+          Preview mode. Only you can see this.{" "}
           <button onClick={() => navigate(-1)} className="underline font-semibold bg-transparent border-none text-inherit cursor-pointer">
             Back to builder
           </button>

@@ -45,15 +45,19 @@ const CoursesPage = () => {
       <Helmet>
         <title>Browse Courses | Excellion</title>
         <meta name="description" content="Discover fitness, coaching, and training courses published on Excellion. Browse the latest programs from independent creators." />
-        <link rel="canonical" href="/courses" />
+        <link rel="canonical" href="https://excellioncourses.com/courses" />
         <meta property="og:title" content="Browse Courses | Excellion" />
-        <meta property="og:description" content="Discover fitness, coaching, and training courses published on Excellion." />
-        <meta property="og:url" content="/courses" />
+        <meta property="og:description" content="Discover fitness, coaching, and training courses published on Excellion. Browse the latest programs from independent creators." />
+        <meta property="og:url" content="https://excellioncourses.com/courses" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Browse Courses | Excellion" />
+        <meta name="twitter:description" content="Discover fitness, coaching, and training courses published on Excellion. Browse the latest programs from independent creators." />
       </Helmet>
       <Navigation />
       <main className="pt-24 pb-16 px-4 max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/secret-builder-hub")}>
+          <Button variant="ghost" size="icon" aria-label="Back to dashboard" onClick={() => navigate("/secret-builder-hub")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

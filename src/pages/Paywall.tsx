@@ -111,7 +111,7 @@ const Paywall = () => {
             <p className="text-sm sm:text-base text-foreground/80 italic font-body leading-relaxed mb-2">
               "Built for coaches who are tired of seeing great programs stuck in Google Docs."
             </p>
-            <p className="text-xs text-muted-foreground font-body">— John, Founder</p>
+            <p className="text-xs text-muted-foreground font-body">- John, Founder</p>
           </div>
 
           {/* Price */}

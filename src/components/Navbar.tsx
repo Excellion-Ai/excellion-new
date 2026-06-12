@@ -50,7 +50,7 @@ const Navbar = () => {
             </button>
           </div>
 
-          <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
+          <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Close menu" : "Open menu"}>
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>

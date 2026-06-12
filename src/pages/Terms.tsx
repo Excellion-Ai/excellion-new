@@ -7,7 +7,7 @@ const Terms = () => {
     <div className="min-h-screen bg-background">
       <SEO
         title="Terms of Service | Excellion"
-        description="The terms that govern your use of Excellion — account responsibilities, content ownership, payments, refunds, and acceptable use."
+        description="The terms that govern your use of Excellion. Account responsibilities, content ownership, payments, refunds, and acceptable use."
         path="/terms"
       />
       <Navigation />

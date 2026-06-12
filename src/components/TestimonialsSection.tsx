@@ -3,7 +3,7 @@ import { Star } from "lucide-react";
 
 const testimonials = [
   {
-    quote: "I went from 'I should make a course' to actually having students enrolled — in one weekend. Excellion made it stupidly easy.",
+    quote: "I went from 'I should make a course' to actually having students enrolled in one weekend. Excellion made it stupidly easy.",
     name: "Sarah K.",
     title: "Online Fitness Coach",
     followers: "48K followers",

@@ -19,7 +19,7 @@ import Footer from "@/components/Footer";
 
 const FAQ_ITEMS = [
   { q: "Can I really launch in 1 weekend?", a: "Yes. Excellion generates your course outline, lesson structure, sales page copy, and student portal from a single prompt. You spend the weekend reviewing, filming if needed, and publishing." },
-  { q: "What types of fitness courses can I create?", a: "Any fitness niche works — fat loss, strength training, muscle gain, postpartum, running, home workouts, beginner programs, and more." },
+  { q: "What types of fitness courses can I create?", a: "Any fitness niche works. Fat loss, strength training, muscle gain, postpartum, running, home workouts, beginner programs, and more." },
   { q: "Do I need technical skills?", a: "No. Everything is generated and managed through simple prompts and an intuitive editor. No coding required." },
   { q: "Can I use my own domain?", a: "Yes. Publish on your Excellion link or connect your own custom domain at any time." },
   { q: "How does pricing work?", a: "You can preview your course for free. The Pro plan is $29 for your first month, then $79/month. 0% revenue share, cancel anytime." },

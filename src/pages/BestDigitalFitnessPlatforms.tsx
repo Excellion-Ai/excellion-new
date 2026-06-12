@@ -82,7 +82,7 @@ const BestDigitalFitnessPlatforms = () => {
       "@type": "Article",
       headline: "Best Digital Fitness Platforms for Coaches in 2026",
       description:
-        "Compare the top digital fitness platforms for coaches — features, pricing, revenue share, and which one fits your business.",
+        "Compare the top digital fitness platforms for coaches - features, pricing, revenue share, and which one fits your business.",
       author: { "@type": "Organization", name: "Excellion" },
       datePublished: "2026-06-07",
       mainEntityOfPage: `https://excellioncourses.com${path}`,
@@ -93,7 +93,7 @@ const BestDigitalFitnessPlatforms = () => {
     <div className="min-h-screen bg-background text-foreground">
       <SEO
         title="Best Digital Fitness Platforms for Coaches (2026 Comparison)"
-        description="Compare the top digital fitness platforms — Excellion, Trainerize, TrueCoach, Kajabi, Teachable, Thinkific. Features, pricing, and revenue share side-by-side."
+        description="Compare the top digital fitness platforms - Excellion, Trainerize, TrueCoach, Kajabi, Teachable, Thinkific. Features, pricing, and revenue share side-by-side."
         path={path}
         jsonLd={jsonLd}
       />
@@ -107,7 +107,7 @@ const BestDigitalFitnessPlatforms = () => {
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               A no-fluff comparison of the digital fitness platforms coaches actually use to
-              move their business online — features, pricing, and revenue share, side-by-side.
+              move their business online - features, pricing, and revenue share, side-by-side.
             </p>
           </header>
 
@@ -115,7 +115,7 @@ const BestDigitalFitnessPlatforms = () => {
             <h2 className="text-2xl font-semibold">What is a digital fitness platform?</h2>
             <p className="text-muted-foreground">
               A digital fitness platform is the software a coach uses to deliver training, courses,
-              or programs online — covering lesson hosting, video, payments, client management, and
+              or programs online - covering lesson hosting, video, payments, client management, and
               branding. The right one depends on whether you're selling <strong>courses and
               cohorts</strong> (Excellion, Kajabi, Teachable, Thinkific) or doing{" "}
               <strong>1:1 programming and check-ins</strong> (Trainerize, TrueCoach).
@@ -175,7 +175,7 @@ const BestDigitalFitnessPlatforms = () => {
                 starter plans. Excellion charges a flat 2% platform fee on top of Stripe.
               </li>
               <li>
-                <strong>Own your brand.</strong> Custom domain and design control matter — your
+                <strong>Own your brand.</strong> Custom domain and design control matter - your
                 course shouldn't look like everyone else's.
               </li>
             </ul>
@@ -187,7 +187,7 @@ const BestDigitalFitnessPlatforms = () => {
               Excellion is the only platform on this list built specifically for fitness coaches who
               want a polished course site without hiring a designer. Describe your offer, the AI drafts
               the full site and curriculum, and you fine-tune it. Stripe Connect handles payouts with a
-              flat 2% platform fee — no per-sale tiers.
+              flat 2% platform fee - no per-sale tiers.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Link

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -61,6 +62,18 @@ const FoundingApply = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <Helmet>
+        <title>Apply to Be a Founding Coach | Excellion</title>
+        <meta name="description" content="Apply for one of 5 founding coach spots. Free lifetime access to Excellion, direct input on the product, and your name on the wall." />
+        <link rel="canonical" href="https://excellioncourses.com/founding/apply" />
+        <meta property="og:title" content="Apply to Be a Founding Coach | Excellion" />
+        <meta property="og:description" content="5 spots. Free lifetime access. Apply to the founding cohort and help shape the product." />
+        <meta property="og:url" content="https://excellioncourses.com/founding/apply" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Apply to Be a Founding Coach | Excellion" />
+        <meta name="twitter:description" content="5 spots. Free lifetime access. Apply to the founding cohort and help shape the product." />
+      </Helmet>
       <Navigation />
       <video
         className="fixed inset-0 w-full h-full object-cover opacity-15 pointer-events-none z-0"
