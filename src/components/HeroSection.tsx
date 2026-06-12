@@ -262,32 +262,33 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-start sm:items-center justify-center overflow-hidden pt-32 sm:pt-20">
+    <section id="hero" className="relative min-h-screen flex items-start sm:items-center justify-center overflow-hidden pt-20 sm:pt-20">
       {/* Background */}
       <div className="absolute inset-0" style={{ backgroundColor: 'hsl(38 10% 6%)' }} />
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 text-center py-8 md:py-12">
+      <div className="relative z-10 max-w-3xl mx-auto px-4 text-center py-4 md:py-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-3">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm mb-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-sm text-primary font-body font-semibold tracking-wide">Full Course in 1 Weekend</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-foreground leading-tight mb-3">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-heading font-black text-foreground leading-tight mb-2">
             Build your online course in{" "}
             <em className="not-italic text-gradient-gold">1 weekend.</em>
           </h1>
 
-          <p className="text-sm text-primary/80 font-body font-medium mb-3">The online course platform built for fitness coaches</p>
+          <p className="text-sm text-primary/80 font-body font-medium mb-2">The online course platform built for fitness coaches</p>
 
-          <p
-            className="max-w-2xl mx-auto mb-6 font-body font-light text-base text-white/90"
-          >
+          <p className="max-w-2xl mx-auto mb-4 font-body font-light text-sm sm:text-base text-white/90 hidden sm:block">
             Excellion generates your curriculum, lesson plan, sales page, and student portal from one prompt — so you can spend the weekend filming and publishing instead of wiring up a course platform.
+          </p>
+          <p className="max-w-2xl mx-auto mb-4 font-body font-light text-sm text-white/90 sm:hidden">
+            Generate your curriculum, sales page, and student portal from one prompt.
           </p>
         </motion.div>
 
@@ -341,25 +342,13 @@ const HeroSection = () => {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleHowItWorks}
-              className="flex-1 px-6 py-3 rounded-[10px] bg-secondary text-foreground font-medium text-sm flex items-center justify-center gap-2 hover:bg-secondary/80 transition-colors font-body"
-            >
-              <Sparkles className="w-4 h-4" />
-              See how it works
-            </button>
-            <button
-              onClick={() => handleStartBuilding()}
-              disabled={isStarting}
-              className="flex-1 px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center gap-2 font-body disabled:opacity-50"
-            >
-              {isStarting ? "Creating…" : "Start Building"}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          
+          <button
+            onClick={handleHowItWorks}
+            className="w-full px-6 py-2.5 rounded-[10px] bg-secondary/60 text-muted-foreground hover:text-foreground font-medium text-xs flex items-center justify-center gap-2 hover:bg-secondary/80 transition-colors font-body"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            See how it works
+          </button>
 
           <div className="flex flex-wrap gap-2 justify-center pt-2">
             {suggestions.map((s) => (
