@@ -278,16 +278,16 @@ const HeroSection = () => {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-foreground leading-tight mb-3">
-            Launch your fitness course in{" "}
+            Build your online course in{" "}
             <em className="not-italic text-gradient-gold">1 weekend.</em>
           </h1>
 
-          <p className="text-sm text-primary/80 font-body font-medium mb-3">Built for coaches who are done waiting to launch</p>
+          <p className="text-sm text-primary/80 font-body font-medium mb-3">The online course platform built for fitness coaches</p>
 
           <p
             className="max-w-2xl mx-auto mb-6 font-body font-light text-base text-white/90"
           >
-            Excellion generates your course outline, lesson plan, sales page copy, and student portal from 1 prompt. Spend the weekend polishing, filming, and publishing.
+            Excellion generates your curriculum, lesson plan, sales page, and student portal from one prompt — so you can spend the weekend filming and publishing instead of wiring up a course platform.
           </p>
         </motion.div>
 
