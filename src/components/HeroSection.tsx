@@ -320,7 +320,7 @@ const HeroSection = () => {
                   <span key={a.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/20 text-xs text-primary">
                     <FileText className="w-3 h-3" />
                     {a.name}
-                    <button onClick={() => handleRemoveAttachment(a.id)} className="hover:text-foreground" aria-label={`Remove attachment ${a.name}`}>
+                    <button onClick={() => handleRemoveAttachment(a.id)} className="hover:text-foreground">
                       <X className="w-3 h-3" />
                     </button>
                   </span>

@@ -87,36 +87,6 @@ const BestDigitalFitnessPlatforms = () => {
       datePublished: "2026-06-07",
       mainEntityOfPage: `https://excellioncourses.com${path}`,
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "What's the cheapest digital fitness platform?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Trainerize starts lowest at $5/mo but adds per-client fees. For course-style offers, Excellion starts at $29/mo with a flat 2% platform fee.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Which platform is best for selling fitness courses?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Excellion is purpose-built for it. Kajabi and Teachable also work but aren't fitness-specific and cost more on entry tiers.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can I use my own domain?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes on Excellion, Kajabi, Teachable, and Thinkific. Trainerize and TrueCoach don't offer branded standalone sites.",
-          },
-        },
-      ],
-    },
   ];
 
   return (
