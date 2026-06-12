@@ -175,6 +175,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO
+        title={mode === "signup" ? "Sign up — Excellion" : "Sign in — Excellion"}
+        description="Sign in or create your Excellion account to build and publish AI-powered course sites for fitness coaches."
+        path="/auth"
+        noindex
+      />
       <Navigation />
       <div className="flex-1 flex items-center justify-center px-4 pt-16">
         <div className="w-full max-w-md glass-card rounded-2xl p-8">

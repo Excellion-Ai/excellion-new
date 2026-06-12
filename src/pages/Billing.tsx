@@ -62,6 +62,12 @@ const Billing = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Billing & subscription — Excellion"
+        description="Manage your Excellion subscription, payment method, and billing history."
+        path="/billing"
+        noindex
+      />
       <Navigation />
       <main className="pt-24 pb-16 px-4 max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
