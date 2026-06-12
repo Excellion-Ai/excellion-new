@@ -68,7 +68,7 @@ const AuthCallback = () => {
       if (cancelled) return;
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        goToDashboard(session.user.id, session.user.email);
+        void routeAfterAuth(session);
       }
     }, 2000);
 
