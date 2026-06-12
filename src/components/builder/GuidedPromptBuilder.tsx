@@ -156,7 +156,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
           placeholder="Describe your course idea in detail..."
           className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 text-base sm:text-sm resize-none focus:outline-none focus:border-primary/60"
         />
-        <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-border/40 flex items-center justify-between gap-3 sm:static sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:backdrop-blur-none sm:border-t-0">
+        <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-border/40 flex items-center justify-between gap-3 sm:static sm:px-0 sm:py-0 sm:bg-transparent sm:backdrop-blur-none sm:border-t-0">
           <button type="button" onClick={() => setSkipped(false)} className="text-xs text-muted-foreground hover:text-foreground underline shrink-0">
             Use guided mode
           </button>
