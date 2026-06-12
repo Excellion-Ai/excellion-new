@@ -14,6 +14,7 @@ type Props = {
   claimed?: number;
   total?: number;
   founderPhoto?: string;
+  founderPhoto2?: string;
   shipCadenceLine?: string;
   tiktokUrl?: string;
   xUrl?: string;
@@ -140,6 +141,7 @@ const SocialProofFounding = ({
   claimed = 0,
   total = 10,
   founderPhoto = "",
+  founderPhoto2 = "",
   shipCadenceLine = "Shipped daily since April 1. No VC. No marketing budget.",
   tiktokUrl = "https://www.tiktok.com/",
   xUrl = "https://x.com/",
@@ -276,24 +278,50 @@ const SocialProofFounding = ({
         {/* 4. FOUNDER STRIP */}
         <div className="mt-24 flex flex-col md:flex-row items-center gap-6 md:justify-between">
           <div className="flex items-center gap-5">
-            <div
-              style={{
-                width: "96px",
-                height: "96px",
-                borderRadius: "999px",
-                border: `1px solid ${GOLD}`,
-                overflow: "hidden",
-                flexShrink: 0,
-                backgroundColor: BG_ELEV_1,
-              }}
-            >
-              {founderPhoto ? (
-                <img
-                  src={founderPhoto}
-                  alt="John, founder of Excellion"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : null}
+            <div className="flex items-center" style={{ gap: "-16px" }}>
+              <div
+                style={{
+                  width: "96px",
+                  height: "96px",
+                  borderRadius: "999px",
+                  border: `2px solid ${GOLD}`,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  backgroundColor: BG_ELEV_1,
+                  position: "relative",
+                  zIndex: 2,
+                }}
+              >
+                {founderPhoto ? (
+                  <img
+                    src={founderPhoto}
+                    alt="John, co-founder of Excellion"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : null}
+              </div>
+              <div
+                style={{
+                  width: "96px",
+                  height: "96px",
+                  borderRadius: "999px",
+                  border: `2px solid ${GOLD}`,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  backgroundColor: BG_ELEV_1,
+                  marginLeft: "-24px",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                {founderPhoto2 ? (
+                  <img
+                    src={founderPhoto2}
+                    alt="Kohen, co-founder of Excellion"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : null}
+              </div>
             </div>
             <div>
               <div
@@ -305,7 +333,7 @@ const SocialProofFounding = ({
                   lineHeight: 1.3,
                 }}
               >
-                Built by John, founder of Excellion.
+                Built by John and Kohen, founders of Excellion.
               </div>
               <div
                 style={{
