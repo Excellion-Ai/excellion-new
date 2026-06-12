@@ -111,7 +111,14 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "https://excellioncourses.lovable.app";
+    // Validate origin against allowlist to prevent open-redirect via Stripe success/cancel URLs
+    const allowedOrigins = ["https://excellioncourses.com", "https://www.excellioncourses.com"];
+    const rawOrigin = req.headers.get("origin") || "";
+    const isAllowedOrigin =
+      allowedOrigins.includes(rawOrigin) ||
+      rawOrigin.endsWith(".lovable.app") ||
+      rawOrigin.endsWith(".lovableproject.com");
+    const origin = isAllowedOrigin ? rawOrigin : "https://excellioncourses.com";
 
     // Apply first-month coupon: waitlist $19, public $29, annual none.
     const couponId =
