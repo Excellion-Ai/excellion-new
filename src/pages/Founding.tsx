@@ -114,7 +114,7 @@ const Founding = () => {
           >
             10 spots. Lifetime free access. Your course, your domain, your revenue.
           </p>
-          <GoldButton>Apply for a Founding Spot</GoldButton>
+          <GoldButton>Claim Your Founding Spot</GoldButton>
         </div>
       </section>
 
