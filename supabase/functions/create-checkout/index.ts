@@ -113,16 +113,21 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://excellioncourses.lovable.app";
 
-    // Build checkout session params with $29 first month via coupon (card required)
+    // Apply first-month coupon: waitlist $19, public $29, annual none.
+    const couponId =
+      plan === "annual"
+        ? undefined
+        : isWaitlist
+          ? COUPONS.waitlist_first_month
+          : COUPONS.public_first_month;
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       client_reference_id: user.id,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      subscription_data: {
-        trial_period_days: plan === "annual" ? undefined : 30,
-      },
+      ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
       payment_method_collection: "always",
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
