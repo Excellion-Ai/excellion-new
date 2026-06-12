@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, ArrowRight, X, FileText } from "lucide-react";
-import heroImg from "@/assets/hero-bg.jpg";
+
 import AttachmentMenu from "@/components/secret-builder/attachments/AttachmentMenu";
 import type { AttachmentMenuHandle } from "@/components/secret-builder/attachments/AttachmentMenu";
 import type { AttachmentItem } from "@/components/secret-builder/attachments/types";
@@ -263,20 +263,8 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-start sm:items-center justify-center overflow-hidden pt-32 sm:pt-20">
-      {/* Background image */}
-      <div className="absolute inset-0">
-        <img
-          src={heroImg}
-          alt=""
-          width="1920"
-          height="1080"
-          fetchPriority="high"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 45%, transparent 0%, rgba(0,0,0,0.5) 100%)' }} />
-      </div>
+      {/* Background */}
+      <div className="absolute inset-0" style={{ backgroundColor: 'hsl(38 10% 6%)' }} />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 text-center py-8 md:py-12">
         <motion.div
