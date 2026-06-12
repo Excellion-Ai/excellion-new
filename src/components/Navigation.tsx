@@ -141,7 +141,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
-            <img src={excellionLogo} alt="Excellion fitness course builder" className="w-8 h-8 rounded-full object-cover" />
+            <img src={excellionLogo} alt="Excellion fitness course builder" width="32" height="32" className="w-8 h-8 rounded-full object-cover" />
             <span className="text-foreground font-semibold text-lg">Excellion</span>
           </Link>
 
@@ -195,7 +195,7 @@ const Navigation = () => {
                 <div className="flex flex-col gap-6 mt-6">
                   {/* Header */}
                   <div className="flex items-center gap-2 pb-4 border-b border-border">
-                    <img src={excellionLogo} alt="Excellion fitness course builder" className="w-8 h-8 rounded-full object-cover" />
+                    <img src={excellionLogo} alt="Excellion fitness course builder" width="32" height="32" className="w-8 h-8 rounded-full object-cover" />
                     <span className="text-foreground font-semibold text-lg">Excellion</span>
                   </div>
 

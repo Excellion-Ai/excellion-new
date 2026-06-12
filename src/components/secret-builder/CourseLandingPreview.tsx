@@ -236,6 +236,9 @@ const HeroSection = ({
               <img
                 src={bgImage}
                 alt={course.title}
+                width="800"
+                height="600"
+                fetchPriority="high"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
@@ -289,6 +292,8 @@ const HeroSection = ({
             <img
               src={bgImage}
               alt={course.title}
+              width="1200"
+              height="400"
               className="w-full h-auto object-cover max-h-[400px]"
             />
           </motion.div>
