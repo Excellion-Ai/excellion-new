@@ -124,7 +124,14 @@ serve(async (req) => {
       creator_receives: course.price_cents - applicationFeeAmount,
     });
 
-    const origin = req.headers.get("origin") || "https://excellioncourses.lovable.app";
+    // Validate origin against allowlist to prevent open-redirect via Stripe success/cancel URLs
+    const allowedOrigins = ["https://excellioncourses.com", "https://www.excellioncourses.com"];
+    const rawOrigin = req.headers.get("origin") || "";
+    const isAllowedOrigin =
+      allowedOrigins.includes(rawOrigin) ||
+      rawOrigin.endsWith(".lovable.app") ||
+      rawOrigin.endsWith(".lovableproject.com");
+    const origin = isAllowedOrigin ? rawOrigin : "https://excellioncourses.com";
 
     // Create checkout session with Connect destination charge
     const session = await stripe.checkout.sessions.create({

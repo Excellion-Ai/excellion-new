@@ -65,11 +65,29 @@ serve(async (req: Request) => {
       );
     }
 
-    // Parse return_url from request body, fallback to origin
-    let return_url = req.headers.get("origin") ?? "https://excellioncourses.com";
+    // Validate return_url against allowlist to prevent open-redirect after billing portal
+    const ALLOWED_HOSTS = ["excellioncourses.com", "www.excellioncourses.com"];
+    const isAllowedUrl = (u: string): boolean => {
+      try {
+        const parsed = new URL(u);
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+        return (
+          ALLOWED_HOSTS.includes(parsed.hostname) ||
+          parsed.hostname.endsWith(".lovable.app") ||
+          parsed.hostname.endsWith(".lovableproject.com")
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    const origin = req.headers.get("origin") ?? "";
+    let return_url = isAllowedUrl(origin) ? origin : "https://excellioncourses.com";
     try {
       const body = await req.json();
-      if (body.return_url) return_url = body.return_url;
+      if (body?.return_url && typeof body.return_url === "string" && isAllowedUrl(body.return_url)) {
+        return_url = body.return_url;
+      }
     } catch { /* no body is fine */ }
 
     // Create Stripe billing portal session
