@@ -56,7 +56,7 @@ const FoundingScarcityStrip = ({ claimed = 0 }: Props) => {
           type="button"
           onClick={handleDismiss}
           aria-label="Dismiss"
-          className="absolute right-0 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground transition-colors"
+          className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
