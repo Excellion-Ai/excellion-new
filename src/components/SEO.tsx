@@ -10,6 +10,8 @@ interface SEOProps {
   image?: string;
   /** Extra JSON-LD blocks (already-stringified or objects) */
   jsonLd?: Array<Record<string, unknown>>;
+  /** Set true for private/auth pages that shouldn't be indexed */
+  noindex?: boolean;
 }
 
 /**
@@ -17,13 +19,14 @@ interface SEOProps {
  * og:title/description/url so each route self-references instead of
  * inheriting the homepage tags from index.html.
  */
-const SEO = ({ title, description, path, image, jsonLd }: SEOProps) => {
+const SEO = ({ title, description, path, image, jsonLd, noindex }: SEOProps) => {
   const url = `${BASE_URL}${path}`;
   return (
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />

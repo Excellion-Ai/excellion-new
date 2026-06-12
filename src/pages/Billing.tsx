@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import SEO from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,12 @@ const Billing = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Billing & subscription — Excellion"
+        description="Manage your Excellion subscription, payment method, and billing history."
+        path="/billing"
+        noindex
+      />
       <Navigation />
       <main className="pt-24 pb-16 px-4 max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-6">

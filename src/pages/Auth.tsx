@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import SEO from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { analytics, identifyUser, trackEvent } from "@/lib/analytics";
@@ -174,6 +175,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO
+        title={mode === "signup" ? "Sign up — Excellion" : "Sign in — Excellion"}
+        description="Sign in or create your Excellion account to build and publish AI-powered course sites for fitness coaches."
+        path="/auth"
+        noindex
+      />
       <Navigation />
       <div className="flex-1 flex items-center justify-center px-4 pt-16">
         <div className="w-full max-w-md glass-card rounded-2xl p-8">
