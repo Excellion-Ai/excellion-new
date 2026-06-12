@@ -271,7 +271,7 @@ const Founding = () => {
               fontWeight: 600,
             }}
           >
-            <span style={{ color: GOLD }}>{SPOTS_REMAINING}</span> of {SPOTS_TOTAL} spots remaining
+            <span style={{ color: GOLD }}>4</span> out of {SPOTS_TOTAL} spots taken
           </div>
           <div
             role="progressbar"
