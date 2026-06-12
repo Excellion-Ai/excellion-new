@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "How does pricing work?",
-    a: "Building and publishing your course is free. When you are ready to connect payments or a custom domain, the pro plan is $79/month with a free first month. 0% revenue share. Cancel anytime.",
+    a: "You can preview your course for free. When you are ready to publish, the pro plan is $29 for your first month, then $79/month. 0% revenue share. Cancel anytime.",
   },
 ];
 

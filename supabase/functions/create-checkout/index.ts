@@ -91,7 +91,7 @@ serve(async (req) => {
     const isWaitlist = !!waitlistEntry;
     logStep("Waitlist check", { isWaitlist });
 
-    // Select price. Free first month via trial_period_days (card required up front).
+    // Select price. $29 first month via coupon (card required up front).
     let priceId: string;
 
     if (plan === "annual") {
@@ -113,7 +113,7 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://excellioncourses.lovable.app";
 
-    // Build checkout session params with 30-day free trial (card required)
+    // Build checkout session params with $29 first month via coupon (card required)
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,

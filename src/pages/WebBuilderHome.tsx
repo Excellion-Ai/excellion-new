@@ -22,7 +22,7 @@ const FAQ_ITEMS = [
   { q: "What types of fitness courses can I create?", a: "Any fitness niche works — fat loss, strength training, muscle gain, postpartum, running, home workouts, beginner programs, and more." },
   { q: "Do I need technical skills?", a: "No. Everything is generated and managed through simple prompts and an intuitive editor. No coding required." },
   { q: "Can I use my own domain?", a: "Yes. Publish on your Excellion link or connect your own custom domain at any time." },
-  { q: "How does pricing work?", a: "Building and publishing your course is free. The Pro plan is $79/month with a free first month, 0% revenue share, cancel anytime." },
+  { q: "How does pricing work?", a: "You can preview your course for free. The Pro plan is $29 for your first month, then $79/month. 0% revenue share, cancel anytime." },
 ];
 
 const faqJsonLd = {

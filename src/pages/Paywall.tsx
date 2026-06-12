@@ -119,10 +119,10 @@ const Paywall = () => {
             <div className="inline-flex flex-col items-center gap-1">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl sm:text-5xl font-heading font-black text-gradient-gold leading-none">
-                  $0
+                  $29
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-[10px] font-semibold uppercase tracking-wider font-body">
-                  First month free
+                  First month
                 </span>
               </div>
               <p className="text-base sm:text-lg font-heading font-semibold text-foreground">

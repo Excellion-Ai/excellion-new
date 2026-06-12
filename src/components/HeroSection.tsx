@@ -262,7 +262,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-start sm:items-center justify-center overflow-hidden pt-32 sm:pt-20">
+    <section id="hero" className="relative min-h-screen flex items-start sm:items-center justify-center overflow-hidden pt-32 sm:pt-20">
       {/* Background */}
       <div className="absolute inset-0" style={{ backgroundColor: 'hsl(38 10% 6%)' }} />
 

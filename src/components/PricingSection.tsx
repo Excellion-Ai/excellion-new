@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/hooks/useSubscription";
-import { toast } from "sonner";
 import { analytics } from "@/lib/analytics";
 
 const features = [
@@ -18,33 +15,11 @@ const features = [
 
 const PricingSection = () => {
   const [yearly, setYearly] = useState(false);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     analytics.pricingPageViewed({ source: "landing_pricing_section" });
   }, []);
-  const { user } = useAuth();
-  const { subscribed, startCheckout } = useSubscription();
-
-  const handleSubscribe = async () => {
-    if (!user) {
-      navigate("/auth?mode=signup&redirect=/paywall");
-      return;
-    }
-    if (subscribed) {
-      navigate("/dashboard");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await startCheckout(yearly ? "annual" : "monthly");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to start checkout");
-      setLoading(false);
-    }
-  };
 
   return (
     <section id="pricing" className="py-[60px] bg-background relative radial-glow">
@@ -93,10 +68,10 @@ const PricingSection = () => {
             <div className="pricing-animated-border rounded-2xl p-[1px]">
               <div className="premium-card p-8 text-center rounded-2xl pricing-glow-pulse">
             <div className="mb-2">
-              <span className="text-4xl font-heading font-black text-gradient-gold">{yearly ? "$790" : "$0"}</span>
+              <span className="text-4xl font-heading font-black text-gradient-gold">{yearly ? "$790" : "$29"}</span>
               {!yearly && (
                 <span className="inline-flex items-center ml-2 px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-[10px] font-semibold uppercase tracking-wider font-body align-middle">
-                  First month free
+                  First month
                 </span>
               )}
               {yearly && <span className="text-muted-foreground text-sm ml-2 font-body">/year</span>}
@@ -107,7 +82,7 @@ const PricingSection = () => {
               </p>
             )}
             <p className="text-muted-foreground text-sm mb-8 font-body">
-              {yearly ? "Save $158 a year. " : ""}Build and publish free. Pay when you connect payments.
+              {yearly ? "Save $158 a year. " : ""}Preview your course free. Pay $29 for your first month when you are ready to publish.
             </p>
 
             <ul className="space-y-3 mb-8 text-left">
@@ -120,15 +95,17 @@ const PricingSection = () => {
             </ul>
 
             <button
-              onClick={handleSubscribe}
-              disabled={loading}
-              className="w-full px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center font-body disabled:opacity-50"
+              onClick={() => {
+                const hero = document.getElementById("hero");
+                if (hero) {
+                  hero.scrollIntoView({ behavior: "smooth" });
+                } else {
+                  navigate("/");
+                }
+              }}
+              className="w-full px-6 py-3 rounded-[10px] btn-primary text-sm flex items-center justify-center font-body"
             >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                yearly ? "Start for $790/yr" : "Start building free"
-              )}
+              {yearly ? "Start for $790/yr" : "Preview your course free"}
             </button>
 
             <p className="text-xs text-muted-foreground mt-4 font-body">No hidden fees. Just build and sell your course.</p>
