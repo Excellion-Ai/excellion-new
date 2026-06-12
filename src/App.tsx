@@ -32,6 +32,7 @@ const AdminCourses = lazyWithRetry(() => import("./pages/AdminCourses"), "AdminC
 const Privacy = lazyWithRetry(() => import("./pages/Privacy"), "Privacy");
 const Terms = lazyWithRetry(() => import("./pages/Terms"), "Terms");
 const About = lazyWithRetry(() => import("./pages/About"), "About");
+const BestDigitalFitnessPlatforms = lazyWithRetry(() => import("./pages/BestDigitalFitnessPlatforms"), "BestDigitalFitnessPlatforms");
 const Contact = lazyWithRetry(() => import("./pages/Contact"), "Contact");
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"), "FAQ");
 const Legal = lazyWithRetry(() => import("./pages/Legal"), "Legal");
