@@ -12,5 +12,23 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /auth/callback
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /secret-builder
+Disallow: /secret-builder-hub
+Disallow: /studio
+Disallow: /admin
+Disallow: /settings
+Disallow: /checkout
+Disallow: /checkout/success
+Disallow: /billing
+Disallow: /paywall
+Disallow: /my-courses
+Disallow: /learn
+Disallow: /certificate
+Disallow: /purchase-success
+Disallow: /not-found
 
 Sitemap: https://excellioncourses.com/sitemap.xml
