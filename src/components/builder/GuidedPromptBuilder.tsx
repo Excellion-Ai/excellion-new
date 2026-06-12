@@ -338,7 +338,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
       {/* Actions — sticky to card bottom on mobile so CTA stays reachable.
           The Generate button is ALWAYS visible once the user has an audience.
           If the prompt is empty, it shows disabled with helper text. */}
-      <div className="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-border/40 flex items-center justify-between gap-3 sm:static sm:mx-0 sm:px-0 sm:py-1 sm:pt-1 sm:bg-transparent sm:backdrop-blur-none sm:border-t-0">
+      <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-border/40 flex items-center justify-between gap-3 sm:static sm:px-0 sm:py-1 sm:pt-1 sm:bg-transparent sm:backdrop-blur-none sm:border-t-0">
         <button
           type="button"
           onClick={() => setSkipped(true)}
