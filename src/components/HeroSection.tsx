@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, X, FileText } from "lucide-react";
+import { ArrowRight, X, FileText } from "lucide-react";
 
 import AttachmentMenu from "@/components/secret-builder/attachments/AttachmentMenu";
 import type { AttachmentMenuHandle } from "@/components/secret-builder/attachments/AttachmentMenu";
@@ -278,17 +278,12 @@ const HeroSection = () => {
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-heading font-black text-foreground leading-tight mb-2">
-            Build your online course in{" "}
-            <em className="not-italic text-gradient-gold">1 weekend.</em>
+            Build your coaching course.{" "}
+            <em className="not-italic text-gradient-gold">Own it. Keep 100 percent.</em>
           </h1>
 
-          <p className="text-sm text-primary/80 font-body font-medium mb-2">The online course platform built for fitness coaches</p>
-
-          <p className="max-w-2xl mx-auto mb-4 font-body font-light text-sm sm:text-base text-white/90 hidden sm:block">
-            Excellion generates your curriculum, lesson plan, sales page, and student portal from one prompt — so you can spend the weekend filming and publishing instead of wiring up a course platform.
-          </p>
-          <p className="max-w-2xl mx-auto mb-4 font-body font-light text-sm text-white/90 sm:hidden">
-            Generate your curriculum, sales page, and student portal from one prompt.
+          <p className="max-w-2xl mx-auto mb-4 font-body font-light text-sm sm:text-base text-white/90">
+            Excellion is the course platform built for fitness coaches who want their own domain, their own Stripe, and zero revenue share. Generate your curriculum, sales page, and student portal from one prompt, and launch on your own site this weekend.
           </p>
         </motion.div>
 
@@ -331,24 +326,20 @@ const HeroSection = () => {
             <AttachmentMenu ref={attachMenuRef} onAdd={handleAddAttachment} />
           </div>
 
-          <div className="flex flex-wrap gap-2 justify-center">
-            {["Generated in 60 seconds", "Published on your domain", "Keep 100% of revenue"].map((stat) => (
-              <span
-                key={stat}
-                className="px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-xs text-primary/90 font-body font-medium"
-              >
-                {stat}
-              </span>
-            ))}
-          </div>
-
           <button
-            onClick={handleHowItWorks}
-            className="w-full px-6 py-2.5 rounded-[10px] bg-secondary/60 text-muted-foreground hover:text-foreground font-medium text-xs flex items-center justify-center gap-2 hover:bg-secondary/80 transition-colors font-body"
+            onClick={() => {
+              const el = document.getElementById("hero");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="w-full px-6 py-3 rounded-[10px] btn-primary font-semibold text-sm flex items-center justify-center gap-2 font-body"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            See how it works
+            Preview your course free
+            <ArrowRight className="w-4 h-4" />
           </button>
+
+          <p className="text-xs text-muted-foreground font-body text-center">
+            No credit card. Everything Kajabi does for coaches, at $79 a month and 0 percent of your sales.
+          </p>
 
           <div className="flex flex-wrap gap-2 justify-center pt-2">
             {suggestions.map((s) => (
