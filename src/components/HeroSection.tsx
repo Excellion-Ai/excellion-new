@@ -193,10 +193,8 @@ const HeroSection = () => {
       return;
     }
 
-    // Anonymous flow: generate the course, stash the result, redirect to signup.
-    // The generated outline is saved to localStorage (survives OAuth redirects).
-    // After auth, Auth.tsx and AuthCallback.tsx detect the stash, save the course
-    // to the new user's account, and land them in /studio/:id with their preview.
+    // Anonymous flow: stash inputs and redirect to signup immediately.
+    // The actual generate-course call happens after auth in Auth.tsx / AuthCallback.tsx.
     setIsStarting(true);
     try {
       const draft = buildDraft();
@@ -211,42 +209,22 @@ const HeroSection = () => {
         if (rawText) pastedText = rawText;
       } catch { /* ignore */ }
 
-      const { data, error } = await supabase.functions.invoke("generate-course", {
-        body: {
-          prompt: effectivePrompt,
-          options: {
-            difficulty: "beginner",
-            duration_weeks: 6,
-            template: "creator",
-          },
-          ...(files ? { files } : {}),
-          ...(pastedText ? { pastedText } : {}),
-        },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      trackEvent("outline_generated", {
-        title: data.title,
-        module_count: data.modules?.length,
-        anonymous: true,
-      });
-
-      // Stash the generated course + inputs for post-auth claim.
-      // Use localStorage (not sessionStorage) because Google OAuth is a
-      // full-page redirect that can clear sessionStorage in some browsers.
-      const outlinePayload = { ...data, _prompt: effectivePrompt, _draft: draft };
+      const inputs = {
+        prompt: effectivePrompt,
+        options: { difficulty: "beginner", duration_weeks: 6, template: "creator" },
+        ...(files ? { files } : {}),
+        ...(pastedText ? { pastedText } : {}),
+        _draft: draft,
+      };
       try {
-        localStorage.setItem("anon-course-outline", JSON.stringify(outlinePayload));
+        localStorage.setItem("anon-course-inputs", JSON.stringify(inputs));
       } catch { /* quota */ }
 
-      // Go straight to signup. No inline preview.
       trackEvent("claim_account_clicked");
       navigate("/auth?mode=signup&redirect=/dashboard");
     } catch (err: any) {
-      console.error("Anonymous generation error:", err);
-      toast.error(err?.message || "Generation failed. Try again.");
+      console.error("Anonymous flow error:", err);
+      toast.error(err?.message || "Something went wrong. Try again.");
     } finally {
       setIsStarting(false);
     }

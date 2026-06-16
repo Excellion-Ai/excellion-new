@@ -15,6 +15,27 @@ const AuthCallback = () => {
       if (cancelled) return;
       try { identifyUser(session.user.id, { email: session.user.email }); } catch {}
 
+      // Generate course from stashed inputs if the user signed up mid-flow.
+      try {
+        const rawInputs = localStorage.getItem("anon-course-inputs");
+        if (rawInputs) {
+          localStorage.removeItem("anon-course-inputs");
+          const inputs = JSON.parse(rawInputs);
+          const { data, error } = await supabase.functions.invoke("generate-course", {
+            body: {
+              prompt: inputs.prompt,
+              options: inputs.options,
+              ...(inputs.files ? { files: inputs.files } : {}),
+              ...(inputs.pastedText ? { pastedText: inputs.pastedText } : {}),
+            },
+          });
+          if (!error && data && !data.error) {
+            const outlinePayload = { ...data, _prompt: inputs.prompt, _draft: inputs._draft || { prompt: inputs.prompt } };
+            localStorage.setItem("anon-course-outline", JSON.stringify(outlinePayload));
+          }
+        }
+      } catch { /* generation failed, fall through */ }
+
       // Claim anonymous draft if one exists from pre-signup generation.
       // This handles Google OAuth (full-page redirect) where Auth.tsx
       // never mounts. The draft was stashed in localStorage by HeroSection.
