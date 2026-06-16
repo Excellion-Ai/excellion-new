@@ -66,26 +66,19 @@ serve(async (req: Request) => {
     }
 
     // Validate return_url against allowlist to prevent open-redirect after billing portal
-    const ALLOWED_HOSTS = ["excellioncourses.com", "www.excellioncourses.com"];
-    const isAllowedUrl = (u: string): boolean => {
+    const isAllowedReturnUrl = (u: string): boolean => {
       try {
-        const parsed = new URL(u);
-        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
-        return (
-          ALLOWED_HOSTS.includes(parsed.hostname) ||
-          parsed.hostname.endsWith(".lovable.app") ||
-          parsed.hostname.endsWith(".lovableproject.com")
-        );
+        return new URL(u).origin === "https://excellioncourses.com";
       } catch {
         return false;
       }
     };
 
     const origin = req.headers.get("origin") ?? "";
-    let return_url = isAllowedUrl(origin) ? origin : "https://excellioncourses.com";
+    let return_url = "https://excellioncourses.com/dashboard";
     try {
       const body = await req.json();
-      if (body?.return_url && typeof body.return_url === "string" && isAllowedUrl(body.return_url)) {
+      if (body?.return_url && typeof body.return_url === "string" && isAllowedReturnUrl(body.return_url)) {
         return_url = body.return_url;
       }
     } catch { /* no body is fine */ }
