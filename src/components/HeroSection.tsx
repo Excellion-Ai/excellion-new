@@ -202,6 +202,15 @@ const HeroSection = () => {
       const draft = buildDraft();
       if (overridePrompt) draft.prompt = overridePrompt.trim();
 
+      let files: any[] | undefined;
+      let pastedText: string | undefined;
+      try {
+        const rawFiles = sessionStorage.getItem("builder-upload-files");
+        if (rawFiles) files = JSON.parse(rawFiles);
+        const rawText = sessionStorage.getItem("builder-pasted-text");
+        if (rawText) pastedText = rawText;
+      } catch { /* ignore */ }
+
       const { data, error } = await supabase.functions.invoke("generate-course", {
         body: {
           prompt: effectivePrompt,
@@ -210,6 +219,8 @@ const HeroSection = () => {
             duration_weeks: 6,
             template: "creator",
           },
+          ...(files ? { files } : {}),
+          ...(pastedText ? { pastedText } : {}),
         },
       });
 
