@@ -95,6 +95,7 @@ const BestDigitalFitnessPlatforms = () => {
         title="Digital Fitness Platforms: 2026 Comparison Guide for Coaches"
         description="Compare the top digital fitness platforms side-by-side - Excellion, Kajabi, Teachable, Trainerize, TrueCoach, Thinkific. Features, pricing, and revenue share."
         path={path}
+        ogType="article"
         jsonLd={jsonLd}
       />
       <Navigation />
