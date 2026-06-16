@@ -40,16 +40,16 @@ const WebBuilderHome = () => {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Course Builder for Fitness Coaches | Excellion</title>
-        <meta name="description" content="Excellion builds your course outline, lesson plan, sales copy, and student portal from one prompt. Sell on your own domain for $79/mo. 0% revenue share." />
+        <meta name="description" content="Sell your coaching course on your own site and keep 100 percent. Excellion is the course platform built for fitness coaches. No revenue share, your own Stripe." />
         <link rel="canonical" href="https://excellioncourses.com/" />
         <meta property="og:title" content="Launch Your Fitness Course in a Weekend | Excellion" />
-        <meta property="og:description" content="Generate your full course from one prompt, then sell it on your own domain. 0% revenue share, your own Stripe." />
+        <meta property="og:description" content="Sell your coaching course on your own site and keep 100 percent. Excellion is the course platform built for fitness coaches. No revenue share, your own Stripe." />
         <meta property="og:image" content="https://excellioncourses.com/og/home.png" />
         <meta property="og:url" content="https://excellioncourses.com/" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Launch Your Fitness Course in a Weekend | Excellion" />
-        <meta name="twitter:description" content="Your full course from one prompt. Sell on your own domain, keep 100%." />
+        <meta name="twitter:description" content="Sell your coaching course on your own site and keep 100 percent. Excellion is the course platform built for fitness coaches. No revenue share, your own Stripe." />
         <meta name="twitter:image" content="https://excellioncourses.com/og/home.png" />
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
