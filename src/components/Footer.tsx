@@ -11,7 +11,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 mb-3">
-              <img src={excellionLogo} alt="Excellion" width="32" height="32" className="w-8 h-8 rounded-full object-cover" />
+              <img src={excellionLogo} alt="Excellion fitness course builder" width="32" height="32" className="w-8 h-8 rounded-full object-cover" />
               <span className="text-foreground font-heading font-bold text-lg">Excellion</span>
             </Link>
             <p className="text-muted-foreground text-sm font-body">
