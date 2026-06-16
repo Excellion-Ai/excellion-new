@@ -15,7 +15,7 @@ function getCorsHeaders(req: Request) {
 const MODEL = "claude-sonnet-4-6";
 const REQUEST_TIMEOUT_MS = 120000;
 const PDF_TIMEOUT_MS = 120000;
-const MAX_TOKENS = 4000;
+const MAX_TOKENS = 2000;
 const MAX_TOKENS_PDF = 6000; // PDFs need more room for detailed structures
 
 // Fitness-only topic validation
@@ -416,7 +416,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: MODEL,
           max_tokens: maxTokens,
-          temperature: 1.0,
+          temperature: 0.7,
           system: SYSTEM_PROMPT + `\n\nGeneration variance key: ${crypto.randomUUID()}`,
           messages: [{ role: "user", content: messageContent }],
         }),
