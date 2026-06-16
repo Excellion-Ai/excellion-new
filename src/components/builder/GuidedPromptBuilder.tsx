@@ -15,6 +15,12 @@ export const BRAND_STYLE_CONFIGS: Record<Exclude<BrandStylePreset, "custom">, { 
   "soft-calm": { primary: "#7c9885", accent: "#b8c9b8", background: "#0e1210", cardBackground: "#151a17", text: "#e8efe8", textMuted: "#8a9b8f" },
 };
 
+interface UploadedFile {
+  name: string;
+  type: string;
+  base64: string;
+}
+
 interface GuidedPromptBuilderProps {
   onPromptChange: (prompt: string) => void;
   onGenerate: (prompt: string, brandStyle?: BrandStyle) => void;
@@ -118,6 +124,53 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
   const [customPrimary, setCustomPrimary] = useState("#C9A84C");
   const [customAccent, setCustomAccent] = useState("#f5c542");
   const [manualPrompt, setManualPrompt] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [pastedText, setPastedText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files;
+    if (!selected) return;
+    const newFiles: UploadedFile[] = [];
+    for (let i = 0; i < selected.length; i++) {
+      const file = selected[i];
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const commaIdx = result.indexOf(",");
+          resolve(commaIdx > 0 ? result.slice(commaIdx + 1) : result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      newFiles.push({ name: file.name, type: file.type, base64 });
+    }
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    if (materialChoice !== "upload") setMaterialChoice("upload");
+    if (e.target) e.target.value = "";
+  };
+
+  const removeFile = (idx: number) => setUploadedFiles((prev) => prev.filter((_, i) => i !== idx));
+
+  const stashFilesForParent = () => {
+    try {
+      if (uploadedFiles.length > 0) {
+        sessionStorage.setItem("builder-upload-files", JSON.stringify(uploadedFiles));
+      } else {
+        sessionStorage.removeItem("builder-upload-files");
+      }
+      if (pastedText.trim()) {
+        sessionStorage.setItem("builder-pasted-text", pastedText.trim());
+      } else {
+        sessionStorage.removeItem("builder-pasted-text");
+      }
+      if (uploadedFiles.length === 1 && uploadedFiles[0].type === "application/pdf") {
+        sessionStorage.setItem("builder-pdf-base64", uploadedFiles[0].base64);
+        sessionStorage.setItem("builder-pdf-name", uploadedFiles[0].name);
+      }
+    } catch { /* quota */ }
+  };
 
   const LOADING_PHRASES = ["Generating your curriculum...", "Building your lesson plan...", "Almost ready..."];
   const loadingIdx = useRef(0);
@@ -156,7 +209,9 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
 
   function handleGenerate() {
     const final = manualPrompt.trim();
-    if (final) onGenerate(final, getBrandStyle());
+    if (!final) return;
+    stashFilesForParent();
+    onGenerate(final, getBrandStyle());
   }
 
   if (skipped) {
@@ -259,14 +314,22 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
 
       {/* Step 4: Material upload */}
       {hasDuration && (
-        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <StepLabel number={4} text="Got existing material?" active={currentStep === 4} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
           <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-2">
             <button
               type="button"
-              onClick={() => { setMaterialChoice("upload"); onUploadClick?.(); }}
+              onClick={() => fileInputRef.current?.click()}
               className={`min-h-[56px] flex-1 sm:flex-initial flex flex-col items-center justify-center gap-0.5 px-4 py-3 rounded-xl text-sm border transition-all touch-manipulation ${
-                materialChoice === "upload"
+                uploadedFiles.length > 0
                   ? "bg-primary/20 border-primary text-primary font-medium"
                   : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground active:bg-muted/40"
               }`}
@@ -277,7 +340,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                Upload a PDF
+                Upload PDFs or images
               </span>
               <span className="text-[10px] text-primary/70 font-medium">3x better results</span>
             </button>
@@ -285,7 +348,7 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
               type="button"
               onClick={() => setMaterialChoice("skip")}
               className={`min-h-[56px] flex-1 sm:flex-initial px-4 py-3 rounded-xl text-sm border transition-all touch-manipulation ${
-                materialChoice === "skip"
+                materialChoice === "skip" && uploadedFiles.length === 0
                   ? "bg-primary/20 border-primary text-primary font-medium"
                   : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground active:bg-muted/40"
               }`}
@@ -293,6 +356,25 @@ export function GuidedPromptBuilder({ onPromptChange, onGenerate, isGenerating =
               Skip for now
             </button>
           </div>
+          {uploadedFiles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {uploadedFiles.map((f, i) => (
+                <span key={`${f.name}-${i}`} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary">
+                  {f.name}
+                  <button type="button" onClick={() => removeFile(i)} className="hover:text-foreground" aria-label={`Remove ${f.name}`}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <textarea
+            value={pastedText}
+            onChange={(e) => { setPastedText(e.target.value); if (!materialChoice) setMaterialChoice("upload"); }}
+            rows={3}
+            placeholder="Or paste your existing content here (course notes, outlines, lesson plans)..."
+            className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/40 text-sm resize-none focus:outline-none focus:border-primary/60"
+          />
         </div>
       )}
 

@@ -252,20 +252,41 @@ serve(async (req) => {
     const prompt = typeof body.prompt === "string" ? body.prompt.trim().slice(0, 2000) : "";
     const options = body.options || {};
     const attachmentContent = typeof body.attachmentContent === "string" ? body.attachmentContent.slice(0, 15000) : "";
+    const pastedText = typeof body.pastedText === "string" ? body.pastedText.trim().slice(0, 15000) : "";
 
-    // Clean PDF base64 — strip data URL prefix if present
+    // Parse multi-file uploads (new format)
+    const rawFiles = Array.isArray(body.files) ? body.files : [];
+    const uploadedFiles: { name: string; type: string; base64: string }[] = [];
+    for (const f of rawFiles) {
+      if (f && typeof f.name === "string" && typeof f.type === "string" && typeof f.base64 === "string" && f.base64.length > 100) {
+        let b64 = f.base64;
+        if (b64.startsWith("data:")) {
+          const ci = b64.indexOf(",");
+          if (ci > 0) b64 = b64.slice(ci + 1);
+        }
+        uploadedFiles.push({ name: f.name, type: f.type, base64: b64 });
+      }
+    }
+
+    // Backward compat: accept single pdfBase64 if no files array
     let pdfBase64 = typeof body.pdfBase64 === "string" && body.pdfBase64.length > 100 ? body.pdfBase64 : "";
     if (pdfBase64.startsWith("data:")) {
       const commaIdx = pdfBase64.indexOf(",");
       if (commaIdx > 0) pdfBase64 = pdfBase64.slice(commaIdx + 1);
     }
+    if (pdfBase64 && uploadedFiles.length === 0) {
+      uploadedFiles.push({ name: "uploaded.pdf", type: "application/pdf", base64: pdfBase64 });
+    }
 
-    console.log("generate-course: step 2 done —", JSON.stringify({
+    const hasFiles = uploadedFiles.length > 0;
+
+    console.log("generate-course: step 2 done", JSON.stringify({
       promptLength: prompt.length,
       promptPreview: prompt.slice(0, 80),
       attachmentLength: attachmentContent.length,
-      hasPdf: !!pdfBase64,
-      pdfLength: pdfBase64.length,
+      fileCount: uploadedFiles.length,
+      fileNames: uploadedFiles.map((f) => f.name),
+      hasPastedText: !!pastedText,
     }));
 
     if (!prompt) {
@@ -276,7 +297,7 @@ serve(async (req) => {
     }
 
     const refersToUploadedFile = /\b(this pdf|attached pdf|attached document|attached file|uploaded pdf|uploaded file|this document)\b/i.test(prompt);
-    if (refersToUploadedFile && !attachmentContent && !pdfBase64) {
+    if (refersToUploadedFile && !attachmentContent && !hasFiles) {
       console.warn("generate-course: user refers to attachment but none received — proceeding without it");
       // Don't block — just generate from the prompt text alone
     }
@@ -349,16 +370,25 @@ serve(async (req) => {
 
     const parts: string[] = [];
 
-    if (pdfBase64) {
-      parts.push(`The creator has uploaded a PDF document. Read EVERY page carefully and build the course structure directly from their content.`);
+    if (hasFiles) {
+      const fileDesc = uploadedFiles.map((f) => f.name).join(", ");
+      if (uploadedFiles.length === 1) {
+        parts.push(`The creator has uploaded a file (${fileDesc}). Read it carefully and build the course structure directly from their content.`);
+      } else {
+        parts.push(`The creator has uploaded ${uploadedFiles.length} files (${fileDesc}). Read ALL of them carefully and blend the material into the best possible course structure.`);
+      }
       parts.push(`Creator's description: "${prompt}"`);
-      parts.push(`INSTRUCTION: Use the creator's exact headings, topics, terminology, and teaching order as module/lesson titles. Do NOT make up generic content — extract everything from the PDF.`);
+      parts.push(`INSTRUCTION: Use the creator's exact headings, topics, terminology, and teaching order as module/lesson titles. Do NOT make up generic content. Extract everything from the uploaded material.`);
     } else if (attachmentContent && !attachmentContent.startsWith("[PDF")) {
       parts.push(`CREATOR'S DOCUMENT (USE THIS AS THE PRIMARY SOURCE):\n\n${attachmentContent.slice(0, 10000)}`);
       parts.push(`\nCreator's description: "${prompt}"`);
       parts.push(`\nINSTRUCTION: Build the course DIRECTLY from the document above. Use the creator's exact headings, topics, and terminology as module/lesson titles.`);
     } else {
       parts.push(`Create a fitness/health/wellness course about: ${prompt}${!isFitnessExplicit ? " (Note: Excellion is for fitness creators — frame this as a fitness/health/wellness program)" : ""}`);
+    }
+
+    if (pastedText) {
+      parts.push(`\nCreator's additional notes:\n${pastedText.slice(0, 10000)}`);
     }
 
     const durationCtx = durationWeeks <= 2 ? "SHORT intensive" : durationWeeks <= 4 ? "medium program" : "comprehensive program";
@@ -373,37 +403,43 @@ serve(async (req) => {
 
     // Build message content
     const messageContent: any[] = [];
-    const hasPdf = !!pdfBase64;
+    const hasPdf = uploadedFiles.some((f) => f.type === "application/pdf");
 
-    if (hasPdf) {
-      console.log("generate-course: step 5 — attaching PDF document block, base64 length:", pdfBase64.length);
-      messageContent.push({
-        type: "document",
-        source: {
-          type: "base64",
-          media_type: "application/pdf",
-          data: pdfBase64,
-        },
-      });
+    if (hasFiles) {
+      console.log("generate-course: step 5 — attaching file blocks:", uploadedFiles.map((f) => `${f.name} (${f.type})`));
+      for (const f of uploadedFiles) {
+        if (f.type === "application/pdf") {
+          messageContent.push({
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: f.base64 },
+          });
+        } else if (f.type.startsWith("image/")) {
+          messageContent.push({
+            type: "image",
+            source: { type: "base64", media_type: f.type, data: f.base64 },
+          });
+        }
+      }
       messageContent.push({
         type: "text",
-        text: `Read the entire PDF document above carefully. ${userMessage}`,
+        text: `Read all uploaded material above carefully. ${userMessage}`,
       });
     } else {
       messageContent.push({ type: "text", text: userMessage });
     }
 
     // ── STEP 6: Call Claude API ──────────────────────────────
-    const timeoutMs = hasPdf ? PDF_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
-    const maxTokens = hasPdf ? MAX_TOKENS_PDF : MAX_TOKENS;
-    console.log("generate-course: step 6 — calling Claude API", { model: MODEL, timeoutMs, maxTokens, hasPdf });
+    const timeoutMs = hasFiles ? PDF_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
+    const maxTokens = hasFiles
+      ? Math.min(MAX_TOKENS + 500 * uploadedFiles.length, MAX_TOKENS_PDF)
+      : MAX_TOKENS;
+    console.log("generate-course: step 6 — calling Claude API", { model: MODEL, timeoutMs, maxTokens, fileCount: uploadedFiles.length });
 
     const apiHeaders: Record<string, string> = {
       "x-api-key": anthropicApiKey,
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     };
-    // Add PDF beta header only when sending a PDF document
     if (hasPdf) {
       apiHeaders["anthropic-beta"] = "pdfs-2024-09-25";
     }
