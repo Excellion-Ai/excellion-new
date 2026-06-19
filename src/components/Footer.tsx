@@ -43,6 +43,11 @@ const Footer = () => {
                   Kajabi Alternative
                 </Link>
               </li>
+              <li>
+                <Link to="/skool-alternative" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-body">
+                  Skool Alternative
+                </Link>
+              </li>
             </ul>
           </div>
 
