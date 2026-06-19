@@ -46,6 +46,7 @@ const FoundingApply = lazyWithRetry(() => import("./pages/FoundingApply"), "Foun
 const FoundingThanks = lazyWithRetry(() => import("./pages/FoundingThanks"), "FoundingThanks");
 const Founding = lazyWithRetry(() => import("./pages/Founding"), "Founding");
 const KajabiAlternative = lazyWithRetry(() => import("./pages/KajabiAlternative"), "KajabiAlternative");
+const SkoolAlternative = lazyWithRetry(() => import("./pages/SkoolAlternative"), "SkoolAlternative");
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"), "NotFound");
 
 // Onboarding
@@ -139,6 +140,7 @@ const App = () => (
             <Route path="/founding/apply" element={<FoundingApply />} />
             <Route path="/founding/thanks" element={<FoundingThanks />} />
             <Route path="/kajabi-alternative" element={<KajabiAlternative />} />
+            <Route path="/skool-alternative" element={<SkoolAlternative />} />
 
             {/* Resources */}
             <Route path="/resources/best-digital-fitness-platforms" element={<BestDigitalFitnessPlatforms />} />
