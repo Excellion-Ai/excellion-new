@@ -302,14 +302,28 @@ const CoursePage = () => {
             "@context": "https://schema.org",
             "@type": "Course",
             name: course.title,
-            description: course.seo_description || course.description || course.tagline || "",
+            ...(course.seo_description || course.description || course.tagline
+              ? { description: (course.seo_description || course.description || course.tagline).slice(0, 500) }
+              : {}),
             provider: {
               "@type": "Organization",
               name: course.instructor_name || "Excellion",
-              sameAs: "https://excellioncourses.com",
+              ...(course.instructor_name ? {} : { url: "https://excellioncourses.com" }),
             },
             ...(course.thumbnail_url ? { image: course.thumbnail_url } : {}),
             url: `https://excellioncourses.com/course/${identifier}`,
+            ...(course.is_free
+              ? { isAccessibleForFree: true }
+              : course.price_cents && course.price_cents > 0
+                ? {
+                    offers: {
+                      "@type": "Offer",
+                      price: (course.price_cents / 100).toFixed(2),
+                      priceCurrency: course.currency || "USD",
+                      availability: "https://schema.org/InStock",
+                    },
+                  }
+                : {}),
           })}
         </script>
       </Helmet>
