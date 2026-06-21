@@ -725,6 +725,8 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          message: string | null
+          name: string | null
           niche: string | null
           outline: Json | null
           source: string | null
@@ -733,6 +735,8 @@ export type Database = {
           created_at?: string | null
           email: string
           id?: string
+          message?: string | null
+          name?: string | null
           niche?: string | null
           outline?: Json | null
           source?: string | null
@@ -741,6 +745,8 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          message?: string | null
+          name?: string | null
           niche?: string | null
           outline?: Json | null
           source?: string | null
